@@ -900,77 +900,13 @@ function CategoryScreen({ category, onBack }) {
         );
     }
 
-    const isHeroPage = category.key === 0;
 
     return (
         <div className="category-page">
-            {isHeroPage ? (
-                <div style={{
-                    position: 'relative',
-                    height: '250px',
-                    width: '100%',
-                    backgroundImage: 'url("https://images.unsplash.com/photo-1522778119026-d647f0565c6d?auto=format&fit=crop&w=1350&q=80")',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    marginBottom: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'column'
-                }}>
-                    <div style={{
-                        position: 'absolute',
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        zIndex: 1
-                    }}></div>
-
-                    <button
-                        onClick={selectedTipster ? () => setSelectedTipster(null) : selectedLeague ? () => setSelectedLeague(null) : onBack}
-                        style={{
-                            position: 'absolute',
-                            top: '20px',
-                            left: '20px',
-                            background: 'none',
-                            border: 'none',
-                            color: '#fff',
-                            fontSize: '24px',
-                            cursor: 'pointer',
-                            zIndex: 3
-                        }}
-                    >
-                        {Icons.back}
-                    </button>
-
-                    <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '0 20px' }}>
-                        <h1 style={{
-                            fontSize: '32px',
-                            fontWeight: '900',
-                            color: '#fff',
-                            textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '1px',
-                            marginBottom: '10px'
-                        }}>
-                            {selectedTipster ? selectedTipster.name : selectedLeague ? selectedLeague : "Oddsy!"}
-                        </h1>
-                        <p style={{
-                            fontSize: '16px',
-                            color: '#eee',
-                            fontWeight: '500',
-                            maxWidth: '600px',
-                            margin: '0 auto'
-                        }}>
-                            {selectedLeague ? 'Lig İstatistikleri ve Tahminler' : 'Oddsy ile Akıllı Futbol Tahminleri'}
-                        </p>
-                    </div>
-                </div>
-            ) : (
-                <div className="category-header">
-                    <button className="category-back-btn" onClick={selectedTipster ? () => setSelectedTipster(null) : selectedLeague ? () => setSelectedLeague(null) : onBack}>{Icons.back} </button>
-                    <h1 className="category-title">{selectedTipster ? selectedTipster.name : selectedLeague ? selectedLeague : category.title}</h1>
-                </div>
-            )}
+            <div className="category-header">
+                <button className="category-back-btn" onClick={selectedTipster ? () => setSelectedTipster(null) : selectedLeague ? () => setSelectedLeague(null) : onBack}>{Icons.back} </button>
+                <h1 className="category-title">{selectedTipster ? selectedTipster.name : selectedLeague ? selectedLeague : category.title}</h1>
+            </div>
             {IS_CARDS_MENU && !selectedLeague ? (
                 <>
                     <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
