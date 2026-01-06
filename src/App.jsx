@@ -851,7 +851,7 @@ function CategoryScreen({ category, onBack }) {
         { id: 'p4', name: 'Nbavipbox', role: 'Basketbol Gurusu', image: 'https://i.ibb.co/xtJDGZhT/Whats-App-mage-2025-12-07-at-23-21-34.jpg', stats: { total: 155, win: 105, rate: '%68' } },
     ];
 
-    const IS_CARDS_MENU = [0, 3, 4, 6].includes(category.key);
+    const IS_CARDS_MENU = [0, 4, 6].includes(category.key);
 
     useEffect(() => {
         const fetch = async () => {
@@ -884,7 +884,7 @@ function CategoryScreen({ category, onBack }) {
         );
     }
 
-    if (category.key === 1) {
+    if (category.key === 1 || category.key === 3) {
         return (
             <div className="category-page">
                 <div className="category-header">
