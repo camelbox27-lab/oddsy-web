@@ -144,10 +144,8 @@ body {
 .logo {
   font-size: 24px;
   font-weight: 900;
+  color: var(--gold);
   letter-spacing: 1px;
-  background: linear-gradient(to right, var(--primary-green) 50%, var(--gold) 50%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   cursor: pointer;
 }
 
@@ -181,7 +179,7 @@ body {
 .sidebar-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(51, 51, 51, 0.8);
   z-index: 1100;
   display: none;
 }
@@ -230,7 +228,7 @@ body {
   background: linear-gradient(180deg, rgba(0, 106, 78, 0.5) 0%, rgba(51, 51, 51, 0.3) 50%, rgba(51, 51, 51, 0.9) 100%);
   z-index: 1;
 }
-.hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; text-align: center; text-shadow: 0 2px 15px rgba(0,0,0,0.5); }
+.hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; text-align: center; text-shadow: 0 2px 15px rgba(51, 51, 51, 0.5); }
 .hero-title { font-size: 36px; font-weight: 900; color: #FFFFFF; margin-bottom: 15px; line-height: 1.1; letter-spacing: -1px; }
 .hero-subtitle { font-size: 15px; color: #EEEEEE; margin-bottom: 30px; line-height: 1.5; max-width: 600px; margin-left: auto; margin-right: auto; font-weight: 500; }
 .hero-btn { padding: 12px 30px; font-size: 15px; font-weight: 700; border-radius: 30px; cursor: pointer; transition: all 0.3s ease; border: none; }
@@ -282,7 +280,7 @@ body {
 
 /* Auth */
 .auth-container { min-height: calc(100vh - 65px); display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg-dark); }
-.auth-card { width: 100%; max-width: 400px; padding: 30px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: relative; }
+.auth-card { width: 100%; max-width: 400px; padding: 30px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(51, 51, 51, 0.5); position: relative; }
 .back-btn { background: none; border: none; color: var(--gold); cursor: pointer; font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
 .form-group { margin-bottom: 20px; }
 .form-label { display: block; color: var(--text-secondary); font-size: 11px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
