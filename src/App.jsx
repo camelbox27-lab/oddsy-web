@@ -346,6 +346,155 @@ const LEAGUES = [
     { id: 'Ligue 1', title: 'Ligue 1', desc: 'Yetenek Fabrikası & Atletizm', image: 'https://i.ibb.co/cXSXDS45/france-ligue-1-64x64-football-logos-cc.png' },
 ];
 
+// LEGAL TEXTS
+const LEGAL_TEXTS = {
+    kvkk: {
+        title: "KVKK Aydınlatma Metni",
+        content: `### Kişisel Verilerin Korunması ve İşlenmesi
+**Veri Sorumlusu:** ODDSY Tahmin Platformu
+**İletişim:** oddsydestek@gmail.com
+
+#### 1. Toplanan Kişisel Veriler
+Platformumuzda aşağıdaki kişisel verileriniz toplanmaktadır:
+- Kimlik Bilgileri: Ad, soyad, kullanıcı adı
+- İletişim Bilgileri: E-posta adresi
+- İşlem Güvenliği Bilgileri: IP adresi, cihaz bilgileri, tarayıcı bilgileri
+- Kullanıcı İşlem Bilgileri: Tahmin geçmişi, platform aktiviteleri
+
+#### 2. Kişisel Verilerin İşlenme Amaçları
+Kişisel verileriniz aşağıdaki amaçlarla işlenmektedir:
+- Kullanıcı hesabı oluşturma ve yönetme
+- Platform hizmetlerinin sunulması
+- Kullanıcı deneyiminin iyileştirilmesi
+- İletişim faaliyetlerinin yürütülmesi
+- Güvenlik tedbirlerinin uygulanması
+- Yasal yükümlülüklerin yerine getirilmesi
+
+#### 3. Kişisel Verilerin Aktarılması
+Kişisel verileriniz, yasal zorunluluklar ve hizmet sağlayıcılar dışında üçüncü kişilerle paylaşılmamaktadır. Verileriniz yalnızca:
+- Firebase (Google Cloud Platform) altyapısında saklanmaktadır
+- Yasal mercilerin talebi halinde yetkili kurumlara aktarılabilir
+
+#### 4. Kişisel Verilerin Saklanma Süresi
+Kişisel verileriniz, işlenme amacının gerektirdiği süre boyunca ve yasal saklama yükümlülükleri çerçevesinde saklanmaktadır.
+
+#### 5. KVKK Kapsamındaki Haklarınız
+6698 sayılı Kişisel Verilerin Korunması Kanunu uyarınca aşağıdaki haklara sahipsiniz:
+- Kişisel verilerinizin işlenip işlenmediğini öğrenme
+- İşlenmişse bilgi talep etme
+- İşlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme
+- Yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme
+- Eksik veya yanlış işlenmişse düzeltilmesini isteme
+- Kanunda öngörülen şartlar çerçevesinde silinmesini veya yok edilmesini isteme
+- Düzeltme, silme ve yok edilme işlemlerinin kişisel verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme
+- İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme
+- Kanuna aykırı olarak işlenmesi sebebiyle zarara uğramanız halinde zararın giderilmesini talep etme`
+    },
+    privacy: {
+        title: "Gizlilik Politikası",
+        content: `**Son Güncelleme:** Ocak 2026
+
+### 1. Genel Bilgiler
+ODDSY, kullanıcı gizliliğine önem veren bir tahmin paylaşım platformudur. Bu gizlilik politikası, kişisel verilerinizin nasıl toplandığı, kullanıldığı ve korunduğu hakkında bilgi vermektedir.
+
+### 2. Toplanan Bilgiler
+Platform kullanımınız sırasında aşağıdaki bilgiler toplanmaktadır:
+- Kayıt sırasında verdiğiniz bilgiler (e-posta, kullanıcı adı)
+- Platform üzerindeki aktiviteleriniz (tahminler, yorumlar)
+- Teknik bilgiler (IP adresi, cihaz türü, tarayıcı bilgileri)
+- Çerezler aracılığıyla toplanan bilgiler
+
+### 3. Bilgilerin Kullanımı
+Toplanan bilgiler şu amaçlarla kullanılır:
+- Hesap oluşturma ve yönetme
+- Platform hizmetlerinin sunulması
+- Kullanıcı deneyiminin kişiselleştirilmesi
+- Platform güvenliğinin sağlanması
+- İstatistiksel analizler yapılması
+
+### 4. Bilgi Güvenliği
+Kişisel bilgileriniz, endüstri standardı güvenlik önlemleriyle korunmaktadır:
+- Şifreli veri iletimi (SSL/TLS)
+- Güvenli veri depolama (Firebase)
+- Düzenli güvenlik güncellemeleri
+- Yetkisiz erişime karşı koruma`
+    },
+    terms: {
+        title: "Kullanım Koşulları",
+        content: `### 1. Hizmetin Kapsamı
+ODDSY, kullanıcıların spor müsabakalarına yönelik tahminlerini paylaşabilecekleri ücretsiz bir platformdur. Platform:
+- Bahis hizmeti sunmaz
+- Para kazandırmaz
+- Bahis oynamanıza teşvik etmez
+- Sadece bilgi paylaşım amaçlıdır
+
+### 2. Kullanıcı Sorumlulukları
+Platform kullanıcısı olarak:
+- En az 18 yaşında olmalısınız
+- Doğru ve güncel bilgiler sağlamalısınız
+- Başkalarının haklarına saygı göstermelisiniz
+- Yasadışı içerik paylaşmamalısınız
+- Platform kurallarına uymalısınız
+
+### 3. Yasak Faaliyetler
+Aşağıdaki faaliyetler kesinlikle yasaktır:
+- Sahte hesap oluşturma
+- Spam veya taciz edici içerik paylaşma
+- Yanıltıcı veya aldatıcı bilgi verme
+- Platform güvenliğini tehdit edecek eylemler
+- Telif hakkı ihlali
+- 18 yaş altı kullanıcıların platforma erişimi`
+    },
+    support: {
+        title: "Destek ve Yardım",
+        content: `### Nasıl Yardımcı Olabiliriz?
+ODDSY ekibi olarak size en iyi hizmeti sunmak için buradayız. 
+
+**E-posta:** oddsydestek@gmail.com
+**Yanıt Süresi:** 24-48 saat içinde
+
+### Sık Sorulan Sorular
+**S: Hesap nasıl oluşturulur?**
+C: Ana sayfadan "Kayıt Ol" butonuna tıklayarak e-posta adresinizle kolayca hesap oluşturabilirsiniz.
+
+**S: Şifremi unuttum, ne yapmalıyım?**
+C: Giriş sayfasında "Şifremi Unuttum" bağlantısını kullanarak şifrenizi sıfırlayabilirsiniz.
+
+**S: Platform ücretli mi?**
+C: Hayır, ODDSY tamamen ücretsiz bir tahmin paylaşım platformudur.`
+    },
+    responsibility: {
+        title: "Sorumluluk Beyanı ve Uyarılar",
+        content: `### ⚠️ ÖNEMLİ UYARILAR
+**🔞 BU PLATFORM 18 YAŞ VE ÜZERİ KİŞİLER İÇİNDİR**
+ODDSY, tamamen bilgi ve eğlence amaçlı bir tahmin paylaşım platformudur. 
+
+### 🚫 ODDSY NE DEĞİLDİR?
+- ❌ Bahis sitesi değildir
+- ❌ Kumar platformu değildir  
+- ❌ Para kazandırmaz
+- ❌ Bahis hizmeti sunmaz
+- ❌ Bahis kuponları satmaz
+- ❌ Mali kazanç vaat etmez
+
+### ✅ ODDSY NEDİR?
+- ✅ Spor tahmin paylaşım topluluğudur
+- ✅ Bilgilendirme amaçlıdır
+- ✅ Tamamen ücretsizdir
+- ✅ Eğlence ve sosyal amaçlıdır`
+    },
+    warning18: {
+        title: "🔞 +18 UYARISI",
+        content: `**KUMAR BAĞIMLILIK YAPABİLİR VE SOSYAL, PSİKOLOJİK VE MALİ SORUNLARA YOL AÇABİLİR.**
+
+### ⚠️ KUMAR BAĞIMLILIĞI CİDDİ BİR SORUNDUR
+Kumar bağımlılığı sadece maddi kayıplara değil, aile içi sorunlara, depresyona ve sosyal izolasyona da yol açabilir.
+
+**Yeşilay Danışma Hattı:** 444 0 628 (7/24 ücretsiz)
+**ALO 171 Sosyal Destek Hattı:** 171 (ücretsiz)`
+    }
+};
+
 // Helper Components
 function Alert({ message, type, onClose }) {
     useEffect(() => {
@@ -353,6 +502,24 @@ function Alert({ message, type, onClose }) {
         return () => clearTimeout(timer);
     }, [onClose]);
     return <div className={`alert ${type}`}>{message}</div>;
+}
+
+function LegalModal({ type, onClose }) {
+    const data = LEGAL_TEXTS[type];
+    if (!data) return null;
+    return (
+        <div className="sidebar-overlay open" onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
+            <div className="auth-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <h2 style={{ color: 'var(--gold)', fontSize: 18 }}>{data.title}</h2>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}>{Icons.close}</button>
+                </div>
+                <div style={{ fontSize: 14, color: '#aaa', lineHeight: 1.6, whiteSpace: 'pre-line', textAlign: 'left' }}>
+                    {data.content}
+                </div>
+            </div>
+        </div>
+    );
 }
 
 function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory }) {
@@ -430,7 +597,7 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute }) {
     );
 }
 
-function HomePage({ onLoginClick, onNavigate }) {
+function HomePage({ onLoginClick, onNavigate, onShowLegal }) {
     return (
         <div className="home-page">
             <div className="hero-section">
@@ -449,22 +616,30 @@ function HomePage({ onLoginClick, onNavigate }) {
             </div>
             <footer className="footer-section">
                 <div className="footer-container">
-                    <div className="footer-col">
+                    <div className="footer-col" style={{ flex: 2 }}>
                         <h3 className="footer-heading">Oddsy</h3>
-                        <p style={{ color: '#aaa' }}>Profesyonel futbol tahmin platformu</p>
+                        <p style={{ color: '#aaa', fontSize: 13, marginBottom: 20 }}>Profesyonel futbol tahmin platformu. Tüm analizler veri odaklıdır.</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span className="age-badge-small">18+</span>
+                            <span style={{ fontSize: 11, color: '#666' }}>Lütfen sorumlu oynayınız. Bilgi ve destek için Yeşilay: 444 0 628</span>
+                        </div>
                     </div>
-                    <div className="footer-col" style={{ display: 'flex', gap: 20 }}>
-                        <a className="footer-link">Destek</a>
-                        <a className="footer-link">Gizlilik</a>
+                    <div className="footer-col">
+                        <h4 style={{ color: '#fff', fontSize: 16, marginBottom: 15 }}>Kurumsal</h4>
+                        <a className="footer-link" onClick={() => onShowLegal('kvkk')}>KVKK Aydınlatma</a>
+                        <a className="footer-link" onClick={() => onShowLegal('gizlilik')}>Gizlilik Politikası</a>
+                        <a className="footer-link" onClick={() => onShowLegal('terms')}>Kullanım Koşulları</a>
+                    </div>
+                    <div className="footer-col">
+                        <h4 style={{ color: '#fff', fontSize: 16, marginBottom: 15 }}>Yardım</h4>
+                        <a className="footer-link" onClick={() => onShowLegal('support')}>Destek ve Yardım</a>
+                        <a className="footer-link" onClick={() => onShowLegal('responsibility')}>Sorumluluk Beyanı</a>
+                        <a className="footer-link" onClick={() => onShowLegal('warning18')}>+18 Uyarı</a>
                     </div>
                 </div>
                 <div className="footer-divider" />
                 <div className="footer-bottom">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span className="age-badge-small">18+</span>
-                        <span style={{ fontSize: 11, color: '#666' }}>Lütfen sorumlu oynayınız.</span>
-                    </div>
-                    <p className="copyright">© 2025 ODDSY. Tüm hakları saklıdır.</p>
+                    <p className="copyright">© 2025 ODDSY. Tüm hakları saklıdır. oddsydestek@gmail.com</p>
                 </div>
             </footer>
         </div>
@@ -723,6 +898,7 @@ export default function App() {
     const [userData, setUserData] = useState(null);
     const [alert, setAlert] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [legalType, setLegalType] = useState(null);
 
     useEffect(() => {
         const el = document.createElement('style'); el.textContent = styles; document.head.appendChild(el);
@@ -768,13 +944,14 @@ export default function App() {
             case 'profile': return <ProfileScreen user={user} userData={userData} onBack={r => navigate(r || 'home')} showAlert={showAlert} />;
             case 'admin': return <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} />;
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} />;
-            default: return <HomePage onLoginClick={() => navigate(user ? 'profile' : 'auth')} onNavigate={navigate} />;
+            default: return <HomePage onLoginClick={() => navigate(user ? 'profile' : 'auth')} onNavigate={navigate} onShowLegal={setLegalType} />;
         }
     };
 
     return (
         <div className="app">
             {alert && <Alert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
+            {legalType && <LegalModal type={legalType} onClose={() => setLegalType(null)} />}
             <Header onMenuOpen={() => setSidebarOpen(true)} user={user} onProfileClick={() => navigate(user ? 'profile' : 'auth')} onNavigate={navigate} currentCategory={routeParams.key} />
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onNavigate={navigate} currentRoute={route} />
             <main className="main-content">{render()}</main>
