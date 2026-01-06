@@ -21,15 +21,14 @@ import {
     where
 } from 'firebase/firestore';
 import { useCallback, useEffect, useState } from 'react';
-import { getTeamLogo } from './utils/logoHelper';
 
-import { getDatabase } from 'firebase/database';
+import { getDatabase, onValue, ref } from 'firebase/database';
 
 // Firebase Config
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://oddsy-778d7-default-rtdb.europe-west1.firebasedatabase.app/",
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -545,15 +544,18 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory 
                 <div className="logo" onClick={() => onNavigate('home')} style={{ cursor: 'pointer' }}>ODDSY</div>
             </div>
             <nav className="header-nav">
-                {topCategories.map(cat => (
-                    <div
-                        key={cat.id}
-                        className={`header-nav-item ${currentCategory === cat.key ? 'active' : ''}`}
-                        onClick={() => onNavigate('category', MENU_ITEMS.find(m => m.key === cat.key))}
-                    >
-                        {cat.title}
-                    </div>
-                ))}
+                {topCategories.map(cat => {
+                    const menuItem = MENU_ITEMS.find(m => m.key === cat.key);
+                    return (
+                        <div
+                            key={cat.id}
+                            className={`header-nav-item ${currentCategory === cat.key ? 'active' : ''}`}
+                            onClick={() => onNavigate(menuItem?.route || 'category', menuItem)}
+                        >
+                            {cat.title}
+                        </div>
+                    );
+                })}
             </nav>
             <div className="header-right">
                 <button className="profile-btn" onClick={onProfileClick}>
@@ -581,7 +583,7 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute }) {
                         <span className="sidebar-item-text">Ana Sayfa</span>
                     </div>
                     {MENU_ITEMS.map(item => (
-                        <div key={item.id} className="sidebar-item" onClick={() => { onNavigate('category', { ...item }); onClose(); }}>
+                        <div key={item.id} className={`sidebar-item ${currentRoute === item.route ? 'active' : ''}`} onClick={() => { onNavigate(item.route, { ...item }); onClose(); }}>
                             <span className="sidebar-item-icon">{item.icon}</span>
                             <span className="sidebar-item-text">{item.title}</span>
                         </div>
@@ -822,6 +824,168 @@ function PredictionCard({ item }) {
     );
 }
 
+function AIAnalysisScreen({ onBack }) {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState({ team: '', league: '', date: '' });
+    const [analysisType, setAnalysisType] = useState('2.5_over');
+    const [results, setResults] = useState(null);
+
+    useEffect(() => {
+        try {
+            const dbRef = ref(rtdb, '/');
+            const unsub = onValue(dbRef, (snapshot) => {
+                const val = snapshot.val();
+                if (val) {
+                    const list = Object.keys(val).map(key => ({ id: key, ...val[key] }));
+                    setData(list);
+                }
+                setLoading(false);
+            }, (err) => {
+                console.error("Firebase RTDB Error:", err);
+                setLoading(false);
+            });
+            return () => unsub();
+        } catch (e) {
+            console.error(e);
+            setLoading(false);
+        }
+    }, []);
+
+    const parseScore = (s) => (s && typeof s === 'string' ? s.split('-').map(Number) : [0, 0]);
+
+    const runAnalysis = () => {
+        const filtered = data.filter(m => {
+            const teamMatch = !filters.team || (m.ev?.toLowerCase().includes(filters.team.toLowerCase()) || m.Dep?.toLowerCase().includes(filters.team.toLowerCase()));
+            const leagueMatch = !filters.league || m.Lig?.toLowerCase().includes(filters.league.toLowerCase());
+            const dateMatch = !filters.date || m.Tarih === filters.date;
+            return teamMatch && leagueMatch && dateMatch;
+        });
+
+        const analyzed = filtered.map(m => {
+            const ms = parseScore(m.MSSko);
+            const iy = parseScore(m.IYSko);
+            let success = false;
+            const totalMs = ms[0] + ms[1];
+            const totalIy = iy[0] + iy[1];
+
+            switch (analysisType) {
+                case '1.5_over': success = totalMs > 1.5; break;
+                case '2.5_over': success = totalMs > 2.5; break;
+                case '3.5_over': success = totalMs > 3.5; break;
+                case '4.5_over': success = totalMs > 4.5; break;
+                case 'btts': success = ms[0] > 0 && ms[1] > 0; break;
+                case 'iy_1.5_over': success = totalIy > 1.5; break;
+                case 'home_1.5_over': success = ms[0] > 1.5; break;
+                case 'away_1.5_over': success = ms[1] > 1.5; break;
+                case 'htft_1_1': success = (iy[0] > iy[1] && ms[0] > ms[1]); break;
+                case 'htft_x_1': success = (iy[0] === iy[1] && ms[0] > ms[1]); break;
+                case 'htft_2_2': success = (iy[0] < iy[1] && ms[0] < ms[1]); break;
+                case 'htft_x_2': success = (iy[0] === iy[1] && ms[0] < ms[1]); break;
+            }
+            return { ...m, success };
+        });
+
+        const successful = analyzed.filter(a => a.success);
+        setResults({
+            total: analyzed.length,
+            successCount: successful.length,
+            percentage: analyzed.length > 0 ? ((successful.length / analyzed.length) * 100).toFixed(1) : 0,
+            matches: analyzed
+        });
+    };
+
+    return (
+        <div className="category-page" style={{ padding: 20 }}>
+            <div className="category-header">
+                <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
+                <h1 className="category-title">AI ANALİZ MOTORU</h1>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 15, margin: '20px 0' }}>
+                <div className="form-group">
+                    <label className="form-label">Takım Ara</label>
+                    <input className="form-input" placeholder="Örn: Galatasaray" value={filters.team} onChange={e => setFilters({ ...filters, team: e.target.value })} />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Lig</label>
+                    <input className="form-input" placeholder="Örn: Süper Lig" value={filters.league} onChange={e => setFilters({ ...filters, league: e.target.value })} />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Tarih</label>
+                    <input className="form-input" type="date" value={filters.date} onChange={e => setFilters({ ...filters, date: e.target.value })} />
+                </div>
+            </div>
+
+            <div className="form-group">
+                <label className="form-label">Analiz Türü</label>
+                <select className="form-input" value={analysisType} onChange={e => setAnalysisType(e.target.value)} style={{ background: 'var(--bg-dark)', color: '#fff' }}>
+                    <option value="1.5_over">1.5 Üst</option>
+                    <option value="2.5_over">2.5 Üst</option>
+                    <option value="3.5_over">3.5 Üst</option>
+                    <option value="4.5_over">4.5 Üst</option>
+                    <option value="btts">KG VAR</option>
+                    <option value="iy_1.5_over">İY 1.5 Üst</option>
+                    <option value="home_1.5_over">Ev 1.5 Üst</option>
+                    <option value="away_1.5_over">Dep 1.5 Üst</option>
+                    <option value="htft_1_1">İY 1 / MS 1</option>
+                    <option value="htft_x_1">İY X / MS 1</option>
+                    <option value="htft_2_2">İY 2 / MS 2</option>
+                    <option value="htft_x_2">İY X / MS 2</option>
+                </select>
+            </div>
+
+            <button className="submit-btn" onClick={runAnalysis} style={{ marginBottom: 30 }}>Analiz Et</button>
+
+            {loading ? (
+                <div className="loading"><div className="spinner" /></div>
+            ) : results ? (
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 15, border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', marginBottom: 30 }}>
+                        <div><div style={{ color: 'var(--gold)', fontSize: 24, fontWeight: 900 }}>{results.total}</div><div style={{ fontSize: 11, color: '#aaa' }}>TOPLAM MAÇ</div></div>
+                        <div><div style={{ color: 'var(--success)', fontSize: 24, fontWeight: 900 }}>{results.successCount}</div><div style={{ fontSize: 11, color: '#aaa' }}>BAŞARILI</div></div>
+                        <div><div style={{ color: 'var(--gold)', fontSize: 24, fontWeight: 900 }}>%{results.percentage}</div><div style={{ fontSize: 11, color: '#aaa' }}>BAŞARI ORANI</div></div>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: 10 }}>
+                        {results.matches.map(m => (
+                            <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 15px', background: m.success ? 'rgba(74, 222, 128, 0.1)' : 'rgba(248, 113, 113, 0.1)', borderRadius: 10, border: `1px solid ${m.success ? 'var(--success)' : 'var(--error)'}` }}>
+                                <span style={{ fontSize: 13 }}>{m.ev} - {m.Dep}</span>
+                                <span style={{ fontWeight: 800, color: m.success ? 'var(--success)' : 'var(--error)' }}>{m.MSSko}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 20 }}>
+                        <thead>
+                            <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
+                                <th style={{ padding: 10, fontSize: 12, color: 'var(--gold)' }}>Tarih</th>
+                                <th style={{ padding: 10, fontSize: 12, color: 'var(--gold)' }}>Lig</th>
+                                <th style={{ padding: 10, fontSize: 12, color: 'var(--gold)' }}>Ev</th>
+                                <th style={{ padding: 10, fontSize: 12, color: 'var(--gold)' }}>Deplasman</th>
+                                <th style={{ padding: 10, fontSize: 12, color: 'var(--gold)' }}>Skor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.slice(0, 50).map(m => (
+                                <tr key={m.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                    <td style={{ padding: 10, fontSize: 12 }}>{m.Tarih}</td>
+                                    <td style={{ padding: 10, fontSize: 12 }}>{m.Lig}</td>
+                                    <td style={{ padding: 10, fontSize: 12 }}>{m.ev}</td>
+                                    <td style={{ padding: 10, fontSize: 12 }}>{m.Dep}</td>
+                                    <td style={{ padding: 10, fontSize: 12, fontWeight: 800 }}>{m.MSSko}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+}
+
 function CategoryScreen({ category, onBack }) {
     const [predictions, setPredictions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -950,6 +1114,7 @@ export default function App() {
             case 'profile': return <ProfileScreen user={user} userData={userData} onBack={r => navigate(r || 'home')} showAlert={showAlert} />;
             case 'admin': return <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} />;
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} />;
+            case 'ai-analysis': return <AIAnalysisScreen onBack={() => navigate('home')} />;
             default: return <HomePage onLoginClick={() => navigate(user ? 'profile' : 'auth')} onNavigate={navigate} onShowLegal={setLegalType} />;
         }
     };
