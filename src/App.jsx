@@ -301,12 +301,26 @@ html, body, #root, .app {
 .alert.success { background: var(--success); color: var(--primary-green-dark); }
 .alert.error { background: var(--error); color: #fff; }
 
-@media (max-width: 768px) {
-  .header-nav { display: none; }
-  .menu-btn { display: flex !important; }
-  .hero-title { font-size: 32px; }
-  .features-section { grid-template-columns: 1fr; }
-}
+/* Excel Table Styles */
+.excel-wrapper { padding: 20px; background: var(--bg-dark); min-height: 100vh; }
+.excel-controls { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; align-items: center; }
+.excel-search { flex: 1; min-width: 250px; padding: 12px 15px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #333; font-size: 14px; }
+.excel-export-btn { padding: 10px 20px; background: var(--gold); color: var(--primary-green-dark); border: none; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+.excel-export-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(253, 185, 19, 0.3); }
+.excel-table-container { background: #fff; border-radius: 12px; overflow-x: auto; border: 1px solid #CCCCCC; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+.excel-table { width: 100%; border-collapse: collapse; min-width: 800px; color: #333; }
+.excel-table th { background: #006A4E; color: #fff; padding: 14px 15px; text-align: left; font-weight: 700; font-size: 13px; border: 1px solid #CCCCCC; cursor: pointer; user-select: none; position: relative; }
+.excel-table th:hover { background: #00815e; }
+.excel-table th::after { content: '↕'; position: absolute; right: 8px; opacity: 0.5; }
+.excel-table td { padding: 12px 15px; border: 1px solid #CCCCCC; font-size: 13px; font-weight: 500; }
+.excel-table tr:nth-child(even) { background: #F2F2F2; }
+.excel-table tr:nth-child(odd) { background: #FFFFFF; }
+.excel-table tr:hover { background: #FFB80C !important; color: #000 !important; }
+.excel-pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; padding: 20px; }
+.page-btn { padding: 8px 15px; background: var(--bg-card); color: #fff; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: 0.3s; }
+.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.page-btn.active { background: var(--gold); color: var(--primary-green-dark); font-weight: 800; }
+.filter-input { width: 100%; padding: 4px; margin-top: 5px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px; color: #333; }
 `;
 
 // ICONS
@@ -825,15 +839,165 @@ function PredictionCard({ item }) {
 }
 
 function AIAnalysisScreen({ onBack }) {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortConfig, setSortConfig] = useState({ key: 'Tarih', direction: 'desc' });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(50);
+    const [columnFilters, setColumnFilters] = useState({ Tarih: '', Lig: '', ev: '', Dep: '', IYSko: '', MSSko: '' });
+
+    useEffect(() => {
+        const dbRef = ref(rtdb, '/');
+        const unsub = onValue(dbRef, (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                const list = Object.keys(val).map(key => ({ id: key, ...val[key] }));
+                setData(list);
+            }
+            setLoading(false);
+        }, (err) => {
+            console.error("RTDB Error:", err);
+            setLoading(false);
+        });
+        return () => unsub();
+    }, []);
+
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+        setSortConfig({ key, direction });
+    };
+
+    const handleFilterChange = (key, value) => {
+        setColumnFilters(prev => ({ ...prev, [key]: value }));
+        setCurrentPage(1);
+    };
+
+    const sortedData = [...data].sort((a, b) => {
+        if (!a[sortConfig.key] || !b[sortConfig.key]) return 0;
+        const aVal = a[sortConfig.key].toString().toLowerCase();
+        const bVal = b[sortConfig.key].toString().toLowerCase();
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const filteredData = sortedData.filter(item => {
+        const matchesGlobal = Object.values(item).some(val =>
+            val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        const matchesColumns = Object.keys(columnFilters).every(key =>
+            !columnFilters[key] || item[key]?.toString().toLowerCase().includes(columnFilters[key].toLowerCase())
+        );
+        return matchesGlobal && matchesColumns;
+    });
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+    const exportCSV = () => {
+        const headers = ['Tarih', 'Lig', 'Ev Sahibi', 'Deplasman', 'İY Skor', 'MS Skor'];
+        const csvRows = filteredData.map(m => [
+            `"${m.Tarih || ''}"`,
+            `"${m.Lig || ''}"`,
+            `"${m.ev || ''}"`,
+            `"${m.Dep || ''}"`,
+            `"${m.IYSko || ''}"`,
+            `"${m.MSSko || ''}"`
+        ]);
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF"
+            + headers.join(",") + "\n"
+            + csvRows.map(e => e.join(",")).join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `oddsy_analiz_${new Date().toLocaleDateString()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
-        <div className="category-page" style={{ padding: 20 }}>
-            <div className="category-header">
+        <div className="excel-wrapper">
+            <div className="category-header" style={{ marginBottom: 20, background: 'transparent', border: 'none' }}>
                 <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
-                <h1 className="category-title">AI ANALİZ MOTORU</h1>
+                <h1 className="category-title" style={{ color: 'var(--gold)' }}>AI ANALİZ EXCEL PANELİ</h1>
             </div>
-            <div style={{ marginTop: 50, textAlign: 'center', color: '#666' }}>
-                {/* Bu sayfa şu an boştur */}
+
+            <div className="excel-controls">
+                <input
+                    type="text"
+                    className="excel-search"
+                    placeholder="Tablo içinde ara (Takım, Lig...)"
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                />
+                <button className="excel-export-btn" onClick={exportCSV}>CSV OLARAK İNDİR</button>
+                <div style={{ color: '#aaa', fontSize: 13 }}>Toplam: {filteredData.length} maç</div>
             </div>
+
+            <div className="excel-table-container">
+                {loading ? (
+                    <div className="loading"><div className="spinner" /></div>
+                ) : (
+                    <table className="excel-table">
+                        <thead>
+                            <tr>
+                                {['Tarih', 'Lig', 'ev', 'Dep', 'IYSko', 'MSSko'].map(col => (
+                                    <th key={col}>
+                                        <div onClick={() => handleSort(col)} style={{ marginBottom: 5 }}>
+                                            {col === 'ev' ? 'Ev Sahibi' : col === 'Dep' ? 'Deplasman' : col === 'IYSko' ? 'İY Skor' : col === 'MSSko' ? 'MS Skor' : col}
+                                        </div>
+                                        <input
+                                            type="text"
+                                            className="filter-input"
+                                            placeholder="Filtrele"
+                                            value={columnFilters[col]}
+                                            onClick={e => e.stopPropagation()}
+                                            onChange={(e) => handleFilterChange(col, e.target.value)}
+                                        />
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentItems.map((item, idx) => (
+                                <tr key={item.id || idx}>
+                                    <td>{item.Tarih}</td>
+                                    <td>{item.Lig}</td>
+                                    <td>{item.ev}</td>
+                                    <td>{item.Dep}</td>
+                                    <td style={{ textAlign: 'center', fontWeight: 700 }}>{item.IYSko}</td>
+                                    <td style={{ textAlign: 'center', fontWeight: 800 }}>{item.MSSko}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
+            {totalPages > 1 && (
+                <div className="excel-pagination">
+                    <button
+                        className="page-btn"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(p => p - 1)}
+                    >
+                        Önceki
+                    </button>
+                    <span style={{ color: '#aaa' }}>{currentPage} / {totalPages}</span>
+                    <button
+                        className="page-btn"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(p => p + 1)}
+                    >
+                        Sonraki
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
