@@ -98,9 +98,13 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  z-index: 1000;
+  z-index: 2000;
   border-bottom: 2px solid var(--gold);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
 .header-nav {
@@ -464,7 +468,7 @@ C: Giriş sayfasında "Şifremi Unuttum" bağlantısını kullanarak şifrenizi 
 C: Hayır, ODDSY tamamen ücretsiz bir tahmin paylaşım platformudur.`
     },
     responsibility: {
-        title: "Sorumluluk Beyanı ve Uyarılar",
+        title: "Sorumluluk Beyanı",
         content: `### ⚠️ ÖNEMLİ UYARILAR
 **🔞 BU PLATFORM 18 YAŞ VE ÜZERİ KİŞİLER İÇİNDİR**
 ODDSY, tamamen bilgi ve eğlence amaçlı bir tahmin paylaşım platformudur. 
@@ -475,13 +479,7 @@ ODDSY, tamamen bilgi ve eğlence amaçlı bir tahmin paylaşım platformudur.
 - ❌ Para kazandırmaz
 - ❌ Bahis hizmeti sunmaz
 - ❌ Bahis kuponları satmaz
-- ❌ Mali kazanç vaat etmez
-
-### ✅ ODDSY NEDİR?
-- ✅ Spor tahmin paylaşım topluluğudur
-- ✅ Bilgilendirme amaçlıdır
-- ✅ Tamamen ücretsizdir
-- ✅ Eğlence ve sosyal amaçlıdır`
+- ❌ Mali kazanç vaat etmez`
     },
     warning18: {
         title: "🔞 +18 UYARISI",
@@ -490,8 +488,11 @@ ODDSY, tamamen bilgi ve eğlence amaçlı bir tahmin paylaşım platformudur.
 ### ⚠️ KUMAR BAĞIMLILIĞI CİDDİ BİR SORUNDUR
 Kumar bağımlılığı sadece maddi kayıplara değil, aile içi sorunlara, depresyona ve sosyal izolasyona da yol açabilir.
 
-**Yeşilay Danışma Hattı:** 444 0 628 (7/24 ücretsiz)
-**ALO 171 Sosyal Destek Hattı:** 171 (ücretsiz)`
+### 💪 SORUMLU OYUN İLKELERİ
+1. **Sadece Eğlence:** Kumar sadece eğlence amaçlı olmalıdır
+2. **Bütçe Belirleyin:** Kaybetmeyi göze alabileceğiniz miktarı belirleyin
+3. **Zaman Sınırı:** Kendinize zaman limiti koyun ve uyun
+4. **Borçlanma:** Asla kumar için borçlanmayın`
     }
 };
 
@@ -619,10 +620,13 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal }) {
                     <div className="footer-col" style={{ flex: 2 }}>
                         <h3 className="footer-heading">Oddsy</h3>
                         <p style={{ color: '#aaa', fontSize: 13, marginBottom: 20 }}>Profesyonel futbol tahmin platformu. Tüm analizler veri odaklıdır.</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                             <span className="age-badge-small">18+</span>
-                            <span style={{ fontSize: 11, color: '#666' }}>Lütfen sorumlu oynayınız. Bilgi ve destek için Yeşilay: 444 0 628</span>
+                            <span style={{ fontSize: 11, color: '#666' }}>Lütfen sorumlu oynayınız.</span>
                         </div>
+                        <a href="mailto:oddsydestek@gmail.com" className="hero-btn primary" style={{ textDecoration: 'none', display: 'inline-block', fontSize: 12, padding: '10px 20px' }}>
+                            Destek Hattı: oddsydestek@gmail.com
+                        </a>
                     </div>
                     <div className="footer-col">
                         <h4 style={{ color: '#fff', fontSize: 16, marginBottom: 15 }}>Kurumsal</h4>
