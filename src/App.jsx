@@ -22,7 +22,7 @@ import {
 } from 'firebase/firestore';
 import { useCallback, useEffect, useState } from 'react';
 
-import { getDatabase, onValue, ref } from 'firebase/database';
+import { getDatabase } from 'firebase/database';
 
 // Firebase Config
 const firebaseConfig = {
@@ -826,173 +826,21 @@ function PredictionCard({ item }) {
 }
 
 function AIAnalysisScreen({ onBack }) {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [sortConfig, setSortConfig] = useState({ key: 'Tarih', direction: 'desc' });
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(50);
-    const [columnFilters, setColumnFilters] = useState({ Tarih: '', Lig: '', ev: '', Dep: '', IYSko: '', MSSko: '' });
-
-    useEffect(() => {
-        let isMounted = true;
-        const dbRef = ref(rtdb, '/');
-
-        // Bağlantı zaman aşımı kontrolü (5 saniye)
-        const timeoutId = setTimeout(() => {
-            if (isMounted) {
-                console.warn("Veri çekme zaman aşımına uğradı.");
-                setLoading(false);
-            }
-        }, 5000);
-
-        const unsub = onValue(dbRef, (snapshot) => {
-            if (!isMounted) return;
-            const val = snapshot.val();
-            if (val) {
-                // Veri formatını güvenli şekilde işle (Array veya Object)
-                let list = [];
-                try {
-                    list = Array.isArray(val)
-                        ? val.map((item, i) => ({ id: i, ...item }))
-                        : Object.keys(val).map(key => ({ id: key, ...val[key] }));
-                    setData(list);
-                } catch (err) {
-                    console.error("Veri işleme hatası:", err);
-                }
-            }
-            setLoading(false);
-            clearTimeout(timeoutId);
-        }, (err) => {
-            console.error("RTDB Hatası:", err);
-            if (isMounted) setLoading(false);
-            clearTimeout(timeoutId);
-        });
-
-        return () => {
-            isMounted = false;
-            unsub();
-            clearTimeout(timeoutId);
-        };
-    }, []);
-
-    const handleSort = (key) => {
-        let direction = 'asc';
-        if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
-        setSortConfig({ key, direction });
-    };
-
-    const handleFilterChange = (key, value) => {
-        setColumnFilters(prev => ({ ...prev, [key]: value }));
-        setCurrentPage(1);
-    };
-
-    const sortedData = [...data].sort((a, b) => {
-        if (!a[sortConfig.key] || !b[sortConfig.key]) return 0;
-        const aVal = a[sortConfig.key].toString().toLowerCase();
-        const bVal = b[sortConfig.key].toString().toLowerCase();
-        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-    });
-
-    const filteredData = sortedData.filter(item => {
-        const matchesGlobal = Object.values(item).some(val =>
-            (val?.toString() || "").toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        const matchesColumns = Object.keys(columnFilters).every(key =>
-            !columnFilters[key] || (item[key]?.toString() || "").toLowerCase().includes(columnFilters[key].toLowerCase())
-        );
-        return matchesGlobal && matchesColumns;
-    });
-
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
     return (
-        <div className="excel-wrapper">
-            <div className="category-header" style={{ marginBottom: 20, background: 'transparent', border: 'none' }}>
+        <div className="category-page" style={{ padding: 20 }}>
+            <div className="category-header">
                 <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
-                <h1 className="category-title" style={{ color: 'var(--gold)' }}>AI ANALİZ EXCEL PANELİ</h1>
+                <h1 className="category-title">AI ANALİZ MOTORU</h1>
             </div>
-
-            <div className="excel-controls">
-                <input
-                    type="text"
-                    className="excel-search"
-                    placeholder="Tablo içinde ara (Takım, Lig...)"
-                    value={searchTerm}
-                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                />
-                <div style={{ color: '#aaa', fontSize: 13 }}>Toplam: {filteredData.length} maç</div>
+            <div style={{ padding: 50, textAlign: 'center', color: '#666' }}>
+                <p>...</p>
             </div>
-
-            <div className="excel-table-container">
-                {loading ? (
-                    <div className="loading"><div className="spinner" /></div>
-                ) : (
-                    <table className="excel-table">
-                        <thead>
-                            <tr>
-                                {['Tarih', 'Lig', 'ev', 'Dep', 'IYSko', 'MSSko'].map(col => (
-                                    <th key={col}>
-                                        <div onClick={() => handleSort(col)} style={{ marginBottom: 5 }}>
-                                            {col === 'ev' ? 'Ev Sahibi' : col === 'Dep' ? 'Deplasman' : col === 'IYSko' ? 'İY Skor' : col === 'MSSko' ? 'MS Skor' : col}
-                                        </div>
-                                        <input
-                                            type="text"
-                                            className="filter-input"
-                                            placeholder="Filtrele"
-                                            value={columnFilters[col]}
-                                            onClick={e => e.stopPropagation()}
-                                            onChange={(e) => handleFilterChange(col, e.target.value)}
-                                        />
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.map((item, idx) => (
-                                <tr key={item.id || idx}>
-                                    <td>{item.Tarih}</td>
-                                    <td>{item.Lig}</td>
-                                    <td>{item.ev}</td>
-                                    <td>{item.Dep}</td>
-                                    <td style={{ textAlign: 'center', fontWeight: 700 }}>{item.IYSko}</td>
-                                    <td style={{ textAlign: 'center', fontWeight: 800 }}>{item.MSSko}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-
-            {totalPages > 1 && (
-                <div className="excel-pagination">
-                    <button
-                        className="page-btn"
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(p => p - 1)}
-                    >
-                        Önceki
-                    </button>
-                    <span style={{ color: '#aaa' }}>{currentPage} / {totalPages}</span>
-                    <button
-                        className="page-btn"
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(p => p + 1)}
-                    >
-                        Sonraki
-                    </button>
-                </div>
-            )}
         </div>
     );
 }
 
 function CategoryScreen({ category, onBack }) {
+    if (!category || !category.key) return <div className="loading">Yükleniyor...</div>;
     const [predictions, setPredictions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedLeague, setSelectedLeague] = useState(null);
