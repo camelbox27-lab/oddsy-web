@@ -301,24 +301,6 @@ html, body, #root, .app {
 .alert.success { background: var(--success); color: var(--primary-green-dark); }
 .alert.error { background: var(--error); color: #fff; }
 
-/* Excel Table Styles */
-.excel-wrapper { padding: 20px; background: var(--bg-dark); min-height: 100vh; }
-.excel-controls { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; align-items: center; }
-.excel-search { flex: 1; min-width: 250px; padding: 12px 15px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #333; font-size: 14px; }
-.excel-table-container { background: #fff; border-radius: 12px; overflow-x: auto; border: 1px solid #CCCCCC; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-.excel-table { width: 100%; border-collapse: collapse; min-width: 800px; color: #333; }
-.excel-table th { background: #006A4E; color: #fff; padding: 14px 15px; text-align: left; font-weight: 700; font-size: 13px; border: 1px solid #CCCCCC; cursor: pointer; user-select: none; position: relative; }
-.excel-table th:hover { background: #00815e; }
-.excel-table th::after { content: '↕'; position: absolute; right: 8px; opacity: 0.5; }
-.excel-table td { padding: 12px 15px; border: 1px solid #CCCCCC; font-size: 13px; font-weight: 500; }
-.excel-table tr:nth-child(even) { background: #F2F2F2; }
-.excel-table tr:nth-child(odd) { background: #FFFFFF; }
-.excel-table tr:hover { background: #FFB80C !important; color: #000 !important; }
-.excel-pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; padding: 20px; }
-.page-btn { padding: 8px 15px; background: var(--bg-card); color: #fff; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: 0.3s; }
-.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.page-btn.active { background: var(--gold); color: var(--primary-green-dark); font-weight: 800; }
-.filter-input { width: 100%; padding: 4px; margin-top: 5px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px; color: #333; }
 
 @media (max-width: 768px) {
   .header-nav { display: none; }
