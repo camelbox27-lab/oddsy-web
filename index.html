@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <title>Oddsy - Akıllı Futbol Tahminleri</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+            display: ['Rajdhani', 'sans-serif'],
+          },
+          colors: {
+            'green-950': '#052e16',
+            'green-900': '#064e3b',
+            'yellow-400': '#facc15',
+            'yellow-500': '#eab308'
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'fade-in-down': 'fade-in-down 1s ease-out',
+            'fade-in-up': 'fade-in-up 1s ease-out 0.2s both',
+            'fade-in-up-delay': 'fade-in-up 1s ease-out 0.4s both',
+            'fade-in': 'fade-in 1s ease-out 0.3s both',
+            'fade-in-delay': 'fade-in 1s ease-out 0.5s both',
+          },
+          keyframes: {
+            'fade-in-down': {
+              'from': { opacity: '0', transform: 'translateY(-30px)' },
+              'to': { opacity: '1', transform: 'translateY(0)' },
+            },
+            'fade-in-up': {
+              'from': { opacity: '0', transform: 'translateY(30px)' },
+              'to': { opacity: '1', transform: 'translateY(0)' },
+            },
+            'fade-in': {
+              'from': { opacity: '0' },
+              'to': { opacity: '1' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-black">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>
