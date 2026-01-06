@@ -203,7 +203,7 @@ body {
 .sidebar-item-text { font-size: 14px; font-weight: 600; }
 .sidebar-divider { height: 1px; background: #222; margin: 20px 0; }
 
-.main-content { margin-top: 65px; padding-bottom: 0; min-height: calc(100vh - 65px); }
+.main-content { padding-top: 65px; padding-bottom: 0; min-height: calc(100vh - 65px); }
 
 /* Hero Section */
 .hero-section {
@@ -631,7 +631,7 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal }) {
                     <div className="footer-col">
                         <h4 style={{ color: '#fff', fontSize: 16, marginBottom: 15 }}>Kurumsal</h4>
                         <a className="footer-link" onClick={() => onShowLegal('kvkk')}>KVKK Aydınlatma</a>
-                        <a className="footer-link" onClick={() => onShowLegal('gizlilik')}>Gizlilik Politikası</a>
+                        <a className="footer-link" onClick={() => onShowLegal('privacy')}>Gizlilik Politikası</a>
                         <a className="footer-link" onClick={() => onShowLegal('terms')}>Kullanım Koşulları</a>
                     </div>
                     <div className="footer-col">
