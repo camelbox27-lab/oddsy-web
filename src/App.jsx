@@ -46,16 +46,16 @@ const styles = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-  --primary-green: #004d40;
-  --primary-green-light: #00695c;
-  --primary-green-dark: #002b1d;
-  --gold: #FFD700;
-  --gold-dark: #B8860B;
-  --bg-dark: #0a0a0a;
-  --bg-card: #1a1a1a;
+  --primary-green: #006A4E;
+  --primary-green-light: #00815e;
+  --primary-green-dark: #00523c;
+  --gold: #FDB913;
+  --gold-dark: #ca940f;
+  --bg-dark: #333333;
+  --bg-card: #404040;
   --text-primary: #FFFFFF;
-  --text-secondary: #AAAAAA;
-  --border: #333;
+  --text-secondary: #FFFFFF;
+  --border: #555555;
   --success: #4ade80;
   --error: #f87171;
 }
