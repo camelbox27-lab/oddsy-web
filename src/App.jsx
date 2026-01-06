@@ -853,19 +853,45 @@ function AIAnalysisScreen({ onBack }) {
     const [columnFilters, setColumnFilters] = useState({ Tarih: '', Lig: '', ev: '', Dep: '', IYSko: '', MSSko: '' });
 
     useEffect(() => {
+        let isMounted = true;
         const dbRef = ref(rtdb, '/');
+
+        // Bağlantı zaman aşımı kontrolü (5 saniye)
+        const timeoutId = setTimeout(() => {
+            if (isMounted) {
+                console.warn("Veri çekme zaman aşımına uğradı.");
+                setLoading(false);
+            }
+        }, 5000);
+
         const unsub = onValue(dbRef, (snapshot) => {
+            if (!isMounted) return;
             const val = snapshot.val();
             if (val) {
-                const list = Object.keys(val).map(key => ({ id: key, ...val[key] }));
-                setData(list);
+                // Veri formatını güvenli şekilde işle (Array veya Object)
+                let list = [];
+                try {
+                    list = Array.isArray(val)
+                        ? val.map((item, i) => ({ id: i, ...item }))
+                        : Object.keys(val).map(key => ({ id: key, ...val[key] }));
+                    setData(list);
+                } catch (err) {
+                    console.error("Veri işleme hatası:", err);
+                }
             }
             setLoading(false);
+            clearTimeout(timeoutId);
         }, (err) => {
-            console.error("RTDB Error:", err);
-            setLoading(false);
+            console.error("RTDB Hatası:", err);
+            if (isMounted) setLoading(false);
+            clearTimeout(timeoutId);
         });
-        return () => unsub();
+
+        return () => {
+            isMounted = false;
+            unsub();
+            clearTimeout(timeoutId);
+        };
     }, []);
 
     const handleSort = (key) => {
