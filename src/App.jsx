@@ -305,8 +305,6 @@ html, body, #root, .app {
 .excel-wrapper { padding: 20px; background: var(--bg-dark); min-height: 100vh; }
 .excel-controls { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; align-items: center; }
 .excel-search { flex: 1; min-width: 250px; padding: 12px 15px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #333; font-size: 14px; }
-.excel-export-btn { padding: 10px 20px; background: var(--gold); color: var(--primary-green-dark); border: none; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.3s; }
-.excel-export-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(253, 185, 19, 0.3); }
 .excel-table-container { background: #fff; border-radius: 12px; overflow-x: auto; border: 1px solid #CCCCCC; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 .excel-table { width: 100%; border-collapse: collapse; min-width: 800px; color: #333; }
 .excel-table th { background: #006A4E; color: #fff; padding: 14px 15px; text-align: left; font-weight: 700; font-size: 13px; border: 1px solid #CCCCCC; cursor: pointer; user-select: none; position: relative; }
@@ -892,10 +890,10 @@ function AIAnalysisScreen({ onBack }) {
 
     const filteredData = sortedData.filter(item => {
         const matchesGlobal = Object.values(item).some(val =>
-            val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+            (val?.toString() || "").toLowerCase().includes(searchTerm.toLowerCase())
         );
         const matchesColumns = Object.keys(columnFilters).every(key =>
-            !columnFilters[key] || item[key]?.toString().toLowerCase().includes(columnFilters[key].toLowerCase())
+            !columnFilters[key] || (item[key]?.toString() || "").toLowerCase().includes(columnFilters[key].toLowerCase())
         );
         return matchesGlobal && matchesColumns;
     });
@@ -904,28 +902,6 @@ function AIAnalysisScreen({ onBack }) {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
-    const exportCSV = () => {
-        const headers = ['Tarih', 'Lig', 'Ev Sahibi', 'Deplasman', 'İY Skor', 'MS Skor'];
-        const csvRows = filteredData.map(m => [
-            `"${m.Tarih || ''}"`,
-            `"${m.Lig || ''}"`,
-            `"${m.ev || ''}"`,
-            `"${m.Dep || ''}"`,
-            `"${m.IYSko || ''}"`,
-            `"${m.MSSko || ''}"`
-        ]);
-        const csvContent = "data:text/csv;charset=utf-8,\uFEFF"
-            + headers.join(",") + "\n"
-            + csvRows.map(e => e.join(",")).join("\n");
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `oddsy_analiz_${new Date().toLocaleDateString()}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
 
     return (
         <div className="excel-wrapper">
@@ -942,7 +918,6 @@ function AIAnalysisScreen({ onBack }) {
                     value={searchTerm}
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                 />
-                <button className="excel-export-btn" onClick={exportCSV}>CSV OLARAK İNDİR</button>
                 <div style={{ color: '#aaa', fontSize: 13 }}>Toplam: {filteredData.length} maç</div>
             </div>
 
