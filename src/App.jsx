@@ -93,13 +93,13 @@ body {
 /* Header */
 .header {
   height: 65px;
-  background: var(--primary-green);
+  background: var(--bg-dark);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
   z-index: 2000;
-  border-bottom: 2px solid var(--gold);
+  border-bottom: 2px solid var(--primary-green);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   position: fixed;
   top: 0;
@@ -117,26 +117,26 @@ body {
 }
 
 .header-nav-item {
-  padding: 8px 6px;
+  padding: 8px 12px;
   color: var(--gold);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  border-radius: 8px;
+  border-radius: 10px;
   white-space: nowrap;
-  border: 1px solid rgba(255, 215, 0, 0.4);
+  border: 1px solid var(--primary-green);
 }
 
 .header-nav-item:hover {
-  background: var(--gold);
-  color: #000;
+  background: var(--primary-green);
+  color: var(--gold);
 }
 
 .header-nav-item.active {
-  background: var(--gold);
-  color: #000;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  background: var(--primary-green);
+  color: var(--gold);
+  box-shadow: 0 0 10px rgba(0, 106, 78, 0.4);
 }
 
 .header-left, .header-right { display: flex; align-items: center; gap: 10px; }
@@ -144,8 +144,11 @@ body {
 .logo {
   font-size: 24px;
   font-weight: 900;
-  color: var(--gold);
   letter-spacing: 1px;
+  background: linear-gradient(to right, var(--primary-green) 50%, var(--gold) 50%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  cursor: pointer;
 }
 
 .menu-btn {
@@ -159,7 +162,7 @@ body {
 
 .profile-btn {
   background: var(--gold);
-  color: #000;
+  color: var(--primary-green-dark);
   border: none;
   padding: 6px 12px;
   border-radius: 8px;
@@ -201,7 +204,7 @@ body {
 .sidebar-item:hover, .sidebar-item.active { background: rgba(255, 215, 0, 0.1); color: var(--gold); }
 .sidebar-item-icon { font-size: 20px; }
 .sidebar-item-text { font-size: 14px; font-weight: 600; }
-.sidebar-divider { height: 1px; background: #222; margin: 20px 0; }
+.sidebar-divider { height: 1px; background: var(--border); margin: 20px 0; }
 
 .main-content { padding-top: 65px; padding-bottom: 0; min-height: calc(100vh - 65px); }
 
@@ -224,20 +227,20 @@ body {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(180deg, rgba(0, 43, 29, 0.7) 0%, rgba(10, 10, 10, 0.3) 50%, rgba(10, 10, 10, 0.8) 100%);
+  background: linear-gradient(180deg, rgba(0, 106, 78, 0.5) 0%, rgba(51, 51, 51, 0.3) 50%, rgba(51, 51, 51, 0.9) 100%);
   z-index: 1;
 }
-.hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; text-align: center; text-shadow: 0 2px 15px rgba(0,0,0,0.8); }
+.hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; text-align: center; text-shadow: 0 2px 15px rgba(0,0,0,0.5); }
 .hero-title { font-size: 36px; font-weight: 900; color: #FFFFFF; margin-bottom: 15px; line-height: 1.1; letter-spacing: -1px; }
 .hero-subtitle { font-size: 15px; color: #EEEEEE; margin-bottom: 30px; line-height: 1.5; max-width: 600px; margin-left: auto; margin-right: auto; font-weight: 500; }
 .hero-btn { padding: 12px 30px; font-size: 15px; font-weight: 700; border-radius: 30px; cursor: pointer; transition: all 0.3s ease; border: none; }
-.hero-btn.primary { background: #0ea5e9; color: #fff; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); }
-.hero-btn.secondary { background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid #FFD700; backdrop-filter: blur(5px); }
+.hero-btn.primary { background: var(--primary-green); color: #fff; box-shadow: 0 4px 15px rgba(0, 106, 78, 0.4); }
+.hero-btn.secondary { background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid var(--gold); backdrop-filter: blur(5px); }
 
 /* Analysis Section */
-.analysis-section { padding: 100px 20px; text-align: center; background: #111; }
+.analysis-section { padding: 100px 20px; text-align: center; background: var(--bg-card); }
 .analysis-title { font-size: 42px; font-weight: 900; color: var(--text-primary); margin-bottom: 20px; }
-.analysis-btn { padding: 18px 50px; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); border: none; border-radius: 30px; color: #000; font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; }
+.analysis-btn { padding: 18px 50px; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); border: none; border-radius: 30px; color: var(--primary-green-dark); font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; }
 
 /* Category & Prediction Cards */
 .category-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: var(--primary-green-dark); border-bottom: 1px solid var(--border); }
@@ -245,10 +248,10 @@ body {
 .category-title { font-size: 18px; font-weight: 900; color: var(--gold); letter-spacing: 2px; }
 .predictions-list { padding: 20px; display: grid; gap: 20px; }
 .prediction-card { background: var(--bg-card); border-radius: 20px; padding: 15px; border: 1px solid #333; transition: all 0.3s ease; }
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #222; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .league-badge { color: var(--text-secondary); font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .status-badge { font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 4px; }
-.status-badge.won { background: var(--success); color: #000; }
+.status-badge.won { background: var(--success); color: var(--primary-green-dark); }
 .status-badge.lost { background: var(--error); color: #fff; }
 
 .match-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -259,20 +262,20 @@ body {
 .time-text { font-size: 18px; font-weight: 800; color: var(--gold); }
 
 .card-footer { display: flex; gap: 10px; }
-.footer-item { flex: 1; background: #111; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #222; }
+.footer-item { flex: 1; background: var(--bg-dark); padding: 10px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
 .footer-label { color: #555; font-size: 9px; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; }
 .footer-value { font-size: 13px; font-weight: 800; }
 .footer-value.prediction { color: var(--success); }
 .footer-value.odds { color: var(--gold); }
 
 /* Footer */
-.footer-section { padding: 60px 20px 20px; background: #000; border-top: 1px solid #222; }
+.footer-section { padding: 60px 20px 20px; background: var(--bg-dark); border-top: 1px solid var(--border); }
 .footer-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 40px; }
 .footer-col { flex: 1; min-width: 200px; }
 .footer-heading { font-size: 24px; font-weight: 900; color: var(--gold); margin-bottom: 15px; }
 .footer-link { display: block; color: var(--text-secondary); margin-bottom: 10px; cursor: pointer; transition: 0.3s; font-size: 14px; text-decoration: none; }
 .footer-link:hover { color: var(--gold); }
-.footer-divider { height: 1px; background: #222; margin: 30px auto; max-width: 1200px; }
+.footer-divider { height: 1px; background: var(--border); margin: 30px auto; max-width: 1200px; }
 .footer-bottom { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
 .age-badge-small { background: #ff0000; color: #fff; font-weight: 900; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
 .copyright { font-size: 12px; color: #666; }
@@ -283,21 +286,21 @@ body {
 .back-btn { background: none; border: none; color: var(--gold); cursor: pointer; font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
 .form-group { margin-bottom: 20px; }
 .form-label { display: block; color: var(--text-secondary); font-size: 11px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
-.form-input { width: 100%; padding: 12px 15px; background: var(--bg-dark); border: 1px solid #333; border-radius: 10px; color: var(--text-primary); font-size: 14px; }
-.submit-btn { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 10px; color: #000; font-size: 15px; font-weight: 800; cursor: pointer; }
+.form-input { width: 100%; padding: 12px 15px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 14px; }
+.submit-btn { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 10px; color: var(--primary-green-dark); font-size: 15px; font-weight: 800; cursor: pointer; }
 
 /* Profile */
 .profile-container { padding: 20px; max-width: 600px; margin: 0 auto; }
 .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; border: 2px solid var(--gold); }
-.profile-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; }
+.profile-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .logout-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--error); border-radius: 10px; color: var(--error); font-weight: 700; cursor: pointer; margin-top: 20px; }
 
 .loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
-.spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
+.spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 10px; font-size: 14px; font-weight: 700; z-index: 2000; }
-.alert.success { background: var(--success); color: #000; }
+.alert.success { background: var(--success); color: var(--primary-green-dark); }
 .alert.error { background: var(--error); color: #fff; }
 
 @media (max-width: 768px) {
