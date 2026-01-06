@@ -22,7 +22,7 @@ import {
 } from 'firebase/firestore';
 import { useCallback, useEffect, useState } from 'react';
 
-import { getDatabase } from 'firebase/database';
+import { getDatabase, onValue, ref } from 'firebase/database';
 
 // Firebase Config
 const firebaseConfig = {
@@ -321,6 +321,13 @@ html, body, #root, .app {
 .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .page-btn.active { background: var(--gold); color: var(--primary-green-dark); font-weight: 800; }
 .filter-input { width: 100%; padding: 4px; margin-top: 5px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px; color: #333; }
+
+@media (max-width: 768px) {
+  .header-nav { display: none; }
+  .menu-btn { display: flex !important; }
+  .hero-title { font-size: 32px; }
+  .features-section { grid-template-columns: 1fr; }
+}
 `;
 
 // ICONS
