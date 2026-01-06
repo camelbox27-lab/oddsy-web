@@ -68,10 +68,11 @@ const styles = `
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
+html, body, #root, .app {
   background: var(--bg-dark);
   color: var(--text-primary);
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 .auth-loading-screen {
@@ -85,7 +86,6 @@ body {
 }
 
 .app {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -204,7 +204,7 @@ body {
 .sidebar-item-text { font-size: 14px; font-weight: 600; }
 .sidebar-divider { height: 1px; background: var(--border); margin: 20px 0; }
 
-.main-content { padding-top: 65px; padding-bottom: 0; min-height: calc(100vh - 65px); }
+.main-content { padding-top: 65px; padding-bottom: 0; min-height: calc(100vh - 65px); background: var(--bg-dark); }
 
 /* Hero Section */
 .hero-section {
@@ -241,6 +241,7 @@ body {
 .analysis-btn { padding: 18px 50px; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); border: none; border-radius: 30px; color: var(--primary-green-dark); font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; }
 
 /* Category & Prediction Cards */
+.category-page { min-height: calc(100vh - 65px); background: var(--bg-dark); }
 .category-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: var(--primary-green-dark); border-bottom: 1px solid var(--border); }
 .category-back-btn { background: none; border: none; color: var(--gold); font-size: 24px; cursor: pointer; padding: 5px; }
 .category-title { font-size: 18px; font-weight: 900; color: var(--gold); letter-spacing: 2px; }
@@ -288,7 +289,7 @@ body {
 .submit-btn { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 10px; color: var(--primary-green-dark); font-size: 15px; font-weight: 800; cursor: pointer; }
 
 /* Profile */
-.profile-container { padding: 20px; max-width: 600px; margin: 0 auto; }
+.profile-container { padding: 40px 20px; max-width: 600px; margin: 0 auto; min-height: calc(100vh - 65px); background: var(--bg-dark); }
 .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; border: 2px solid var(--gold); }
 .profile-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .logout-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--error); border-radius: 10px; color: var(--error); font-weight: 700; cursor: pointer; margin-top: 20px; }
