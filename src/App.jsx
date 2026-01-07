@@ -332,7 +332,7 @@ const Icons = {
 
 // CONSTANTS
 const MENU_ITEMS = [
-    { id: 'cat_ai', title: "AI ANALİZ", key: 10, icon: Icons.ai, color: "#FFD700", route: 'ai-analysis' },
+    { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZLERİ", key: 10, icon: Icons.ai, color: "#FFD700", route: 'yapay-zeka-analizleri' },
     { id: 'cat_1', title: "ILK YARI GOL LISTESI", key: 0, icon: Icons.soccer, color: "#10B981", route: 'category' },
     { id: 'cat_2', title: "GUNUN KUPONLARI", key: 1, icon: Icons.ticket, color: "#f87171", route: 'category' },
     { id: 'cat_3', title: "TAHMINCILER", key: 2, icon: Icons.users, color: "#a78bfa", route: 'category' },
@@ -495,6 +495,12 @@ Kumar bağımlılığı sadece maddi kayıplara değil, aile içi sorunlara, dep
 2. **Bütçe Belirleyin:** Kaybetmeyi göze alabileceğiniz miktarı belirleyin
 3. **Zaman Sınırı:** Kendinize zaman limiti koyun ve uyun
 4. **Borçlanma:** Asla kumar için borçlanmayın`
+    },
+    about: {
+        title: "Hakkında",
+        content: `Oddsy, yapay zeka destekli bir futbol analiz platformudur. Amacımız, geçmiş maç verilerini ve algoritmalarımızı kullanarak kullanıcılara güvenilir maç içgörüleri sunmaktır.
+
+Sistemimizde onlarca istatistik ve yapay zeka bazlı analiz algoritmasıyla, her maç için veriye dayalı tahminler oluşturuyoruz. Kullanıcı dostu arayüzümüz ve filtreleme seçeneklerimizle, analizleri kişiselleştirmenizi sağlıyoruz.`
     }
 };
 
@@ -527,7 +533,7 @@ function LegalModal({ type, onClose }) {
 
 function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory }) {
     const topCategories = [
-        { id: 'cat_ai', title: "AI ANALİZ", key: 10 },
+        { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZLERİ", key: 10 },
         { id: 'cat_2', title: "İLK YARI GOL LİSTESİ", key: 0 },
         { id: 'cat_8_new', title: "İY / MS TAHMİNLERİ", key: 7 },
         { id: 'cat_3', title: "GÜNÜN KUPONLARI", key: 1 },
@@ -545,6 +551,13 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory 
                 <div className="logo" onClick={() => onNavigate('home')} style={{ cursor: 'pointer' }}>ODDSY</div>
             </div>
             <nav className="header-nav">
+                <div
+                    className={`header-nav-item`}
+                    onClick={() => onNavigate('about_modal')}
+                    style={{ border: '1px solid var(--gold)', color: 'var(--gold)' }}
+                >
+                    HAKKINDA
+                </div>
                 {topCategories.map(cat => {
                     const menuItem = MENU_ITEMS.find(m => m.key === cat.key);
                     return (
@@ -592,6 +605,11 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute }) {
                 </div>
                 <div className="sidebar-divider" />
                 <div className="sidebar-section">
+                    <div className="sidebar-section-title">Kurumsal</div>
+                    <div className="sidebar-item" onClick={() => { onNavigate('about_modal'); onClose(); }}>
+                        <span className="sidebar-item-icon">{Icons.star}</span>
+                        <span className="sidebar-item-text">Hakkında</span>
+                    </div>
                     <div className="sidebar-section-title">Hesap</div>
                     <div className="sidebar-item" onClick={() => { onNavigate('profile'); onClose(); }}>
                         <span className="sidebar-item-icon">{Icons.user}</span>
@@ -610,8 +628,9 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal }) {
                 <div className="hero-content">
                     <h1 className="hero-title">Oddsy ile Akıllı Futbol Tahminleri</h1>
                     <p className="hero-subtitle">Yapay zeka ve Bet365 oran analiz sistemiyle güçlendirilmiş, günün öne çıkan karşılaşmalarını sizin için sadeleştiren yeni nesil tahmin platformu.</p>
-                    <div className="hero-buttons">
+                    <div className="hero-buttons" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <button className="hero-btn primary" onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })}>Hemen Başla</button>
+                        <button className="hero-btn secondary" onClick={() => onShowLegal('about')}>Hakkında</button>
                         <button className="hero-btn secondary" onClick={onLoginClick}>Giriş Yap</button>
                     </div>
                 </div>
@@ -635,6 +654,7 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal }) {
                     </div>
                     <div className="footer-col">
                         <h4 style={{ color: '#fff', fontSize: 16, marginBottom: 15 }}>Kurumsal</h4>
+                        <a className="footer-link" onClick={() => onShowLegal('about')}>Hakkında</a>
                         <a className="footer-link" onClick={() => onShowLegal('kvkk')}>KVKK Aydınlatma</a>
                         <a className="footer-link" onClick={() => onShowLegal('privacy')}>Gizlilik Politikası</a>
                         <a className="footer-link" onClick={() => onShowLegal('terms')}>Kullanım Koşulları</a>
@@ -825,19 +845,10 @@ function PredictionCard({ item }) {
     );
 }
 
-function AIAnalysisScreen({ onBack }) {
-    return (
-        <div className="category-page" style={{ padding: 20 }}>
-            <div className="category-header">
-                <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
-                <h1 className="category-title">AI ANALİZ MOTORU</h1>
-            </div>
-            <div style={{ padding: 50, textAlign: 'center', color: '#666' }}>
-                <p>...</p>
-            </div>
-        </div>
-    );
-}
+
+
+
+
 
 function CategoryScreen({ category, onBack }) {
     if (!category || !category.key) return <div className="loading">Yükleniyor...</div>;
@@ -972,7 +983,14 @@ export default function App() {
         return () => unsub();
     }, []);
 
-    const navigate = useCallback((r, p = {}) => { setRoute(r); setRouteParams(p); }, []);
+    const navigate = useCallback((r, p = {}) => {
+        if (r === 'about_modal') {
+            setLegalType('about');
+            return;
+        }
+        setRoute(r);
+        setRouteParams(p);
+    }, []);
     const showAlert = useCallback((m, t) => setAlert({ message: m, type: t }), []);
 
     if (loading) return <div className="auth-loading-screen"><div className="spinner" /><h3>Oddsy Yükleniyor...</h3></div>;
@@ -983,7 +1001,7 @@ export default function App() {
             case 'profile': return <ProfileScreen user={user} userData={userData} onBack={r => navigate(r || 'home')} showAlert={showAlert} />;
             case 'admin': return <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} />;
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} />;
-            case 'ai-analysis': return <AIAnalysisScreen onBack={() => navigate('home')} />;
+            case 'yapay-zeka-analizleri': return <div style={{ padding: 100, textAlign: 'center', color: '#666' }}>Yapay Zeka Analizleri Sayfası Hazırlanıyor...</div>;
             default: return <HomePage onLoginClick={() => navigate(user ? 'profile' : 'auth')} onNavigate={navigate} onShowLegal={setLegalType} />;
         }
     };
