@@ -3,117 +3,243 @@ import { useEffect, useState } from 'react';
 import { db } from './firebaseConfig';
 import { getTeamLogo, handleLogoError } from './helper';
 
-const LEAGUES = [
-    { id: 'Serie A', name: 'Serie A', image: 'https://i.ibb.co/N6N4CGn5/Whats-App-mage-2025-12-05-at-14-21-54-1.jpg' },
-    { id: 'Premier Lig', name: 'Premier Lig', image: 'https://i.ibb.co/cXt6fJdd/Whats-App-mage-2025-12-05-at-14-21-54.jpg' },
-    { id: 'La Liga', name: 'La Liga', image: 'https://i.ibb.co/C55n1CFc/spain-la-liga-64x64-football-logos-cc.png' },
-    { id: 'Super Lig', name: 'Süper Lig', image: 'https://i.ibb.co/RT40RH3G/turkey-super-lig-64x64-football-logos-cc.png' },
-    { id: 'Bundesliga', name: 'Bundesliga', image: 'https://i.ibb.co/fzrPDNQp/germany-bundesliga-64x64-football-logos-cc.png' },
-    { id: 'Ligue 1', name: 'Ligue 1', image: 'https://i.ibb.co/cXSXDS45/france-ligue-1-64x64-football-logos-cc.png' }
-];
-
-function GununSurprizleri({ onBack }) {
-    const [selectedLeague, setSelectedLeague] = useState(null);
+function GununSurprizleri() {
     const [matches, setMatches] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (selectedLeague) {
-            setLoading(true);
-            const q = query(
-                collection(db, 'predictions'),
-                where('league', '==', selectedLeague),
-                where('categoryKey', '==', 6)
-            );
+        const q = query(
+            collection(db, 'predictions'),
+            where('categoryKey', '==', 'gunun-surprizleri')
+        );
 
-            const unsubscribe = onSnapshot(q, (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setMatches(data);
-                setLoading(false);
-            });
-            return () => unsubscribe();
-        }
-    }, [selectedLeague]);
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            setMatches(list);
+            setLoading(false);
+        });
 
-    // Lig kartları görünümü
-    if (!selectedLeague) {
+        return () => unsubscribe();
+    }, []);
+
+    if (loading) {
         return (
-            <div className="p-6">
-                <h1 className="text-3xl font-bold text-[#ffd800] mb-6 font-display">Günün Sürprizleri 💣</h1>
-                <p className="text-[#b0b0b0] mb-6">Takip etmek istediğiniz ligi seçin</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {LEAGUES.map(league => (
-                        <div
-                            key={league.id}
-                            onClick={() => setSelectedLeague(league.id)}
-                            className="bg-[#242424] rounded-xl p-6 cursor-pointer hover:bg-[#303030] transition-all duration-300 border border-[#404040] hover:border-[#52d858] hover:scale-105 flex flex-col items-center justify-center text-center group"
-                        >
-                            <img
-                                src={league.image}
-                                alt={league.name}
-                                className="w-16 h-16 object-contain mb-3 group-hover:scale-110 transition-transform"
-                            />
-                            <p className="text-white font-bold">{league.name}</p>
-                        </div>
-                    ))}
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+                <div style={{
+                    width: '32px',
+                    height: '32px',
+                    border: '3px solid #333',
+                    borderTopColor: '#fb7185',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                }}></div>
             </div>
         );
     }
 
-    // Seçilen ligin maçları
     return (
-        <div className="p-6">
-            <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => setSelectedLeague(null)} className="text-[#52d858] text-2xl hover:scale-110 transition-transform">←</button>
-                <h1 className="text-2xl font-bold text-[#ffd800]">{selectedLeague} - Sürprizler 💣</h1>
-            </div>
+        <div style={{ padding: '16px' }}>
+            <h2 style={{
+                fontSize: '20px',
+                fontWeight: '900',
+                color: '#fb7185',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+            }}>
+                💣 Günün Sürprizleri
+            </h2>
 
-            <div className="grid gap-4">
-                {loading ? (
-                    <div className="flex justify-center py-12">
-                        <div className="w-10 h-10 border-3 border-[#52d858] border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                ) : matches.length > 0 ? (
-                    matches.map(match => (
-                        <div key={match.id} className="bg-[#242424] p-5 rounded-xl border border-[#404040] hover:border-[#52d858] transition-all">
-                            <div className="flex justify-between items-center mb-3">
-                                <span className="text-[#999999] text-xs">{match.time || '20:00'}</span>
-                                <span className="bg-[#52d858] text-[#1a1a1a] px-2 py-0.5 rounded text-[10px] font-bold">{match.league}</span>
-                            </div>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+                gap: '20px'
+            }}>
+                {matches.length > 0 ? (
+                    matches.map(match => {
+                        const homeTeam = match.home_team || match.homeTeam || 'Ev Sahibi';
+                        const awayTeam = match.away_team || match.awayTeam || 'Deplasman';
 
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="flex items-center gap-3">
-                                    <img
-                                        src={getTeamLogo(match.homeTeam)}
-                                        onError={handleLogoError}
-                                        alt={match.homeTeam}
-                                        className="w-10 h-10 object-contain"
-                                    />
-                                    <span className="text-white font-bold">{match.homeTeam}</span>
+                        return (
+                            <div
+                                key={match.id}
+                                style={{
+                                    background: '#2e3335',
+                                    border: '3px solid #006A4E',
+                                    borderRadius: '20px',
+                                    padding: '24px',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                {/* Lig Bilgisi */}
+                                {match.league && (
+                                    <div style={{
+                                        fontSize: '11px',
+                                        fontWeight: '700',
+                                        color: 'rgba(253, 185, 19, 0.6)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px',
+                                        marginBottom: '16px',
+                                        textAlign: 'center'
+                                    }}>
+                                        {match.league}
+                                    </div>
+                                )}
+
+                                {/* Takımlar ve Bugün */}
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: '16px'
+                                }}>
+                                    {/* Ev Sahibi */}
+                                    <div style={{
+                                        flex: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}>
+                                        <img
+                                            src={getTeamLogo(homeTeam)}
+                                            alt={homeTeam}
+                                            onError={handleLogoError}
+                                            style={{
+                                                width: '70px',
+                                                height: '70px',
+                                                objectFit: 'contain'
+                                            }}
+                                        />
+                                        <span style={{
+                                            fontSize: '16px',
+                                            fontWeight: '700',
+                                            color: '#fff',
+                                            textAlign: 'center'
+                                        }}>
+                                            {homeTeam}
+                                        </span>
+                                    </div>
+
+                                    {/* Ortada Sadece BUGÜN */}
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        minWidth: '80px'
+                                    }}>
+                                        <span style={{
+                                            fontSize: '18px',
+                                            fontWeight: '900',
+                                            color: '#FDB913',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            BUGÜN
+                                        </span>
+                                    </div>
+
+                                    {/* Deplasman */}
+                                    <div style={{
+                                        flex: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}>
+                                        <img
+                                            src={getTeamLogo(awayTeam)}
+                                            alt={awayTeam}
+                                            onError={handleLogoError}
+                                            style={{
+                                                width: '70px',
+                                                height: '70px',
+                                                objectFit: 'contain'
+                                            }}
+                                        />
+                                        <span style={{
+                                            fontSize: '16px',
+                                            fontWeight: '700',
+                                            color: '#fff',
+                                            textAlign: 'center'
+                                        }}>
+                                            {awayTeam}
+                                        </span>
+                                    </div>
                                 </div>
-                                <span className="text-[#b0b0b0] text-xl font-bold">vs</span>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-white font-bold">{match.awayTeam}</span>
-                                    <img
-                                        src={getTeamLogo(match.awayTeam)}
-                                        onError={handleLogoError}
-                                        alt={match.awayTeam}
-                                        className="w-10 h-10 object-contain"
-                                    />
-                                </div>
-                            </div>
 
-                            <div className="flex justify-between items-center bg-[#2d2d2d] p-3 rounded-lg">
-                                <span className="text-[#52d858] font-bold">{match.prediction}</span>
-                                <span className="text-[#ffd800] font-bold text-lg">{match.odds}</span>
+                                {/* Oranlar Grid - Sadece varsa göster */}
+                                {(match['2_5_ust'] || match['3_5_ust'] || match['ms_5_5_ust'] || match.prediction || match.kategori) && (
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
+                                        gap: '10px',
+                                        marginTop: '20px'
+                                    }}>
+                                        {match['2_5_ust'] && (
+                                            <div style={{
+                                                background: 'rgba(0,0,0,0.3)',
+                                                padding: '12px',
+                                                borderRadius: '10px',
+                                                textAlign: 'center'
+                                            }}>
+                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>2.5 Üst</div>
+                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match['2_5_ust']}</div>
+                                            </div>
+                                        )}
+                                        {match['3_5_ust'] && (
+                                            <div style={{
+                                                background: 'rgba(0,0,0,0.3)',
+                                                padding: '12px',
+                                                borderRadius: '10px',
+                                                textAlign: 'center'
+                                            }}>
+                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>3.5 Üst</div>
+                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match['3_5_ust']}</div>
+                                            </div>
+                                        )}
+                                        {match['ms_5_5_ust'] && (
+                                            <div style={{
+                                                background: 'rgba(0,0,0,0.3)',
+                                                padding: '12px',
+                                                borderRadius: '10px',
+                                                textAlign: 'center'
+                                            }}>
+                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>MS 5.5 Üst</div>
+                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match['ms_5_5_ust']}</div>
+                                            </div>
+                                        )}
+                                        {match.prediction && (
+                                            <div style={{
+                                                background: 'rgba(0,0,0,0.3)',
+                                                padding: '12px',
+                                                borderRadius: '10px',
+                                                textAlign: 'center'
+                                            }}>
+                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>Tahmin</div>
+                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match.prediction}</div>
+                                            </div>
+                                        )}
+                                        {match.kategori && (
+                                            <div style={{
+                                                background: 'rgba(0,0,0,0.3)',
+                                                padding: '12px',
+                                                borderRadius: '10px',
+                                                textAlign: 'center'
+                                            }}>
+                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>Kategori</div>
+                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match.kategori}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 ) : (
-                    <div className="text-center py-12">
-                        <div className="text-5xl mb-4">💣</div>
-                        <p className="text-[#999999]">Bu ligde henüz sürpriz bulunmuyor.</p>
+                    <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center' }}>
+                        <p style={{ color: 'rgba(253, 185, 19, 0.6)', fontWeight: '700' }}>Henüz sürpriz tahmin bulunmuyor.</p>
                     </div>
                 )}
             </div>

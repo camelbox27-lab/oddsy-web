@@ -108,16 +108,16 @@ function KartKorner() {
                         🟨 Kart Bahisleri
                     </h2>
                     {cardMatches.length > 0 ? cardMatches.map(match => (
-                        <div key={match.id} className="bg-[#242424] rounded-xl p-6 mb-4 border border-[#404040] hover:border-[#52d858] transition-all">
+                        <div key={match.id} className="bg-[#242424] rounded-xl p-6 mb-4 border border-[#006A4E] hover:border-[#ffd800] transition-all">
                             {/* Takımlar */}
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <img src={getTeamLogo(match.homeTeam)} onError={handleLogoError} className="w-10 h-10 object-contain" alt="" />
-                                    <span className="text-white font-bold">{match.homeTeam}</span>
+                                    <span className="text-[#ffd800] font-bold">{match.homeTeam}</span>
                                 </div>
                                 <span className="text-[#b0b0b0] font-bold">vs</span>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-white font-bold">{match.awayTeam}</span>
+                                    <span className="text-[#ffd800] font-bold">{match.awayTeam}</span>
                                     <img src={getTeamLogo(match.awayTeam)} onError={handleLogoError} className="w-10 h-10 object-contain" alt="" />
                                 </div>
                             </div>
@@ -172,16 +172,16 @@ function KartKorner() {
                         ⚽ Korner Bahisleri
                     </h2>
                     {cornerMatches.length > 0 ? cornerMatches.map(match => (
-                        <div key={match.id} className="bg-[#242424] rounded-xl p-6 mb-4 border border-[#404040] hover:border-[#52d858] transition-all">
+                        <div key={match.id} className="bg-[#242424] rounded-xl p-6 mb-4 border border-[#006A4E] hover:border-[#ffd800] transition-all">
                             {/* Takımlar */}
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <img src={getTeamLogo(match.homeTeam)} onError={handleLogoError} className="w-10 h-10 object-contain" alt="" />
-                                    <span className="text-white font-bold">{match.homeTeam}</span>
+                                    <span className="text-[#ffd800] font-bold">{match.homeTeam}</span>
                                 </div>
                                 <span className="text-[#b0b0b0] font-bold">vs</span>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-white font-bold">{match.awayTeam}</span>
+                                    <span className="text-[#ffd800] font-bold">{match.awayTeam}</span>
                                     <img src={getTeamLogo(match.awayTeam)} onError={handleLogoError} className="w-10 h-10 object-contain" alt="" />
                                 </div>
                             </div>

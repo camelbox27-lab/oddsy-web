@@ -9,11 +9,14 @@ import {
     updateProfile
 } from 'firebase/auth';
 import {
+    addDoc,
     collection,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
     getFirestore,
+    onSnapshot,
     orderBy,
     query,
     serverTimestamp,
@@ -23,6 +26,8 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 
 import { getDatabase } from 'firebase/database';
+import OddsyKGAnaliz from './components/OddsyKGAnaliz';
+import { getTeamLogo, handleLogoError } from './helper';
 
 // Firebase Config
 const firebaseConfig = {
@@ -35,9 +40,11 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+console.log('Firebase initializing...');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+console.log('Firebase initialized.');
 const rtdb = getDatabase(app);
 
 // STYLES
@@ -245,26 +252,180 @@ html, body, #root, .app {
 .category-back-btn { background: none; border: none; color: var(--gold); font-size: 24px; cursor: pointer; padding: 5px; }
 .category-title { font-size: 18px; font-weight: 900; color: var(--gold); letter-spacing: 2px; }
 .predictions-list { padding: 20px; display: grid; gap: 20px; }
-.prediction-card { background: var(--bg-card); border-radius: 20px; padding: 15px; border: 1px solid #333; transition: all 0.3s ease; }
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-.league-badge { color: var(--text-secondary); font-size: 10px; font-weight: 700; text-transform: uppercase; }
-.status-badge { font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 4px; }
-.status-badge.won { background: var(--success); color: var(--primary-green-dark); }
-.status-badge.lost { background: var(--error); color: #fff; }
+.prediction-card { 
+    background: linear-gradient(145deg, var(--primary-green-dark) 0%, #004d3a 100%); 
+    border-radius: 24px; 
+    padding: 24px; 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.prediction-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.3;
+}
+.prediction-card:hover { transform: translateY(-5px); border-color: rgba(253, 185, 19, 0.3); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.league-badge { color: var(--gold); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+.status-badge { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
+.status-badge.won { background: var(--success); color: #000; box-shadow: 0 0 15px rgba(74, 222, 128, 0.3); }
+.status-badge.lost { background: var(--error); color: #fff; box-shadow: 0 0 15px rgba(248, 113, 113, 0.3); }
 
-.match-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.team { flex: 1; text-align: center; }
-.team-logo { width: 50px; height: 50px; margin-bottom: 5px; object-fit: contain; }
-.team-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.time-box { width: 60px; text-align: center; }
-.time-text { font-size: 18px; font-weight: 800; color: var(--gold); }
+.match-row-modern { display: flex; justify-content: space-around; align-items: center; margin: 25px 0; }
+.team-box-modern { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.team-logo-modern { width: 65px; height: 65px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+.team-name-modern { font-size: 15px; font-weight: 800; color: #fff; text-align: center; max-width: 120px; line-height: 1.2; }
+.scoreboard-box { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 80px; }
+.scoreboard-time { font-size: 24px; font-weight: 900; color: var(--gold); letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+.scoreboard-date { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; }
 
-.card-footer { display: flex; gap: 10px; }
-.footer-item { flex: 1; background: var(--bg-dark); padding: 10px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
-.footer-label { color: #555; font-size: 9px; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; }
-.footer-value { font-size: 13px; font-weight: 800; }
-.footer-value.prediction { color: var(--success); }
-.footer-value.odds { color: var(--gold); }
+.card-footer-modern { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px; 
+    margin-top: 20px; 
+    padding-top: 20px; 
+    border-top: 1px solid rgba(255, 255, 255, 0.1); 
+}
+.footer-pill { 
+    background: rgba(0, 0, 0, 0.2); 
+    padding: 12px; 
+    border-radius: 16px; 
+    text-align: center; 
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: 0.3s;
+}
+.footer-pill:hover { background: rgba(0, 0, 0, 0.3); border-color: var(--gold); }
+.pill-label { color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase; }
+.pill-value { font-size: 15px; font-weight: 800; color: #fff; }
+.pill-value.prediction { color: var(--success); }
+.pill-value.odds { color: var(--gold); }
+
+.analysis-btn-modern {
+    grid-column: span 2;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+.analysis-btn-modern:hover {
+    background: var(--gold);
+    color: var(--primary-green-dark);
+}
+
+/* Coupon Cards - Bet365 Style */
+.coupon-card {
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    margin-bottom: 25px;
+    background: #2e3335;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+.coupon-header {
+    background: rgba(255,255,255,0.05);
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.coupon-title {
+    color: var(--success);
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: none;
+}
+.coupon-match {
+    display: flex;
+    flex-direction: column;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+}
+.coupon-match-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.coupon-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1px solid #aaa;
+}
+.coupon-match-prediction {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+}
+.coupon-match-odds {
+    color: #fff;
+    font-weight: 400;
+    font-size: 14px;
+}
+.coupon-match-teams {
+    padding-left: 16px;
+    font-size: 13px;
+    color: #aaa;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.coupon-footer {
+    background: var(--success);
+    margin-top: 0;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+.coupon-footer:hover {
+    filter: brightness(1.1);
+}
+.total-odds-label {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+}
+.total-odds-value {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    text-shadow: none;
+}
+.coupon-type-badge {
+    color: #aaa;
+    font-size: 11px;
+}
+
+.analysis-content-box {
+    grid-column: span 2;
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #e2e8f0;
+    line-height: 1.5;
+    border-left: 3px solid var(--gold);
+}
 
 /* Footer */
 .footer-section { padding: 60px 20px 20px; background: var(--bg-dark); border-top: 1px solid var(--border); }
@@ -273,6 +434,10 @@ html, body, #root, .app {
 .footer-heading { font-size: 24px; font-weight: 900; color: var(--gold); margin-bottom: 15px; }
 .footer-link { display: block; color: var(--text-secondary); margin-bottom: 10px; cursor: pointer; transition: 0.3s; font-size: 14px; text-decoration: none; }
 .footer-link:hover { color: var(--gold); }
+.footer-logo { font-size: 32px; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+.footer-logo:hover { opacity: 0.8; }
+.about-pill-btn { background: transparent; border: 1.5px solid var(--gold); color: var(--gold); padding: 6px 18px; border-radius: 25px; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+.about-pill-btn:hover { background: var(--gold); color: var(--bg-dark); box-shadow: 0 0 15px rgba(253, 185, 19, 0.4); }
 .footer-divider { height: 1px; background: var(--border); margin: 30px auto; max-width: 1200px; }
 .footer-bottom { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
 .age-badge-small { background: #ff0000; color: #fff; font-weight: 900; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
@@ -285,10 +450,13 @@ html, body, #root, .app {
 .form-group { margin-bottom: 20px; }
 .form-label { display: block; color: var(--text-secondary); font-size: 11px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
 .form-input { width: 100%; padding: 12px 15px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 14px; }
-.submit-btn { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 10px; color: var(--primary-green-dark); font-size: 15px; font-weight: 800; cursor: pointer; }
+.submit-btn { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 10px; color: var(--primary-green-dark); font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; }
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(253, 185, 19, 0.5); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.submit-btn:active { transform: scale(0.98); }
 
-/* Profile */
-.profile-container { padding: 40px 20px; max-width: 600px; margin: 0 auto; min-height: calc(100vh - 65px); background: var(--bg-dark); }
+/* Profile & Admin */
+.profile-container { padding: 40px 20px; max-width: 400px; margin: 0 auto; min-height: calc(100vh - 65px); background: var(--bg-dark); }
 .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; border: 2px solid var(--gold); }
 .profile-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .logout-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--error); border-radius: 10px; color: var(--error); font-weight: 700; cursor: pointer; margin-top: 20px; }
@@ -332,9 +500,9 @@ const Icons = {
 
 // CONSTANTS
 const MENU_ITEMS = [
-    { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZLERİ", key: 10, icon: Icons.ai, color: "#FFD700", route: 'yapay-zeka-analizleri' },
+    { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: Icons.ai, color: "#FFD700", route: 'yapay-zeka-analizleri' },
     { id: 'cat_1', title: "ILK YARI GOL LISTESI", key: 0, icon: Icons.soccer, color: "#10B981", route: 'category' },
-    { id: 'cat_2', title: "GUNUN KUPONLARI", key: 1, icon: Icons.ticket, color: "#f87171", route: 'category' },
+    { id: 'cat_coupons_new', title: "GÜNÜN KUPONLARI", key: 20, icon: Icons.ticket, color: "#f87171", route: 'coupons' },
     { id: 'cat_3', title: "TAHMINCILER", key: 2, icon: Icons.users, color: "#a78bfa", route: 'category' },
     { id: 'cat_4', title: "KART / KORNER", key: 3, icon: Icons.cards, color: "#FBBF24", route: 'category' },
     { id: 'cat_5', title: "GUNUN TERCIHLERI", key: 4, icon: Icons.star, color: "#4ade80", route: 'category' },
@@ -533,16 +701,32 @@ function LegalModal({ type, onClose }) {
 
 function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory }) {
     const topCategories = [
-        { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZLERİ", key: 10 },
-        { id: 'cat_2', title: "İLK YARI GOL LİSTESİ", key: 0 },
-        { id: 'cat_8_new', title: "İY / MS TAHMİNLERİ", key: 7 },
-        { id: 'cat_3', title: "GÜNÜN KUPONLARI", key: 1 },
-        { id: 'cat_4', title: "TAHMİNCİLER", key: 2 },
-        { id: 'cat_5', title: "KART/KORNER", key: 3 },
-        { id: 'cat_6', title: "GÜNÜN TERCİHLERİ", key: 4 },
-        { id: 'cat_7', title: "GÜNÜN SÜRPRİZLERİ", key: 6 },
-        { id: 'cat_8', title: "EDİTÖRÜN SEÇİMİ", key: 8 },
+        { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZLERİ", key: 10, route: 'yapay-zeka-analizleri' },
+        { id: 'cat_2', title: "İLK YARI GOL LİSTESİ", key: 0, route: 'category' },
+        { id: 'cat_8_new', title: "İY / MS TAHMİNLERİ", key: 7, route: 'category' },
+        { id: 'cat_coupons', title: "GÜNÜN KUPONLARI", key: 20, route: 'coupons' },
+        { id: 'cat_4', title: "TAHMİNCİLER", key: 2, route: 'category' },
+        { id: 'cat_5', title: "KART/KORNER", key: 3, route: 'category' },
+        { id: 'cat_6', title: "GÜNÜN TERCİHLERİ", key: 4, route: 'category' },
+        { id: 'cat_7', title: "GÜNÜN SÜRPRİZLERİ", key: 6, route: 'category' },
+        { id: 'cat_8', title: "EDİTÖRÜN SEÇİMİ", key: 8, route: 'category' },
     ];
+
+    const handleCategoryClick = (cat) => {
+        // Kuponlar için özel route
+        if (cat.key === 20) {
+            onNavigate('coupons');
+            return;
+        }
+        // Yapay Zeka için özel route
+        if (cat.key === 10) {
+            onNavigate('yapay-zeka-analizleri');
+            return;
+        }
+        // Diğer kategoriler için
+        const menuItem = MENU_ITEMS.find(m => m.key === cat.key);
+        onNavigate(menuItem?.route || 'category', menuItem);
+    };
 
     return (
         <header className="header">
@@ -551,25 +735,15 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory 
                 <div className="logo" onClick={() => onNavigate('home')} style={{ cursor: 'pointer' }}>ODDSY</div>
             </div>
             <nav className="header-nav">
-                <div
-                    className={`header-nav-item`}
-                    onClick={() => onNavigate('about_modal')}
-                    style={{ border: '1px solid var(--gold)', color: 'var(--gold)' }}
-                >
-                    HAKKINDA
-                </div>
-                {topCategories.map(cat => {
-                    const menuItem = MENU_ITEMS.find(m => m.key === cat.key);
-                    return (
-                        <div
-                            key={cat.id}
-                            className={`header-nav-item ${currentCategory === cat.key ? 'active' : ''}`}
-                            onClick={() => onNavigate(menuItem?.route || 'category', menuItem)}
-                        >
-                            {cat.title}
-                        </div>
-                    );
-                })}
+                {topCategories.map(cat => (
+                    <div
+                        key={cat.id}
+                        className={`header-nav-item ${currentCategory === cat.key ? 'active' : ''}`}
+                        onClick={() => handleCategoryClick(cat)}
+                    >
+                        {cat.title}
+                    </div>
+                ))}
             </nav>
             <div className="header-right">
                 <button className="profile-btn" onClick={onProfileClick}>
@@ -629,8 +803,7 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal }) {
                     <h1 className="hero-title">Oddsy ile Akıllı Futbol Tahminleri</h1>
                     <p className="hero-subtitle">Yapay zeka ve Bet365 oran analiz sistemiyle güçlendirilmiş, günün öne çıkan karşılaşmalarını sizin için sadeleştiren yeni nesil tahmin platformu.</p>
                     <div className="hero-buttons" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <button className="hero-btn primary" onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })}>Hemen Başla</button>
-                        <button className="hero-btn secondary" onClick={() => onShowLegal('about')}>Hakkında</button>
+                        <button className="hero-btn primary" onClick={() => onNavigate('auth', { isLogin: false })}>Hemen Başla</button>
                         <button className="hero-btn secondary" onClick={onLoginClick}>Giriş Yap</button>
                     </div>
                 </div>
@@ -642,8 +815,13 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal }) {
             <footer className="footer-section">
                 <div className="footer-container">
                     <div className="footer-col" style={{ flex: 2 }}>
-                        <h3 className="footer-heading">Oddsy</h3>
-                        <p style={{ color: '#aaa', fontSize: 13, marginBottom: 20 }}>Profesyonel futbol tahmin platformu. Tüm analizler veri odaklıdır.</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
+                            <h3 className="footer-logo" onClick={() => onNavigate('home')}>ODDSY</h3>
+                            <button className="about-pill-btn" onClick={() => onShowLegal('about')}>Hakkında</button>
+                        </div>
+                        <p style={{ color: '#aaa', fontSize: 13, marginBottom: 20 }}>
+                            Oddsy plaftormunda yer alan tüm bahis tahmin oranlari yasal mevzuatta olup oranlar yasal platformlardan alınmaktadir(iddaa.com vb.)
+                        </p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                             <span className="age-badge-small">18+</span>
                             <span style={{ fontSize: 11, color: '#666' }}>Lütfen sorumlu oynayınız.</span>
@@ -675,11 +853,15 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal }) {
     );
 }
 
-function AuthScreen({ onBack, showAlert }) {
-    const [isLogin, setIsLogin] = useState(true);
+function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
+    const [isLogin, setIsLogin] = useState(initialIsLogin);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setIsLogin(initialIsLogin);
+    }, [initialIsLogin]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -689,6 +871,7 @@ function AuthScreen({ onBack, showAlert }) {
             if (isLogin) {
                 await signInWithEmailAndPassword(auth, email.trim(), password.trim());
                 showAlert('Giriş başarılı!', 'success');
+                onBack();
             } else {
                 const { user: newUser } = await createUserWithEmailAndPassword(auth, email.trim(), password.trim());
                 await updateProfile(newUser, { displayName: email.split('@')[0] });
@@ -698,9 +881,12 @@ function AuthScreen({ onBack, showAlert }) {
                     uid: newUser.uid,
                     createdAt: serverTimestamp(),
                     isAdmin: false,
-                    isPremium: false
+                    isPremium: false,
+                    role: 'user',
+                    tipsterName: null
                 });
                 showAlert('Kayıt başarılı!', 'success');
+                onBack();
             }
         } catch (err) {
             showAlert('İşlem başarısız: ' + err.message, 'error');
@@ -752,18 +938,141 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
             <h2 style={{ textAlign: 'center', marginBottom: 30 }}>{userData?.username || 'Kullanıcı'}</h2>
             <div className="profile-row"><span>E-posta</span><span>{user.email}</span></div>
             <div className="profile-row"><span>Üyelik</span><span>{userData?.isPremium ? 'Premium' : 'Standart'}</span></div>
-            <div className="profile-row"><span>Rol</span><span>{userData?.isAdmin ? 'Admin' : 'Üye'}</span></div>
-            {userData?.isAdmin && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('admin')}>Admin Paneli</button>}
+            <div className="profile-row"><span>Rol</span><span>{userData?.role === 'admin' ? 'Admin' : userData?.role === 'editor' ? 'Editör' : userData?.role === 'tipster' ? `Tahminci (${userData?.tipsterName})` : 'Üye'}</span></div>
+            {userData?.role === 'admin' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('admin')}>Admin Paneli</button>}
+            {userData?.role === 'editor' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('editor')}>Editör Paneli</button>}
+            {userData?.role === 'tipster' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('tipster')}>Tahminci Paneli</button>}
             <button className="logout-btn" onClick={handleLogout}>Çıkış Yap</button>
         </div>
     );
 }
 
-function AdminScreen({ onBack, showAlert }) {
-    const [view, setView] = useState('addMatch');
+function AdminDashboard({ onBack, userData }) {
+    const [stats, setStats] = useState({ totalUsers: 0, onlineUsers: 0, totalPredictions: 0, totalCoupons: 0 });
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const usersSnap = await getDocs(collection(db, 'users'));
+                const predictionsSnap = await getDocs(collection(db, 'predictions'));
+                const couponsSnap = await getDocs(collection(db, 'coupons'));
+
+                const usersData = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                setUsers(usersData);
+
+                setStats({
+                    totalUsers: usersData.length,
+                    onlineUsers: usersData.filter(u => u.lastActive && (Date.now() - u.lastActive?.toMillis?.() < 300000)).length,
+                    totalPredictions: predictionsSnap.size,
+                    totalCoupons: couponsSnap.size
+                });
+                setLoading(false);
+            } catch (err) {
+                console.error(err);
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const handleRoleChange = async (userId, newRole, tipsterName = null) => {
+        try {
+            await setDoc(doc(db, 'users', userId), { role: newRole, tipsterName }, { merge: true });
+            setUsers(users.map(u => u.id === userId ? { ...u, role: newRole, tipsterName } : u));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    if (loading) return <div className="loading"><div className="spinner" /></div>;
+
+    return (
+        <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
+            <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
+            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 30 }}>Admin Dashboard</h1>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 15, marginBottom: 30 }}>
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 32, color: 'var(--gold)', fontWeight: 'bold' }}>{stats.totalUsers}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>Toplam Üye</div>
+                </div>
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 32, color: '#4ade80', fontWeight: 'bold' }}>{stats.onlineUsers}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>Çevrimiçi</div>
+                </div>
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 32, color: '#10B981', fontWeight: 'bold' }}>{stats.totalPredictions}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>Toplam Tahmin</div>
+                </div>
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 32, color: '#f87171', fontWeight: 'bold' }}>{stats.totalCoupons}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>Toplam Kupon</div>
+                </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
+                <h2 style={{ color: 'var(--gold)', fontSize: 18, marginBottom: 20 }}>Kullanıcı Yönetimi</h2>
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '1px solid #444' }}>
+                                <th style={{ padding: 10, textAlign: 'left', fontSize: 12, color: '#aaa' }}>E-posta</th>
+                                <th style={{ padding: 10, textAlign: 'left', fontSize: 12, color: '#aaa' }}>Kullanıcı Adı</th>
+                                <th style={{ padding: 10, textAlign: 'left', fontSize: 12, color: '#aaa' }}>Rol</th>
+                                <th style={{ padding: 10, textAlign: 'left', fontSize: 12, color: '#aaa' }}>Tahminci Adı</th>
+                                <th style={{ padding: 10, textAlign: 'left', fontSize: 12, color: '#aaa' }}>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {users.map(u => (
+                                <tr key={u.id} style={{ borderBottom: '1px solid #333' }}>
+                                    <td style={{ padding: 10, fontSize: 12 }}>{u.email}</td>
+                                    <td style={{ padding: 10, fontSize: 12 }}>{u.username}</td>
+                                    <td style={{ padding: 10, fontSize: 12 }}>
+                                        <select
+                                            value={u.role || 'user'}
+                                            onChange={(e) => handleRoleChange(u.id, e.target.value, u.tipsterName)}
+                                            style={{ background: '#333', color: '#fff', border: '1px solid #555', padding: 5, borderRadius: 5, fontSize: 11 }}
+                                        >
+                                            <option value="user">Üye</option>
+                                            <option value="admin">Admin</option>
+                                            <option value="editor">Editör</option>
+                                            <option value="tipster">Tahminci</option>
+                                        </select>
+                                    </td>
+                                    <td style={{ padding: 10, fontSize: 12 }}>
+                                        {u.role === 'tipster' && (
+                                            <select
+                                                value={u.tipsterName || ''}
+                                                onChange={(e) => handleRoleChange(u.id, 'tipster', e.target.value)}
+                                                style={{ background: '#333', color: '#fff', border: '1px solid #555', padding: 5, borderRadius: 5, fontSize: 11 }}
+                                            >
+                                                <option value="">Seçiniz</option>
+                                                <option value="GuedAus">GuedAus</option>
+                                                <option value="Goalman">Goalman</option>
+                                                <option value="Casa De Luka">Casa De Luka</option>
+                                                <option value="Nbavipbox">Nbavipbox</option>
+                                            </select>
+                                        )}
+                                    </td>
+                                    <td style={{ padding: 10, fontSize: 12, color: u.role === 'admin' ? 'var(--gold)' : u.role === 'editor' ? '#10B981' : u.role === 'tipster' ? '#f87171' : '#aaa' }}>
+                                        {u.role === 'admin' ? 'Admin' : u.role === 'editor' ? 'Editör' : u.role === 'tipster' ? 'Tahminci' : 'Üye'}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function EditorScreen({ onBack, showAlert, userData }) {
     const [loading, setLoading] = useState(false);
-    const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 0, status: 'pending' });
-    const [notification, setNotification] = useState({ title: '', body: '' });
+    const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 8, status: 'pending', analysis: '' });
 
     const handleAddMatch = async (e) => {
         e.preventDefault();
@@ -771,9 +1080,178 @@ function AdminScreen({ onBack, showAlert }) {
         try {
             const u = auth.currentUser;
             if (!u) throw new Error('Oturum kapalı');
-            await setDoc(doc(collection(db, 'predictions')), { ...matchData, userId: u.uid, authorId: u.uid, createdAt: serverTimestamp() });
+
+            const docData = { ...matchData, userId: u.uid, authorId: u.uid, createdAt: serverTimestamp() };
+            await addDoc(collection(db, 'predictions'), docData);
+            showAlert('Editör tahmini eklendi!', 'success');
+            setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 8, status: 'pending', analysis: '' });
+        } catch (err) {
+            console.error('Match Save Error:', err);
+            showAlert('Hata: ' + err.message, 'error');
+        } finally { setLoading(false); }
+    };
+
+    return (
+        <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
+            <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
+            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 30 }}>Editör Paneli - Editörün Seçimi</h1>
+
+            <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
+                <form onSubmit={handleAddMatch}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Ev Sahibi</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.homeTeam} onChange={e => setMatchData({ ...matchData, homeTeam: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Deplasman</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.awayTeam} onChange={e => setMatchData({ ...matchData, awayTeam: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Lig</label><select className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.league} onChange={e => setMatchData({ ...matchData, league: e.target.value })}>{LEAGUES.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}</select></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Saat</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} placeholder="20:45" value={matchData.time} onChange={e => setMatchData({ ...matchData, time: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Tahmin</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.prediction} onChange={e => setMatchData({ ...matchData, prediction: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Oran</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.odds} onChange={e => setMatchData({ ...matchData, odds: e.target.value })} /></div>
+                        <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Maç Analizi</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="2" value={matchData.analysis} onChange={e => setMatchData({ ...matchData, analysis: e.target.value })} placeholder="Bu maç için analizini buraya yaz..." /></div>
+                    </div>
+                    <button className="submit-btn" disabled={loading} style={{ marginTop: 15, padding: 10, fontSize: 13 }}>Kaydet</button>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+function TipsterScreen({ onBack, showAlert, userData }) {
+    const [loading, setLoading] = useState(false);
+    const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 2, status: 'pending', analysis: '', tipster: userData?.tipsterName || '' });
+
+    const handleAddMatch = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const u = auth.currentUser;
+            if (!u) throw new Error('Oturum kapalı');
+            if (!userData?.tipsterName) throw new Error('Tahminci adı atanmamış');
+
+            const docData = { ...matchData, tipster: userData.tipsterName, userId: u.uid, authorId: u.uid, createdAt: serverTimestamp() };
+            await addDoc(collection(db, 'predictions'), docData);
+            showAlert('Tahmin eklendi!', 'success');
+            setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 2, status: 'pending', analysis: '', tipster: userData.tipsterName });
+        } catch (err) {
+            console.error('Match Save Error:', err);
+            showAlert('Hata: ' + err.message, 'error');
+        } finally { setLoading(false); }
+    };
+
+    if (!userData?.tipsterName) {
+        return (
+            <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
+                <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
+                <div style={{ textAlign: 'center', marginTop: 50, color: '#aaa' }}>
+                    <h2>Tahminci adınız atanmamış</h2>
+                    <p>Lütfen admin ile iletişime geçin.</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
+            <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
+            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 30 }}>Tahminci Paneli - {userData.tipsterName}</h1>
+
+            <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
+                <form onSubmit={handleAddMatch}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Ev Sahibi</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.homeTeam} onChange={e => setMatchData({ ...matchData, homeTeam: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Deplasman</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.awayTeam} onChange={e => setMatchData({ ...matchData, awayTeam: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Lig</label><select className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.league} onChange={e => setMatchData({ ...matchData, league: e.target.value })}>{LEAGUES.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}</select></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Saat</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} placeholder="20:45" value={matchData.time} onChange={e => setMatchData({ ...matchData, time: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Tahmin</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.prediction} onChange={e => setMatchData({ ...matchData, prediction: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Oran</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.odds} onChange={e => setMatchData({ ...matchData, odds: e.target.value })} /></div>
+                        <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Maç Analizi</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="2" value={matchData.analysis} onChange={e => setMatchData({ ...matchData, analysis: e.target.value })} placeholder="Bu maç için analizini buraya yaz..." /></div>
+                    </div>
+                    <button className="submit-btn" disabled={loading} style={{ marginTop: 15, padding: 10, fontSize: 13 }}>Kaydet</button>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+function AdminScreen({ onBack, showAlert, userData }) {
+    const [view, setView] = useState('addMatch');
+    const [loading, setLoading] = useState(false);
+    const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 0, status: 'pending', analysis: '', cardHomeAvg: '', cardAwayAvg: '', refereeInfo: '', cornerHomeAvg: '', cornerAwayAvg: '', cornerGenAvg: '' });
+    const [couponData, setCouponData] = useState({ type: 'Günün Banko Kuponu', matches: [{ home: '', away: '', prediction: '', odds: '' }] });
+    const [notification, setNotification] = useState({ title: '', body: '' });
+
+    const handleAddMatchToCoupon = () => {
+        setCouponData({ ...couponData, matches: [...couponData.matches, { home: '', away: '', prediction: '', odds: '' }] });
+    };
+
+    const handleUpdateCouponMatch = (index, field, value) => {
+        const newMatches = [...couponData.matches];
+        newMatches[index][field] = value;
+        setCouponData({ ...couponData, matches: newMatches });
+    };
+
+    const handleSaveCoupon = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const u = auth.currentUser;
+            if (!u) throw new Error('Oturum kapalı');
+            const totalOdds = couponData.matches.reduce((acc, curr) => acc * parseFloat(curr.odds || 1), 1).toFixed(2);
+            await addDoc(collection(db, 'coupons'), {
+                ...couponData,
+                totalOdds,
+                createdAt: serverTimestamp(),
+                authorId: u.uid
+            });
+            showAlert('Kupon eklendi!', 'success');
+            setCouponData({ type: 'Günün Banko Kuponu', matches: [{ home: '', away: '', prediction: '', odds: '' }] });
+        } catch (err) {
+            console.error('Coupon Save Error:', err);
+            showAlert('Hata: ' + err.message, 'error');
+        } finally { setLoading(false); }
+    };
+
+    const handleAddMatch = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const u = auth.currentUser;
+            if (!u) throw new Error('Oturum kapalı');
+
+            let finalData = { ...matchData };
+            if (view === 'addCard') {
+                finalData.cornerHomeAvg = ''; finalData.cornerAwayAvg = ''; finalData.cornerGenAvg = '';
+            } else if (view === 'addCorner') {
+                finalData.cardHomeAvg = ''; finalData.cardAwayAvg = ''; finalData.refereeInfo = '';
+            } else if (view === 'addMatch' && matchData.categoryKey !== 3) {
+                finalData.cardHomeAvg = ''; finalData.cardAwayAvg = ''; finalData.refereeInfo = '';
+                finalData.cornerHomeAvg = ''; finalData.cornerAwayAvg = ''; finalData.cornerGenAvg = '';
+            }
+
+            const docData = { ...finalData, userId: u.uid, authorId: u.uid, createdAt: serverTimestamp() };
+            await addDoc(collection(db, 'predictions'), docData);
             showAlert('Eklendi!', 'success');
-            setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 0, status: 'pending' });
+
+            // Sadece form alanlarını temizle, categoryKey'i view'e göre koru
+            setMatchData({
+                ...matchData,
+                homeTeam: '', awayTeam: '', prediction: '', odds: '', analysis: '',
+                cardHomeAvg: '', cardAwayAvg: '', refereeInfo: '',
+                cornerHomeAvg: '', cornerAwayAvg: '', cornerGenAvg: ''
+            });
+        } catch (err) {
+            console.error('Match Save Error:', err);
+            showAlert('Hata: ' + err.message, 'error');
+        } finally { setLoading(false); }
+    };
+
+    const handleClearCollection = async (collName) => {
+        if (!window.confirm(`Tüm ${collName === 'coupons' ? 'kuponları' : 'maçları'} silmek istediğinize emin misiniz?`)) return;
+        setLoading(true);
+        try {
+            const q = query(collection(db, collName));
+            const snap = await getDocs(q);
+            const promises = snap.docs.map(d => deleteDoc(d.ref));
+            await Promise.all(promises);
+            showAlert('Temizlendi!', 'success');
         } catch (err) { showAlert(err.message, 'error'); }
         finally { setLoading(false); }
     };
@@ -792,54 +1270,290 @@ function AdminScreen({ onBack, showAlert }) {
     };
 
     return (
-        <div className="profile-container">
+        <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
             <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                <button className="hero-btn secondary" onClick={() => setView('addMatch')}>Tahmin Ekle</button>
-                <button className="hero-btn secondary" onClick={() => setView('notif')}>Bildirim Gönder</button>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, marginTop: 20 }}>
+                {/* Sol Taraf - Input Listesi */}
+                <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10, height: 'fit-content' }}>
+                    <h3 style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 15, textAlign: 'center' }}>INPUT</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <button className={`hero-btn secondary ${view === 'addMatch' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addMatch')}>Tahmin Ekle</button>
+                        <button className={`hero-btn secondary ${view === 'addCoupon' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addCoupon')}>Kupon Ekle</button>
+                        <button className={`hero-btn secondary ${view === 'addCard' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => { setView('addCard'); setMatchData({ ...matchData, categoryKey: 3 }); }}>Kart Ekle</button>
+                        <button className={`hero-btn secondary ${view === 'addCorner' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => { setView('addCorner'); setMatchData({ ...matchData, categoryKey: 3 }); }}>Korner Ekle</button>
+                        <button className={`hero-btn secondary ${view === 'notif' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('notif')}>Bildirim Gönder</button>
+                    </div>
+                </div>
+
+                {/* Sağ Taraf - Form Alanı */}
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
+                    {(view === 'addMatch' || view === 'addCard' || view === 'addCorner') && (
+                        <form onSubmit={handleAddMatch}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                {view === 'addMatch' && (
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Kategori</label><select className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.categoryKey} onChange={e => setMatchData({ ...matchData, categoryKey: parseInt(e.target.value) })}>{MENU_ITEMS.map(m => <option key={m.key} value={m.key}>{m.title}</option>)}</select></div>
+                                )}
+                                <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Ev Sahibi</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.homeTeam} onChange={e => setMatchData({ ...matchData, homeTeam: e.target.value })} /></div>
+                                <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Deplasman</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.awayTeam} onChange={e => setMatchData({ ...matchData, awayTeam: e.target.value })} /></div>
+                                <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Lig</label><select className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.league} onChange={e => setMatchData({ ...matchData, league: e.target.value })}>{LEAGUES.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}</select></div>
+                                <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Saat</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} placeholder="20:45" value={matchData.time} onChange={e => setMatchData({ ...matchData, time: e.target.value })} /></div>
+                                <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Tahmin</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.prediction} onChange={e => setMatchData({ ...matchData, prediction: e.target.value })} /></div>
+                                <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Oran</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.odds} onChange={e => setMatchData({ ...matchData, odds: e.target.value })} /></div>
+                                <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Maç Analizi</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="2" value={matchData.analysis} onChange={e => setMatchData({ ...matchData, analysis: e.target.value })} placeholder="Bu maç için analizini buraya yaz..." /></div>
+                            </div>
+
+                            {view === 'addCard' && (
+                                <details style={{ marginTop: 15, borderTop: '2px solid #444', paddingTop: 15, cursor: 'pointer' }}>
+                                    <summary style={{ color: 'var(--gold)', fontWeight: 'bold', marginBottom: 10, listStyle: 'none', userSelect: 'none', fontSize: 12 }}>📊 Kart İstatistikleri (Tıkla)</summary>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Ev Sahibi Ort</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.cardHomeAvg} onChange={e => setMatchData({ ...matchData, cardHomeAvg: e.target.value })} /></div>
+                                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Deplasman Ort</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.cardAwayAvg} onChange={e => setMatchData({ ...matchData, cardAwayAvg: e.target.value })} /></div>
+                                        <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Hakem İsim/Ort</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.refereeInfo} onChange={e => setMatchData({ ...matchData, refereeInfo: e.target.value })} /></div>
+                                    </div>
+                                </details>
+                            )}
+
+                            {view === 'addCorner' && (
+                                <details style={{ marginTop: 15, borderTop: '2px solid #444', paddingTop: 15, cursor: 'pointer' }}>
+                                    <summary style={{ color: '#10B981', fontWeight: 'bold', marginBottom: 10, listStyle: 'none', userSelect: 'none', fontSize: 12 }}>⚽ Korner İstatistikleri (Tıkla)</summary>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Ev Sahibi Ort</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.cornerHomeAvg} onChange={e => setMatchData({ ...matchData, cornerHomeAvg: e.target.value })} /></div>
+                                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Deplasman Ort</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.cornerAwayAvg} onChange={e => setMatchData({ ...matchData, cornerAwayAvg: e.target.value })} /></div>
+                                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Genel Ort</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.cornerGenAvg} onChange={e => setMatchData({ ...matchData, cornerGenAvg: e.target.value })} /></div>
+                                    </div>
+                                </details>
+                            )}
+
+                            <button className="submit-btn" disabled={loading} style={{ marginTop: 15, padding: 10, fontSize: 13 }}>Kaydet</button>
+                        </form>
+                    )}
+
+                    {view === 'addCoupon' && (
+                        <form onSubmit={handleSaveCoupon}>
+                            <div className="form-group" style={{ marginBottom: 15 }}>
+                                <label className="form-label" style={{ fontSize: 10 }}>Kupon Türü</label>
+                                <select className="form-input" style={{ padding: 8, fontSize: 12 }} value={couponData.type} onChange={e => setCouponData({ ...couponData, type: e.target.value })}>
+                                    <option value="Günün Banko Kuponu">Günün Banko Kuponu</option>
+                                    <option value="Günün İdeal Kuponu">Günün İdeal Kuponu</option>
+                                    <option value="Günün Sürpriz Kuponu">Günün Sürpriz Kuponu</option>
+                                </select>
+                            </div>
+
+                            {couponData.matches.map((m, i) => (
+                                <div key={i} style={{ border: '2px solid var(--primary-green)', padding: 12, borderRadius: 10, marginBottom: 12, background: '#3a3a3a' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                                        <input placeholder="Ev Sahibi" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.home} onChange={e => handleUpdateCouponMatch(i, 'home', e.target.value)} />
+                                        <input placeholder="Deplasman" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.away} onChange={e => handleUpdateCouponMatch(i, 'away', e.target.value)} />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                        <input placeholder="Tahmin" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.prediction} onChange={e => handleUpdateCouponMatch(i, 'prediction', e.target.value)} />
+                                        <input placeholder="Oran (1.50)" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.odds} onChange={e => handleUpdateCouponMatch(i, 'odds', e.target.value)} />
+                                    </div>
+                                </div>
+                            ))}
+                            <button type="button" className="hero-btn secondary" onClick={handleAddMatchToCoupon} style={{ width: '100%', marginBottom: 12, padding: 10, fontSize: 12 }}>+ Maç Ekle</button>
+                            <button className="submit-btn" disabled={loading} style={{ padding: 10, fontSize: 13 }}>Kuponu Kaydet</button>
+                        </form>
+                    )}
+
+                    {view === 'notif' && (
+                        <form onSubmit={handleSendNotif}>
+                            <div className="form-group" style={{ marginBottom: 15 }}><label className="form-label" style={{ fontSize: 10 }}>Başlık</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={notification.title} onChange={e => setNotification({ ...notification, title: e.target.value })} /></div>
+                            <div className="form-group" style={{ marginBottom: 15 }}><label className="form-label" style={{ fontSize: 10 }}>Mesaj</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="3" value={notification.body} onChange={e => setNotification({ ...notification, body: e.target.value })} /></div>
+                            <button className="submit-btn" disabled={loading} style={{ padding: 10, fontSize: 13 }}>Gönder</button>
+                        </form>
+                    )}
+                </div>
             </div>
-            {view === 'addMatch' ? (
-                <form onSubmit={handleAddMatch}>
-                    <div className="form-group"><label className="form-label">Kategori</label><select className="form-input" value={matchData.categoryKey} onChange={e => setMatchData({ ...matchData, categoryKey: parseInt(e.target.value) })}>{MENU_ITEMS.map(m => <option key={m.key} value={m.key}>{m.title}</option>)}</select></div>
-                    <div className="form-group"><label className="form-label">Ev</label><input className="form-input" value={matchData.homeTeam} onChange={e => setMatchData({ ...matchData, homeTeam: e.target.value })} /></div>
-                    <div className="form-group"><label className="form-label">Deplasman</label><input className="form-input" value={matchData.awayTeam} onChange={e => setMatchData({ ...matchData, awayTeam: e.target.value })} /></div>
-                    <div className="form-group"><label className="form-label">Lig</label><select className="form-input" value={matchData.league} onChange={e => setMatchData({ ...matchData, league: e.target.value })}>{LEAGUES.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}</select></div>
-                    <div className="form-group"><label className="form-label">Tahmin</label><input className="form-input" value={matchData.prediction} onChange={e => setMatchData({ ...matchData, prediction: e.target.value })} /></div>
-                    <div className="form-group"><label className="form-label">Oran</label><input className="form-input" value={matchData.odds} onChange={e => setMatchData({ ...matchData, odds: e.target.value })} /></div>
-                    <button className="submit-btn" disabled={loading}>Kaydet</button>
-                </form>
-            ) : (
-                <form onSubmit={handleSendNotif}>
-                    <div className="form-group"><label className="form-label">Başlık</label><input className="form-input" value={notification.title} onChange={e => setNotification({ ...notification, title: e.target.value })} /></div>
-                    <div className="form-group"><label className="form-label">Mesaj</label><textarea className="form-input" rows="4" value={notification.body} onChange={e => setNotification({ ...notification, body: e.target.value })} /></div>
-                    <button className="submit-btn" disabled={loading}>Gönder</button>
-                </form>
-            )}
+        </div>
+    );
+}
+
+function CouponScreen({ onBack, showAlert }) {
+    const [coupons, setCoupons] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedType, setSelectedType] = useState(null);
+
+    useEffect(() => {
+        const q = query(collection(db, 'coupons'));
+        const unsub = onSnapshot(q, (snap) => {
+            const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            data.sort((a, b) => {
+                const timeA = a.createdAt?.seconds || 0;
+                const timeB = b.createdAt?.seconds || 0;
+                return timeB - timeA;
+            });
+            setCoupons(data);
+            setLoading(false);
+        }, (err) => {
+            console.error('Snapshot Error:', err);
+            showAlert('Veri çekilemedi: ' + err.message, 'error');
+            setLoading(false);
+        });
+        return () => unsub();
+    }, []);
+
+    const couponTypes = [
+        { id: 'banko', name: 'Banko Kupon', dbName: 'Günün Banko Kuponu', color: 'var(--gold)', image: '/banko_kupon.png', desc: 'Günün en güvenilir tahminleri' },
+        { id: 'ideal', name: 'İdeal Kupon', dbName: 'Günün İdeal Kuponu', color: '#4ade80', image: '/ideal_kupon.png', desc: 'Dengeli oran ve güven kombinasyonu' },
+        { id: 'surpriz', name: 'Sürpriz Kupon', dbName: 'Günün Sürpriz Kuponu', color: '#f87171', image: '/surpriz_kupon.png', desc: 'Yüksek oranlı cesur tahminler' }
+    ];
+
+    if (loading) return <div className="loading"><div className="spinner" /></div>;
+
+    // Kart seçim ekranı
+    if (!selectedType) {
+        return (
+            <div className="category-page">
+                <div className="category-header">
+                    <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
+                    <h1 className="category-title">GÜNÜN KUPONLARI</h1>
+                </div>
+                <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15, maxWidth: 600, margin: '0 auto' }}>
+                    {couponTypes.map(type => {
+                        const typeCoupons = coupons.filter(c => c.type === type.dbName);
+                        const latestCoupon = typeCoupons[0];
+
+                        return (
+                            <div key={type.id} className="prediction-card" style={{ textAlign: 'center', cursor: 'pointer', padding: 30, position: 'relative' }} onClick={() => setSelectedType(type)}>
+                                <img src={type.image} style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt={type.name} />
+                                <h3 style={{ color: type.color, fontSize: 18, marginBottom: 10 }}>{type.name}</h3>
+                                {latestCoupon && (
+                                    <div style={{ marginTop: 15, padding: 10, background: 'rgba(0,0,0,0.3)', borderRadius: 8 }}>
+                                        <div style={{ fontSize: 11, color: '#aaa' }}>Toplam Oran</div>
+                                        <div style={{ fontSize: 24, color: type.color, fontWeight: 'bold' }}>{latestCoupon.totalOdds}</div>
+                                        <div style={{ fontSize: 10, color: '#666', marginTop: 5 }}>{latestCoupon.matches?.length || 0} Maç</div>
+                                    </div>
+                                )}
+                                {!latestCoupon && (
+                                    <div style={{ marginTop: 15, padding: 10, fontSize: 12, color: '#666' }}>Henüz kupon eklenmedi</div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    }
+
+    // Seçilen kupon türünün detayları
+    const filteredCoupons = coupons.filter(c => c.type === selectedType.dbName);
+
+    return (
+        <div className="category-page">
+            <div className="category-header">
+                <button className="category-back-btn" onClick={() => setSelectedType(null)}>{Icons.back}</button>
+                <h1 className="category-title">{selectedType.name}</h1>
+            </div>
+
+            <div className="predictions-list">
+                {filteredCoupons.length > 0 ? filteredCoupons.map(c => (
+                    <div key={c.id} className="coupon-card">
+                        <div className="coupon-header">
+                            <span className="coupon-title">{c.type}</span>
+                        </div>
+                        {c.matches.map((m, idx) => (
+                            <div key={idx} className="coupon-match">
+                                <div className="coupon-match-header">
+                                    <div className="coupon-dot" style={{ background: selectedType.color }}></div>
+                                    <div className="coupon-match-prediction" style={{ color: selectedType.color }}>{m.home} - {m.prediction}</div>
+                                    <div className="coupon-match-odds" style={{ color: '#fff', fontWeight: 'bold' }}>{m.odds}</div>
+                                </div>
+                                <div className="coupon-match-teams">
+                                    <span style={{ color: '#fff' }}>{m.home}</span>
+                                    <span style={{ color: '#fff' }}>{m.away}</span>
+                                </div>
+                            </div>
+                        ))}
+                        <div className="coupon-footer" style={{ borderTop: '2px solid rgba(255,255,255,0.1)', background: 'transparent' }}>
+                            <span className="total-odds-label" style={{ color: '#aaa' }}>Toplam Oran</span>
+                            <span className="total-odds-value" style={{ color: selectedType.color, fontSize: '24px' }}>{c.totalOdds}</span>
+                        </div>
+                    </div>
+                )) : <p style={{ textAlign: 'center', color: '#666' }}>Henüz {selectedType.name} eklenmedi.</p>}
+            </div>
         </div>
     );
 }
 
 function PredictionCard({ item }) {
+    const [showAnalysis, setShowAnalysis] = useState(false);
+
     return (
         <div className="prediction-card">
             <div className="card-header">
                 <span className="league-badge">{item.league || 'LIG'}</span>
-                {item.status && <span className={`status-badge ${item.status}`}>{item.status === 'won' ? 'KAZANDI' : 'KAYBETTI'}</span>}
+                {item.status && <span className={`status-badge ${item.status}`}>{item.status === 'won' ? 'WON' : 'LOST'}</span>}
             </div>
-            <div className="match-row">
-                <div className="team">
-                    <img className="team-logo" src={getTeamLogo(item.homeTeam)} alt={item.homeTeam} />
-                    <div className="team-name">{item.homeTeam || 'EV'}</div>
+
+            <div className="match-row-modern">
+                <div className="team-box-modern">
+                    <img className="team-logo-modern" src={getTeamLogo(item.homeTeam)} onError={handleLogoError} alt={item.homeTeam} />
+                    <div className="team-name-modern">{item.homeTeam || 'HOME'}</div>
                 </div>
-                <div className="time-box"><div className="time-text">{item.time || '20:00'}</div></div>
-                <div className="team">
-                    <img className="team-logo" src={getTeamLogo(item.awayTeam, true)} alt={item.awayTeam} />
-                    <div className="team-name">{item.awayTeam || 'DEP'}</div>
+
+                <div className="scoreboard-box">
+                    <div className="scoreboard-time">{item.time || '20:00'}</div>
+                    <div className="scoreboard-date">Bugün</div>
+                </div>
+
+                <div className="team-box-modern">
+                    <img className="team-logo-modern" src={getTeamLogo(item.awayTeam)} onError={handleLogoError} alt={item.awayTeam} />
+                    <div className="team-name-modern">{item.awayTeam || 'AWAY'}</div>
                 </div>
             </div>
-            <div className="card-footer">
-                <div className="footer-item"><div className="footer-label">TAHMIN</div><div className="footer-value prediction">{item.prediction || '-'}</div></div>
-                <div className="footer-item"><div className="footer-label">ORAN</div><div className="footer-value odds">{item.odds || '-'}</div></div>
+
+            <div className="card-footer-modern">
+                <div className="footer-pill">
+                    <div className="pill-label">Tahmin</div>
+                    <div className="pill-value prediction">{item.prediction || '-'}</div>
+                </div>
+                <div className="footer-pill">
+                    <div className="pill-label">Oran</div>
+                    <div className="pill-value odds">{item.odds || '-'}</div>
+                </div>
+
+                {item.analysis && (
+                    <>
+                        <button
+                            className="analysis-btn-modern"
+                            onClick={() => setShowAnalysis(!showAnalysis)}
+                        >
+                            {showAnalysis ? 'Analizi Kapat' : 'Analiz Gör'}
+                        </button>
+                        {showAnalysis && (
+                            <div className="analysis-content-box">
+                                {item.analysis}
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {item.categoryKey === 3 && (
+                    <div style={{ width: '100%', marginTop: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {(item.cardHomeAvg || item.cardAwayAvg || item.refereeInfo) && (
+                            <div style={{ background: 'rgba(253, 185, 19, 0.1)', border: '1px solid var(--gold)', borderRadius: 10, padding: 12 }}>
+                                <p style={{ color: 'var(--gold)', fontWeight: '800', fontSize: 13, marginBottom: 8, borderBottom: '1px solid rgba(253,185,19,0.2)', paddingBottom: 4 }}>Kart İstatistikleri</p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#aaa' }}>Ev Sahibi Ortalama:</span><span style={{ color: '#fff' }}>{item.cardHomeAvg || '-'}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#aaa' }}>Deplasman Ortalama:</span><span style={{ color: '#fff' }}>{item.cardAwayAvg || '-'}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#aaa' }}>Hakem İsim/Ortalama:</span><span style={{ color: '#fff' }}>{item.refereeInfo || '-'}</span></div>
+                                </div>
+                            </div>
+                        )}
+                        {(item.cornerHomeAvg || item.cornerAwayAvg || item.cornerGenAvg) && (
+                            <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10B981', borderRadius: 10, padding: 12 }}>
+                                <p style={{ color: '#10B981', fontWeight: '800', fontSize: 13, marginBottom: 8, borderBottom: '1px solid rgba(16,185,129,0.2)', paddingBottom: 4 }}>Korner İstatistikleri</p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#aaa' }}>Ev Sahibi Ort:</span><span style={{ color: '#fff' }}>{item.cornerHomeAvg || '-'}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#aaa' }}>Deplasman Ort:</span><span style={{ color: '#fff' }}>{item.cornerAwayAvg || '-'}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#aaa' }}>Genel Ort:</span><span style={{ color: '#fff' }}>{item.cornerGenAvg || '-'}</span></div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -851,33 +1565,76 @@ function PredictionCard({ item }) {
 
 
 function CategoryScreen({ category, onBack }) {
-    if (!category || !category.key) return <div className="loading">Yükleniyor...</div>;
+    if (!category || category.key === undefined || category.key === null) return <div className="loading"><div className="spinner" /></div>;
     const [predictions, setPredictions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedLeague, setSelectedLeague] = useState(null);
     const [selectedTipster, setSelectedTipster] = useState(null);
+    const [selectedSubCategory, setSelectedSubCategory] = useState(null);
 
     const tipsters = [
-        { id: 'p1', name: 'GuedAus', role: 'Uzman Analist', image: 'https://i.ibb.co/60Tj8jJJ/Whats-App-mage-2025-12-07-at-23-21-34.jpg', stats: { total: 120, win: 85, rate: '%71' } },
+        { id: 'p1', name: 'GuedAus', role: 'Uzman Analist', image: 'https://i.ibb.co/60Tj8jJJ/Whats-App-mage-2025-12-07-at-23-21-34-1.jpg', stats: { total: 120, win: 85, rate: '%71' } },
         { id: 'p2', name: 'Goalman', role: 'Goal Makinesi', image: 'https://i.ibb.co/5XXgkWSP/Whats-App-mage-2025-12-07-at-23-21-42-1.jpg', stats: { total: 210, win: 140, rate: '%67' } },
         { id: 'p3', name: 'Casa De Luka', role: 'İspanya Ligi', image: 'https://i.ibb.co/2YqjD8BX/Whats-App-mage-2025-12-07-at-23-21-42.jpg', stats: { total: 95, win: 68, rate: '%72' } },
         { id: 'p4', name: 'Nbavipbox', role: 'Basketbol Gurusu', image: 'https://i.ibb.co/xtJDGZhT/Whats-App-mage-2025-12-07-at-23-21-34.jpg', stats: { total: 155, win: 105, rate: '%68' } },
     ];
 
-    const IS_CARDS_MENU = [0, 4, 6].includes(category.key);
+    const IS_BOT_MENU = [0, 4, 6].includes(category.key);
+    const IS_CARD_KORNER_MENU = category.key === 3;
+    const IS_COUPON_MENU = category.key === 20;
 
     useEffect(() => {
-        const fetch = async () => {
+        let q;
+        const dbKeyMap = { 0: 'ilk-yari-gol', 4: 'gunun-tercihleri', 6: 'gunun-surprizleri' };
+
+        if (IS_BOT_MENU) {
             setLoading(true);
-            try {
-                const q = query(collection(db, 'predictions'), where('categoryKey', '==', category.key), orderBy('createdAt', 'desc'));
-                const snap = await getDocs(q);
-                setPredictions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-            } catch (e) { console.error(e); }
-            finally { setLoading(false); }
-        };
-        fetch();
-    }, [category.key]);
+            q = query(
+                collection(db, 'predictions'),
+                where('categoryKey', '==', dbKeyMap[category.key]),
+                orderBy('createdAt', 'desc')
+            );
+        } else if (selectedSubCategory) {
+            setLoading(true);
+            q = query(collection(db, 'predictions'), where('categoryKey', '==', category.key), orderBy('createdAt', 'desc'));
+        } else if (!IS_CARD_KORNER_MENU && !IS_COUPON_MENU) {
+            setLoading(true);
+            q = query(collection(db, 'predictions'), where('categoryKey', '==', category.key), orderBy('createdAt', 'desc'));
+        }
+
+        if (q) {
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                let list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                if (IS_BOT_MENU) {
+                    list = list.filter(p => {
+                        if (!p.createdAt) return false;
+                        const createdDate = p.createdAt.toDate();
+                        createdDate.setHours(0, 0, 0, 0);
+                        return createdDate.getTime() === today.getTime();
+                    });
+                }
+
+                if (selectedSubCategory) {
+                    list = list.filter(p => {
+                        if (selectedSubCategory === 'card') return p.cardHomeAvg || p.cardAwayAvg || p.refereeInfo;
+                        if (selectedSubCategory === 'corner') return p.cornerHomeAvg || p.cornerAwayAvg || p.cornerGenAvg;
+                        return false;
+                    });
+                }
+
+                setPredictions(list);
+                setLoading(false);
+            }, (error) => {
+                console.error('Firebase Error:', error);
+                setLoading(false);
+            });
+            return () => unsubscribe();
+        }
+    }, [category.key, selectedSubCategory, IS_BOT_MENU, IS_CARD_KORNER_MENU, IS_COUPON_MENU]);
 
     const filtered = selectedTipster ? predictions.filter(p => p.tipster?.toLowerCase().includes(selectedTipster.name.toLowerCase())) : selectedLeague ? predictions.filter(p => p.league === selectedLeague) : predictions;
 
@@ -897,50 +1654,319 @@ function CategoryScreen({ category, onBack }) {
         );
     }
 
-    if (category.key === 1 || category.key === 3) {
+    if (IS_BOT_MENU) {
+        // Logo hata durumunda default logo göster (asla gizleme!)
+        const handleImgError = (e) => {
+            const src = e.target.src;
+            console.log('Logo BULUNAMADI, default kullanılıyor:', src);
+
+            // Sonsuz döngüyü önle
+            if (src.includes('default-team') || src.includes('data:image') || src.includes('placeholder')) {
+                e.target.onerror = null;
+                return;
+            }
+
+            // Default futbol topu logosu (SVG data URL - sarı çerçeveli)
+            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0iIzJlMzMzNSIgc3Ryb2tlPSIjRkRCOTEzIiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNNTAgMTBMNjUgMzBMODUgMzVMNzUgNTVMODAgNzVMNTAgODBMMjAgNzVMMjUgNTVMMTUgMzVMMzUgMzBaIiBmaWxsPSIjRkRCOTEzIiBvcGFjaXR5PSIwLjMiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkRCOTEzIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
+            e.target.onerror = null;
+        };
+
+        return (
+            <div style={{
+                minHeight: 'calc(100vh - 65px)',
+                background: '#333333',
+                paddingTop: '20px'
+            }}>
+                {/* Header */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '15px',
+                    padding: '20px',
+                    background: '#00523c',
+                    borderBottom: '1px solid #555'
+                }}>
+                    <button
+                        onClick={onBack}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#FDB913',
+                            fontSize: '24px',
+                            cursor: 'pointer',
+                            padding: '5px'
+                        }}
+                    >
+                        {Icons.back}
+                    </button>
+                    <h1 style={{
+                        fontSize: '18px',
+                        fontWeight: '900',
+                        color: '#FDB913',
+                        letterSpacing: '2px',
+                        margin: 0
+                    }}>
+                        {category.title}
+                    </h1>
+                </div>
+
+                {/* Kartlar Container - Alt alta, Ortalanmış */}
+                <div style={{
+                    padding: '30px 20px',
+                    maxWidth: '600px',
+                    margin: '0 auto'
+                }}>
+                    {loading ? (
+                        <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}>
+                            <div style={{
+                                width: '40px',
+                                height: '40px',
+                                border: '4px solid #555',
+                                borderTopColor: '#FDB913',
+                                borderRadius: '50%',
+                                animation: 'spin 1s linear infinite'
+                            }}></div>
+                        </div>
+                    ) : filtered.length > 0 ? (
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '20px'
+                        }}>
+                            {filtered.map(p => {
+                                const homeTeam = p.homeTeam || p.home_team || 'Ev Sahibi';
+                                const awayTeam = p.awayTeam || p.away_team || 'Deplasman';
+
+                                return (
+                                    <div
+                                        key={p.id}
+                                        style={{
+                                            background: '#2e3335',
+                                            border: '3px solid #006A4E',
+                                            borderRadius: '20px',
+                                            padding: '24px',
+                                            boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+                                        }}
+                                    >
+                                        {/* Lig Bilgisi */}
+                                        {p.league && (
+                                            <div style={{
+                                                fontSize: '12px',
+                                                fontWeight: '700',
+                                                color: 'rgba(253, 185, 19, 0.7)',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '1px',
+                                                marginBottom: '20px',
+                                                textAlign: 'center'
+                                            }}>
+                                                {p.league}
+                                            </div>
+                                        )}
+
+                                        {/* Takımlar ve BUGÜN */}
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: '20px'
+                                        }}>
+                                            {/* Ev Sahibi */}
+                                            <div style={{
+                                                flex: 1,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                gap: '10px'
+                                            }}>
+                                                <img
+                                                    src={getTeamLogo(homeTeam)}
+                                                    alt={homeTeam}
+                                                    onError={handleImgError}
+                                                    style={{
+                                                        width: '70px',
+                                                        height: '70px',
+                                                        objectFit: 'contain'
+                                                    }}
+                                                />
+                                                <span style={{
+                                                    fontSize: '14px',
+                                                    fontWeight: '700',
+                                                    color: '#ffffff',
+                                                    textAlign: 'center',
+                                                    lineHeight: '1.2'
+                                                }}>
+                                                    {homeTeam}
+                                                </span>
+                                            </div>
+
+                                            {/* Ortada BUGÜN */}
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                minWidth: '80px'
+                                            }}>
+                                                <span style={{
+                                                    fontSize: '20px',
+                                                    fontWeight: '900',
+                                                    color: '#FDB913',
+                                                    textTransform: 'uppercase'
+                                                }}>
+                                                    BUGÜN
+                                                </span>
+                                            </div>
+
+                                            {/* Deplasman */}
+                                            <div style={{
+                                                flex: 1,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                gap: '10px'
+                                            }}>
+                                                <img
+                                                    src={getTeamLogo(awayTeam)}
+                                                    alt={awayTeam}
+                                                    onError={handleImgError}
+                                                    style={{
+                                                        width: '70px',
+                                                        height: '70px',
+                                                        objectFit: 'contain'
+                                                    }}
+                                                />
+                                                <span style={{
+                                                    fontSize: '14px',
+                                                    fontWeight: '700',
+                                                    color: '#ffffff',
+                                                    textAlign: 'center',
+                                                    lineHeight: '1.2'
+                                                }}>
+                                                    {awayTeam}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Oranlar Grid - Sadece varsa göster */}
+                                        {(p['2_5_ust'] || p['3_5_ust'] || p['ms_5_5_ust'] || p.kategori || p.prediction) && (
+                                            <div style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+                                                gap: '12px',
+                                                marginTop: '24px'
+                                            }}>
+                                                {p['2_5_ust'] && (
+                                                    <div style={{
+                                                        background: 'rgba(0,0,0,0.4)',
+                                                        padding: '14px',
+                                                        borderRadius: '12px',
+                                                        textAlign: 'center'
+                                                    }}>
+                                                        <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px' }}>2.5 Üst</div>
+                                                        <div style={{ fontSize: '22px', fontWeight: '700', color: '#FDB913' }}>{p['2_5_ust']}</div>
+                                                    </div>
+                                                )}
+                                                {p['3_5_ust'] && (
+                                                    <div style={{
+                                                        background: 'rgba(0,0,0,0.4)',
+                                                        padding: '14px',
+                                                        borderRadius: '12px',
+                                                        textAlign: 'center'
+                                                    }}>
+                                                        <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px' }}>3.5 Üst</div>
+                                                        <div style={{ fontSize: '22px', fontWeight: '700', color: '#FDB913' }}>{p['3_5_ust']}</div>
+                                                    </div>
+                                                )}
+                                                {p['ms_5_5_ust'] && (
+                                                    <div style={{
+                                                        background: 'rgba(0,0,0,0.4)',
+                                                        padding: '14px',
+                                                        borderRadius: '12px',
+                                                        textAlign: 'center'
+                                                    }}>
+                                                        <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px' }}>MS 5.5 Üst</div>
+                                                        <div style={{ fontSize: '22px', fontWeight: '700', color: '#FDB913' }}>{p['ms_5_5_ust']}</div>
+                                                    </div>
+                                                )}
+                                                {p.kategori && (
+                                                    <div style={{
+                                                        background: 'rgba(0,0,0,0.4)',
+                                                        padding: '14px',
+                                                        borderRadius: '12px',
+                                                        textAlign: 'center'
+                                                    }}>
+                                                        <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px' }}>Tahmin</div>
+                                                        <div style={{ fontSize: '22px', fontWeight: '700', color: '#FDB913' }}>{p.kategori}</div>
+                                                    </div>
+                                                )}
+                                                {p.prediction && !p.kategori && (
+                                                    <div style={{
+                                                        background: 'rgba(0,0,0,0.4)',
+                                                        padding: '14px',
+                                                        borderRadius: '12px',
+                                                        textAlign: 'center'
+                                                    }}>
+                                                        <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px' }}>Tahmin</div>
+                                                        <div style={{ fontSize: '22px', fontWeight: '700', color: '#FDB913' }}>{p.prediction}</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p style={{ textAlign: 'center', color: '#888', padding: '50px', fontSize: '16px' }}>
+                            Bugün için henüz tahmin bulunamadı.
+                        </p>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    if (IS_CARD_KORNER_MENU && !selectedSubCategory) {
         return (
             <div className="category-page">
                 <div className="category-header">
                     <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
                     <h1 className="category-title">{category.title}</h1>
                 </div>
-                <div style={{ padding: 50, textAlign: 'center', color: '#666' }}>
-                    {/* Bu sayfa şu an boştur */}
+                <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15, maxWidth: 600, margin: '0 auto' }}>
+                    <div className="prediction-card" style={{ textAlign: 'center', cursor: 'pointer', padding: 30 }} onClick={() => setSelectedSubCategory('card')}>
+                        <img src="/kart_istatistik.png" style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt="Kart İstatistikleri" />
+                        <h3 style={{ color: 'var(--gold)', fontSize: 18, marginBottom: 10 }}>Kart İstatistikleri</h3>
+                    </div>
+                    <div className="prediction-card" style={{ textAlign: 'center', cursor: 'pointer', padding: 30 }} onClick={() => setSelectedSubCategory('corner')}>
+                        <img src="/korner_istatistik.png" style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt="Korner İstatistikleri" />
+                        <h3 style={{ color: '#10B981', fontSize: 18, marginBottom: 10 }}>Korner İstatistikleri</h3>
+                    </div>
                 </div>
             </div>
         );
     }
 
-
     return (
         <div className="category-page">
             <div className="category-header">
-                <button className="category-back-btn" onClick={selectedTipster ? () => setSelectedTipster(null) : selectedLeague ? () => setSelectedLeague(null) : onBack}>{Icons.back} </button>
-                <h1 className="category-title">{selectedTipster ? selectedTipster.name : selectedLeague ? selectedLeague : category.title}</h1>
+                <button className="category-back-btn" onClick={selectedTipster ? () => setSelectedTipster(null) : selectedLeague ? () => setSelectedLeague(null) : selectedSubCategory ? () => setSelectedSubCategory(null) : onBack}>{Icons.back} </button>
+                <h1 className="category-title">
+                    {selectedTipster ? selectedTipster.name :
+                        selectedLeague ? selectedLeague :
+                            selectedSubCategory === 'card' ? 'Kart İstatistikleri' :
+                                selectedSubCategory === 'corner' ? 'Korner İstatistikleri' :
+                                    category.title}
+                </h1>
             </div>
-            {IS_CARDS_MENU && !selectedLeague ? (
-                <>
-                    <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
-                        {LEAGUES.map(l => (
-                            <div key={l.id} className="prediction-card" style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => setSelectedLeague(l.id)}>
-                                <img src={l.image} style={{ width: 60, height: 60, borderRadius: '50%', border: '2px solid var(--gold)', marginBottom: 10 }} />
-                                <h3 style={{ color: 'var(--gold)', fontSize: 15 }}>{l.title}</h3>
-                                <p style={{ fontSize: 10, color: '#aaa' }}>{l.desc}</p>
-                            </div>
-                        ))}
-                    </div>
-                    <p style={{ textAlign: 'center', fontSize: 11, fontStyle: 'italic', color: '#666', marginTop: 30 }}>* Tüm analizler bet365 oran analizlerine dayalıdır.</p>
-                </>
-            ) : (
-                <div className="predictions-list">
-                    {loading ? <div className="loading"><div className="spinner" /></div> : filtered.length > 0 ? filtered.map(p => <PredictionCard key={p.id} item={p} />) : <p style={{ textAlign: 'center', color: '#666' }}>Tahmin bulunamadı.</p>}
-                </div>
-            )}
+            <div className="predictions-list">
+                {loading ? <div className="loading"><div className="spinner" /></div> : filtered.length > 0 ? filtered.map(p => <PredictionCard key={p.id} item={p} />) : <p style={{ textAlign: 'center', color: '#666' }}>Tahmin bulunamadı.</p>}
+            </div>
         </div>
     );
 }
 
 export default function App() {
+    console.log('App rendering...');
     const [route, setRoute] = useState('home');
     const [routeParams, setRouteParams] = useState({});
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -963,16 +1989,27 @@ export default function App() {
                 try {
                     const d = await getDoc(doc(db, 'users', u.uid));
                     if (d.exists()) {
-                        setUserData(d.data());
+                        const data = d.data();
+                        // Eski isAdmin alanını yeni role sistemine çevir
+                        if (data.isAdmin && !data.role) {
+                            await setDoc(doc(db, 'users', u.uid), { role: 'admin' }, { merge: true });
+                            setUserData({ ...data, role: 'admin' });
+                        } else if (!data.role) {
+                            await setDoc(doc(db, 'users', u.uid), { role: 'user' }, { merge: true });
+                            setUserData({ ...data, role: 'user' });
+                        } else {
+                            setUserData(data);
+                        }
                     } else {
-                        const initData = { uid: u.uid, email: u.email, username: u.email.split('@')[0], isAdmin: false, isPremium: false, createdAt: serverTimestamp() };
+                        const initData = { uid: u.uid, email: u.email, username: u.email.split('@')[0], isAdmin: false, isPremium: false, role: 'user', tipsterName: null, createdAt: serverTimestamp() };
                         await setDoc(doc(db, 'users', u.uid), initData);
                         setUserData(initData);
                     }
                 } catch (e) {
                     console.error(e);
                     const token = await getIdTokenResult(u);
-                    setUserData({ uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], isAdmin: !!token.claims.admin });
+                    const isAdmin = !!token.claims.admin;
+                    setUserData({ uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], isAdmin, role: isAdmin ? 'admin' : 'user' });
                 }
             } else {
                 setUser(null);
@@ -997,11 +2034,59 @@ export default function App() {
 
     const render = () => {
         switch (route) {
-            case 'auth': return <AuthScreen onBack={() => navigate('home')} showAlert={showAlert} />;
+            case 'auth': return <AuthScreen onBack={() => navigate('home')} showAlert={showAlert} initialIsLogin={routeParams.isLogin !== undefined ? routeParams.isLogin : true} />;
             case 'profile': return <ProfileScreen user={user} userData={userData} onBack={r => navigate(r || 'home')} showAlert={showAlert} />;
-            case 'admin': return <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} />;
+            case 'admin':
+                if (userData?.role === 'admin') {
+                    const AdminPanel = () => {
+                        const [adminView, setAdminView] = useState('content');
+
+                        return (
+                            <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
+                                <button className="back-btn" onClick={() => navigate('home')}>Geri</button>
+                                <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, marginTop: 20 }}>
+                                    <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10, height: 'fit-content' }}>
+                                        <h3 style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 15, textAlign: 'center' }}>ADMIN MENU</h3>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                            <button
+                                                className={`hero-btn secondary ${adminView === 'dashboard' ? 'active' : ''}`}
+                                                style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }}
+                                                onClick={() => setAdminView('dashboard')}
+                                            >
+                                                Dashboard
+                                            </button>
+                                            <button
+                                                className={`hero-btn secondary ${adminView === 'content' ? 'active' : ''}`}
+                                                style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }}
+                                                onClick={() => setAdminView('content')}
+                                            >
+                                                İçerik Yönetimi
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
+                                        {adminView === 'dashboard' ? (
+                                            <AdminDashboard onBack={navigate} userData={userData} />
+                                        ) : (
+                                            <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    };
+                    return <AdminPanel />;
+                }
+                return <div className="loading">Yetkisiz erişim</div>;
+            case 'editor':
+                if (userData?.role === 'editor') return <EditorScreen onBack={navigate} showAlert={showAlert} userData={userData} />;
+                return <div className="loading">Yetkisiz erişim</div>;
+            case 'tipster':
+                if (userData?.role === 'tipster') return <TipsterScreen onBack={navigate} showAlert={showAlert} userData={userData} />;
+                return <div className="loading">Yetkisiz erişim</div>;
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} />;
-            case 'yapay-zeka-analizleri': return <div style={{ padding: 100, textAlign: 'center', color: '#666' }}>Yapay Zeka Analizleri Sayfası Hazırlanıyor...</div>;
+            case 'coupons': return <CouponScreen onBack={() => navigate('home')} showAlert={showAlert} />;
+            case 'yapay-zeka-analizleri': return <OddsyKGAnaliz onBack={() => navigate('home')} />;
             default: return <HomePage onLoginClick={() => navigate(user ? 'profile' : 'auth')} onNavigate={navigate} onShowLegal={setLegalType} />;
         }
     };
