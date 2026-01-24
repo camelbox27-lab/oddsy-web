@@ -43,7 +43,7 @@ function GununTercihleri() {
             <h2 style={{
                 fontSize: '20px',
                 fontWeight: '900',
-                color: '#FDB913',
+                color: '#4ade80',
                 marginBottom: '16px',
                 display: 'flex',
                 alignItems: 'center',
@@ -53,9 +53,11 @@ function GununTercihleri() {
             </h2>
 
             <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-                gap: '20px'
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '20px',
+                maxWidth: '800px',
+                margin: '0 auto'
             }}>
                 {matches.length > 0 ? (
                     matches.map(match => {
@@ -65,13 +67,7 @@ function GununTercihleri() {
                         return (
                             <div
                                 key={match.id}
-                                style={{
-                                    background: '#2e3335',
-                                    border: '3px solid #006A4E',
-                                    borderRadius: '20px',
-                                    padding: '24px',
-                                    transition: 'all 0.3s ease'
-                                }}
+                                className="prediction-card"
                             >
                                 {/* Lig Bilgisi */}
                                 {match.league && (
@@ -88,7 +84,7 @@ function GununTercihleri() {
                                     </div>
                                 )}
 
-                                {/* Takımlar ve Bugün */}
+                                {/* Takımlar ve Bugün - ILK YARI GOL STYLE */}
                                 <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -96,150 +92,72 @@ function GununTercihleri() {
                                     gap: '16px'
                                 }}>
                                     {/* Ev Sahibi */}
-                                    <div style={{
-                                        flex: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        gap: '8px'
-                                    }}>
-                                        <img
-                                            src={getTeamLogo(homeTeam)}
-                                            alt={homeTeam}
-                                            onError={handleLogoError}
-                                            style={{
-                                                width: '70px',
-                                                height: '70px',
-                                                objectFit: 'contain'
-                                            }}
-                                        />
-                                        <span style={{
-                                            fontSize: '16px',
-                                            fontWeight: '700',
-                                            color: '#fff',
-                                            textAlign: 'center'
-                                        }}>
-                                            {homeTeam}
-                                        </span>
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                        <img src={getTeamLogo(homeTeam)} alt={homeTeam} onError={handleLogoError} style={{ width: '70px', height: '70px', objectFit: 'contain' }} />
+                                        <span style={{ fontSize: '16px', fontWeight: '700', color: '#fff', textAlign: 'center' }}>{homeTeam}</span>
                                     </div>
 
-                                    {/* Ortada Sadece BUGÜN */}
-                                    <div style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        minWidth: '80px'
-                                    }}>
-                                        <span style={{
-                                            fontSize: '18px',
-                                            fontWeight: '900',
-                                            color: '#FDB913',
-                                            textTransform: 'uppercase'
-                                        }}>
-                                            BUGÜN
-                                        </span>
+                                    {/* Ortada Sadece VS */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
+                                        <span style={{ fontSize: '24px', fontWeight: '900', color: '#FDB913', fontStyle: 'italic' }}>VS</span>
                                     </div>
 
                                     {/* Deplasman */}
-                                    <div style={{
-                                        flex: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        gap: '8px'
-                                    }}>
-                                        <img
-                                            src={getTeamLogo(awayTeam)}
-                                            alt={awayTeam}
-                                            onError={handleLogoError}
-                                            style={{
-                                                width: '70px',
-                                                height: '70px',
-                                                objectFit: 'contain'
-                                            }}
-                                        />
-                                        <span style={{
-                                            fontSize: '16px',
-                                            fontWeight: '700',
-                                            color: '#fff',
-                                            textAlign: 'center'
-                                        }}>
-                                            {awayTeam}
-                                        </span>
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                        <img src={getTeamLogo(awayTeam)} alt={awayTeam} onError={handleLogoError} style={{ width: '70px', height: '70px', objectFit: 'contain' }} />
+                                        <span style={{ fontSize: '16px', fontWeight: '700', color: '#fff', textAlign: 'center' }}>{awayTeam}</span>
                                     </div>
                                 </div>
 
-                                {/* Oranlar Grid - Sadece varsa göster */}
-                                {(match['2_5_ust'] || match['3_5_ust'] || match['ms_5_5_ust'] || match.prediction || match.kategori) && (
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
-                                        gap: '10px',
-                                        marginTop: '20px'
-                                    }}>
-                                        {match['2_5_ust'] && (
-                                            <div style={{
-                                                background: 'rgba(0,0,0,0.3)',
-                                                padding: '12px',
-                                                borderRadius: '10px',
-                                                textAlign: 'center'
-                                            }}>
-                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>2.5 Üst</div>
-                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match['2_5_ust']}</div>
+                                {/* Oranlar - Single Row Enforcement */}
+                                <div style={{ marginTop: '20px' }}>
+                                    {(() => {
+                                        let label = '';
+                                        let odds = '';
+
+                                        if (match['2_5_ust']) { label = '2.5 Üst'; odds = match['2_5_ust']; }
+                                        else if (match['3_5_ust']) { label = '3.5 Üst'; odds = match['3_5_ust']; }
+                                        else if (match['ms_5_5_ust']) { label = 'MS 5.5 Üst'; odds = match['ms_5_5_ust']; }
+                                        else if (match.prediction) { label = match.prediction; odds = match.odds || '-'; }
+                                        else if (match.kategori) { label = match.kategori; odds = match.odds || '-'; }
+
+                                        if (!label) return null;
+
+                                        return (
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                {/* Left: TAHMİN */}
+                                                <div style={{
+                                                    background: 'rgba(0,0,0,0.3)',
+                                                    padding: '12px',
+                                                    borderRadius: '12px',
+                                                    textAlign: 'center',
+                                                    border: '1px solid rgba(255,255,255,0.05)'
+                                                }}>
+                                                    <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', fontWeight: '700' }}>TAHMİN</div>
+                                                    <div style={{ fontSize: '18px', fontWeight: '900', color: '#4ade80' }}>{label}</div>
+                                                </div>
+
+                                                {/* Right: ORAN */}
+                                                <div style={{
+                                                    background: 'rgba(0,0,0,0.3)',
+                                                    padding: '12px',
+                                                    borderRadius: '12px',
+                                                    textAlign: 'center',
+                                                    border: '1px solid rgba(255,255,255,0.05)'
+                                                }}>
+                                                    <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', fontWeight: '700' }}>ORAN</div>
+                                                    <div style={{ fontSize: '18px', fontWeight: '900', color: '#FDB913' }}>{odds}</div>
+                                                </div>
                                             </div>
-                                        )}
-                                        {match['3_5_ust'] && (
-                                            <div style={{
-                                                background: 'rgba(0,0,0,0.3)',
-                                                padding: '12px',
-                                                borderRadius: '10px',
-                                                textAlign: 'center'
-                                            }}>
-                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>3.5 Üst</div>
-                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match['3_5_ust']}</div>
-                                            </div>
-                                        )}
-                                        {match['ms_5_5_ust'] && (
-                                            <div style={{
-                                                background: 'rgba(0,0,0,0.3)',
-                                                padding: '12px',
-                                                borderRadius: '10px',
-                                                textAlign: 'center'
-                                            }}>
-                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>MS 5.5 Üst</div>
-                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match['ms_5_5_ust']}</div>
-                                            </div>
-                                        )}
-                                        {match.prediction && (
-                                            <div style={{
-                                                background: 'rgba(0,0,0,0.3)',
-                                                padding: '12px',
-                                                borderRadius: '10px',
-                                                textAlign: 'center'
-                                            }}>
-                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>Tahmin</div>
-                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match.prediction}</div>
-                                            </div>
-                                        )}
-                                        {match.kategori && (
-                                            <div style={{
-                                                background: 'rgba(0,0,0,0.3)',
-                                                padding: '12px',
-                                                borderRadius: '10px',
-                                                textAlign: 'center'
-                                            }}>
-                                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>Kategori</div>
-                                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#FDB913' }}>{match.kategori}</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                        );
+                                    })()}
+                                </div>
                             </div>
                         );
                     })
                 ) : (
                     <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center' }}>
-                        <p style={{ color: 'rgba(253, 185, 19, 0.6)', fontWeight: '700' }}>Henüz tahmin bulunmuyor.</p>
+                        <p style={{ color: 'rgba(253, 185, 19, 0.6)', fontWeight: '700' }}>Henüz tercih bulunmuyor.</p>
                     </div>
                 )}
             </div>

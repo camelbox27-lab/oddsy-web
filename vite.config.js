@@ -1,22 +1,50 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
+// https://vitejs.dev/config/
 export default defineConfig({
     plugins: [react()],
     server: {
-        headers: {
-            'Content-Security-Policy': "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://cdn.tailwindcss.com https://fonts.googleapis.com https://fonts.gstatic.com data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://cdn.tailwindcss.com; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com wss://*.firebaseio.com wss://*.firebasedatabase.app https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src 'self' https://*.firebaseapp.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com;",
-            'X-Frame-Options': 'DENY',
-            'X-Content-Type-Options': 'nosniff',
-            'Referrer-Policy': 'strict-origin-when-cross-origin',
-            'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
-        },
-        proxy: {
-            '/api/firebase': {
-                target: 'https://oddsy-778d7-default-rtdb.europe-west1.firebasedatabase.app',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api\/firebase/, '')
+        port: 3000,
+        host: true,
+        open: true,
+    },
+    build: {
+        outDir: 'dist',
+        sourcemap: false,
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true,
+                pure_funcs: ['console.log', 'console.info', 'console.debug']
             }
+        },
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vendor': ['react', 'react-dom'],
+                    'firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/database'],
+                    'ui': ['lucide-react', 'sweetalert2']
+                },
+                chunkFileNames: 'assets/js/[name]-[hash].js',
+                entryFileNames: 'assets/js/[name]-[hash].js',
+                assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
+            }
+        },
+        chunkSizeWarningLimit: 1000,
+        cssCodeSplit: true,
+        assetsInlineLimit: 4096
+    },
+    define: {
+        'process.env': {}
+    },
+    resolve: {
+        alias: {
+            '@': '/src'
         }
+    },
+    optimizeDeps: {
+        include: ['react', 'react-dom', 'firebase/app', 'firebase/auth', 'firebase/firestore']
     }
 })

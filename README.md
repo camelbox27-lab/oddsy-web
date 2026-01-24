@@ -1,75 +1,89 @@
-# Oddsy Web Version - Firebase Authentication Setup
+# ODDSY - Futbol Tahmin Platformu
 
-## ✅ Tamamlanan Değişiklikler
+Modern, güvenli ve performanslı futbol tahmin platformu.
 
-### 1. UI/UX Güncellemeleri
-- ✅ Bottom navigation kaldırıldı
-- ✅ Ana sayfaya Tahmira.com tarzında kategori kartları eklendi (9 kategori, grid düzeninde)
-- ✅ Tüm "Tahmira" referansları "Oddsy" olarak güncellendi
-- ✅ Responsive tasarım iyileştirildi
+## 🚀 Özellikler
 
-### 2. Firebase Entegrasyonu
-- ✅ `.env` dosyası oluşturuldu ve Firebase credentials eklendi
-- ✅ Firebase config environment variables'dan okunuyor
-- ✅ Mobil uygulama ile aynı Firebase projesi kullanılıyor (oddsy-778d7)
+### Güvenlik
+- ✅ Input sanitization (XSS koruması)
+- ✅ Rate limiting
+- ✅ Email validation
+- ✅ Secure authentication
+- ✅ Error logging
 
-## 🔐 Firebase Credentials
+### Performans
+- ✅ Code splitting
+- ✅ Lazy loading
+- ✅ Image optimization
+- ✅ Caching layer
+- ✅ Memoization
+- ✅ Bundle optimization
 
-`.env` dosyası aşağıdaki bilgileri içeriyor:
-- Project ID: `oddsy-778d7`
-- Auth Domain: `oddsy-778d7.firebaseapp.com`
-- Storage Bucket: `oddsy-778d7.firebasestorage.app`
+### Mimari
+- ✅ Modüler yapı
+- ✅ Global state management (Zustand)
+- ✅ Custom hooks
+- ✅ Reusable components
+- ✅ Centralized constants
 
-## 🚀 Çalıştırma
+## 📦 Kurulum
 
 ```bash
-cd web-version
-npm run dev -- --port 5000
+npm install
 ```
 
-Tarayıcıda: http://localhost:5000
+## 🔧 Geliştirme
 
-## 📝 Giriş Yapma
-
-Firebase Authentication kullanarak giriş yapabilirsiniz:
-
-1. Sağ üstteki "Giriş Yap" butonuna tıklayın
-2. Firebase'de kayıtlı e-posta ve şifrenizi girin
-3. "GİRİŞ YAP" butonuna tıklayın
-
-**Not:** Firebase Console'da kayıtlı bir kullanıcı hesabınız olmalıdır.
-
-## 🔧 Firebase Console
-
-Admin olarak giriş yapmak için:
-1. Firebase Console'a gidin: https://console.firebase.google.com
-2. `oddsy-778d7` projesini seçin
-3. Authentication > Users bölümünden kullanıcıları yönetin
-4. Firestore Database > users koleksiyonundan kullanıcı rollerini düzenleyin (isAdmin: true)
-
-## 📂 Proje Yapısı
-
-```
-web-version/
-├── .env                 # Firebase credentials (gitignore'da)
-├── .env.example         # Template dosyası
-├── src/
-│   ├── App.jsx         # Ana uygulama (Firebase entegrasyonu dahil)
-│   └── main.jsx        # Entry point
-├── index.html
-└── package.json
+```bash
+npm run dev
 ```
 
-## 🎨 Ana Sayfa Özellikleri
+## 🏗️ Production Build
 
-1. **Hero Section**: Merkezi başlık ve CTA butonları
-2. **Kategori Kartları**: 9 tahmin kategorisi (grid düzeninde)
-3. **Özellikler**: 3 özellik kartı (Gerçek Veriler, Yapay Zeka, Kullanıcı Dostu)
-4. **Analiz Bölümü**: Günün analizi
-5. **Footer**: 4 kolonlu footer (Oddsy, Bağlantılar, Destek, İletişim)
+```bash
+npm run build
+```
 
-## 🔒 Güvenlik
+## 📊 Build Analizi
 
-- `.env` dosyası `.gitignore`'da - asla commit edilmemeli
-- Firebase credentials production'da environment variables olarak saklanmalı
-- Firestore rules düzgün yapılandırılmış olmalı
+```bash
+npm run build:analyze
+```
+
+## 🔐 Ortam Değişkenleri
+
+`.env.example` dosyasını `.env` olarak kopyalayın ve Firebase bilgilerinizi girin.
+
+## 📁 Proje Yapısı
+
+```
+src/
+├── components/      # Reusable components
+├── pages/          # Page components
+├── hooks/          # Custom hooks
+├── store/          # Global state (Zustand)
+├── utils/          # Utility functions
+├── constants/      # App constants
+└── styles/         # Global styles
+```
+
+## 🛡️ Güvenlik Özellikleri
+
+- Input sanitization with DOMPurify
+- Rate limiting (20 req/min)
+- XSS protection
+- CSRF protection
+- Secure headers
+
+## ⚡ Performans Optimizasyonları
+
+- Code splitting by route
+- Lazy loading components
+- Image lazy loading
+- Firebase data caching
+- Memoized components
+- Optimized bundle size
+
+## 📝 Lisans
+
+© 2025 ODDSY. Tüm hakları saklıdır.
