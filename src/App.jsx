@@ -1,7 +1,5 @@
-import { getApp, getApps, initializeApp } from 'firebase/app';
 import {
     createUserWithEmailAndPassword,
-    getAuth,
     getIdTokenResult,
     onAuthStateChanged,
     sendEmailVerification,
@@ -17,40 +15,24 @@ import {
     doc,
     getDoc,
     getDocs,
-    getFirestore,
     onSnapshot,
     query,
     serverTimestamp,
     setDoc
 } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { useCallback, useEffect, useState } from 'react';
 
-import { getDatabase } from 'firebase/database';
 import DroppingOddsModal from './components/DroppingOddsModal';
 import Kart from './components/Kart';
 import Korner from './components/Korner';
 import OddsyKGAnaliz from './components/OddsyKGAnaliz';
+import { auth, db, functions } from './firebaseConfig';
 import GununSurprizleri from './GununSurprizleri';
 import GununTercihleri from './GununTercihleri';
 import { getTeamLogo, handleLogoError } from './helper';
 
-// Firebase Config
-const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://oddsy-778d7-default-rtdb.europe-west1.firebasedatabase.app/",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
 
-console.log('Firebase initializing...');
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-console.log('Firebase initialized.');
-const rtdb = getDatabase(app);
 
 // STYLES
 const styles = `
@@ -1496,13 +1478,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
         setLoading(true);
         try {
             if (isLogin) {
-                const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
-                if (!userCredential.user.emailVerified) {
-                    await signOut(auth);
-                    showAlert('Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın. Doğrulama linki gönderildi.', 'error');
-                    await sendEmailVerification(userCredential.user);
-                    return;
-                }
+                await signInWithEmailAndPassword(auth, email.trim(), password);
                 showAlert('Giriş başarılı!', 'success');
                 onBack();
             } else {
@@ -1523,6 +1499,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 setIsLogin(true);
             }
         } catch (err) {
+            console.error('Firebase Auth Error:', err.code, err.message);
             showAlert('İşlem başarısız: ' + err.message, 'error');
         } finally {
             setLoading(false);
@@ -2078,9 +2055,9 @@ function EditorScreen({ onBack, showAlert, userData }) {
             const u = auth.currentUser;
             if (!u) throw new Error('Oturum kapalı');
 
-            const docData = { ...matchData, isPremium: matchData.isPremium || false, userId: u.uid, authorId: u.uid, createdAt: serverTimestamp() };
-            const docRef = await addDoc(collection(db, 'predictions'), docData);
-            console.log('EditorScreen: Prediction added with ID:', docRef.id);
+            const submitFn = httpsCallable(functions, 'submitPrediction');
+            await submitFn({ ...matchData, isPremium: matchData.isPremium || false });
+            console.log('EditorScreen: Prediction added via Cloud Function');
             showAlert('Editör tahmini eklendi!', 'success');
             // Form alanlarını temizle
             setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 8, status: 'pending', analysis: '', isPremium: false });
@@ -2129,9 +2106,9 @@ function TipsterScreen({ onBack, showAlert, userData }) {
             if (!u) throw new Error('Oturum kapalı');
             if (!userData?.tipsterName) throw new Error('Tahminci adı atanmamış');
 
-            const docData = { ...matchData, tipster: userData.tipsterName, userId: u.uid, authorId: u.uid, createdAt: serverTimestamp() };
-            const docRef = await addDoc(collection(db, 'predictions'), docData);
-            console.log('TipsterScreen: Prediction added with ID:', docRef.id);
+            const submitFn = httpsCallable(functions, 'submitPrediction');
+            await submitFn({ ...matchData, tipster: userData.tipsterName });
+            console.log('TipsterScreen: Prediction added via Cloud Function');
             showAlert('Tahmin eklendi!', 'success');
             // Form alanlarını temizle
             setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 2, status: 'pending', analysis: '', tipster: userData.tipsterName });
@@ -2250,9 +2227,9 @@ function AdminScreen({ onBack, showAlert, userData }) {
                 finalData.cornerHomeAvg = ''; finalData.cornerAwayAvg = ''; finalData.cornerGenAvg = '';
             }
 
-            const docData = { ...finalData, userId: u.uid, authorId: u.uid, createdAt: serverTimestamp() };
-            const docRef = await addDoc(collection(db, 'predictions'), docData);
-            console.log(`AdminScreen: ${view} - Prediction added with ID:`, docRef.id, 'categoryKey:', finalData.categoryKey);
+            const submitFn = httpsCallable(functions, 'submitPrediction');
+            await submitFn(finalData);
+            console.log(`AdminScreen: ${view} - Prediction added via Cloud Function`);
 
             showAlert('Eklendi!', 'success');
 
@@ -2393,10 +2370,12 @@ function AdminScreen({ onBack, showAlert, userData }) {
     );
 }
 
-function CouponScreen({ onBack, showAlert }) {
+function CouponScreen({ onBack, showAlert, userData }) {
     const [coupons, setCoupons] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedType, setSelectedType] = useState(null);
+
+    const isAdmin = userData?.role === 'admin';
 
     useEffect(() => {
         console.log('CouponScreen: Setting up onSnapshot listener for coupons...');
@@ -2407,14 +2386,6 @@ function CouponScreen({ onBack, showAlert }) {
                 return { id: d.id, ...data };
             });
             console.log(`CouponScreen: Total fetched coupons from Firestore: ${allCoupons.length}`);
-
-            // Log each coupon type for debugging
-            allCoupons.forEach(c => console.log(`CouponScreen: Found coupon - ID: ${c.id}, Type: "${c.type}"`));
-
-            COUPON_TYPES.forEach(type => {
-                const count = allCoupons.filter(c => c.type === type.dbName).length;
-                console.log(`CouponScreen: Type "${type.dbName}" has ${count} matching coupons`);
-            });
 
             // Sıralama
             allCoupons.sort((a, b) => {
@@ -2437,6 +2408,27 @@ function CouponScreen({ onBack, showAlert }) {
         return () => unsub();
     }, []);
 
+    const handleDeleteCoupon = async (id) => {
+        if (!window.confirm('Bu kuponu silmek istediğinize emin misiniz?')) return;
+        try {
+            await deleteDoc(doc(db, 'coupons', id));
+            showAlert('Kupon silindi.', 'success');
+        } catch (err) {
+            console.error(err);
+            showAlert('Silme başarısız: ' + err.message, 'error');
+        }
+    };
+
+    const updateCouponStatus = async (id, status) => {
+        try {
+            await setDoc(doc(db, 'coupons', id), { status }, { merge: true });
+            showAlert(`Kupon durumu güncellendi: ${status}`, 'success');
+        } catch (err) {
+            console.error(err);
+            showAlert('Güncelleme başarısız: ' + err.message, 'error');
+        }
+    };
+
     const couponTypes = COUPON_TYPES;
 
     if (loading) return <div className="loading"><div className="spinner" /></div>;
@@ -2452,19 +2444,14 @@ function CouponScreen({ onBack, showAlert }) {
                 <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15, maxWidth: 600, margin: '0 auto' }}>
                     {couponTypes.map(type => {
                         const typeCoupons = coupons.filter(c => c.type === type.dbName);
+                        // En son eklenen kuponu göster, tercihen sonucu belli olmayan
                         const latestCoupon = typeCoupons[0];
 
                         return (
                             <div key={type.id} className="menu-selection-card" onClick={() => setSelectedType(type)}>
                                 <img src={type.image} style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt={type.name} />
                                 <h3 style={{ color: type.color, fontSize: 18, marginBottom: 10 }}>{type.name}</h3>
-                                {latestCoupon && (
-                                    <div style={{ marginTop: 15, padding: 10, background: 'rgba(0,0,0,0.3)', borderRadius: 8, width: '100%' }}>
-                                        <div style={{ fontSize: 11, color: '#aaa' }}>Toplam Oran</div>
-                                        <div style={{ fontSize: 24, color: type.color, fontWeight: 'bold' }}>{latestCoupon.totalOdds}</div>
-                                        <div style={{ fontSize: 10, color: '#666', marginTop: 5 }}>{latestCoupon.matches?.length || 0} Maç</div>
-                                    </div>
-                                )}
+                                {/* İstatistikler kaldırıldı, sadece kart ismi ve görsel kalacak */}
                                 {!latestCoupon && (
                                     <div style={{ marginTop: 15, padding: 10, fontSize: 12, color: '#666' }}>Henüz kupon eklenmedi</div>
                                 )}
@@ -2487,46 +2474,144 @@ function CouponScreen({ onBack, showAlert }) {
             </div>
 
             <div className="predictions-list">
-                {filteredCoupons.length > 0 ? filteredCoupons.map(c => (
-                    <div key={c.id} className="coupon-card">
-                        <div className="coupon-header">
-                            <span className="coupon-title">{c.type}</span>
-                        </div>
-                        {c.matches.map((m, idx) => (
-                            <div key={idx} className="coupon-match">
-                                <div className="coupon-match-header">
-                                    <div className="coupon-dot" style={{ background: selectedType.color }}></div>
-                                    <div className="coupon-match-prediction" style={{ color: selectedType.color }}>{m.home} - {m.prediction}</div>
-                                    <div className="coupon-match-odds" style={{ color: '#fff', fontWeight: 'bold' }}>{m.odds}</div>
-                                </div>
-                                <div className="coupon-match-teams" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '5px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <img
-                                            src={getTeamLogo(m.home)}
-                                            alt={m.home}
-                                            onError={handleLogoError}
-                                            style={{ width: '24px', height: '24px', objectFit: 'contain' }}
-                                        />
-                                        <span style={{ color: '#fff', fontSize: '14px' }}>{m.home}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <img
-                                            src={getTeamLogo(m.away)}
-                                            alt={m.away}
-                                            onError={handleLogoError}
-                                            style={{ width: '24px', height: '24px', objectFit: 'contain' }}
-                                        />
-                                        <span style={{ color: '#fff', fontSize: '14px' }}>{m.away}</span>
-                                    </div>
-                                </div>
+                {filteredCoupons.length > 0 ? filteredCoupons.map(c => {
+                    const isWon = c.status === 'won';
+                    const isLost = c.status === 'lost';
+
+                    return (
+                        <div key={c.id} style={{
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            borderRadius: '8px',
+                            padding: 0,
+                            marginBottom: '25px',
+                            background: '#2e3335',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                            overflow: 'hidden',
+                            maxWidth: '800px',
+                            margin: '0 auto 25px auto',
+                            transition: 'all 0.3s ease',
+                            borderColor: isWon ? '#4ade80' : isLost ? '#f87171' : 'rgba(255,255,255,0.05)'
+                        }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-5px)';
+                                e.currentTarget.style.boxShadow = `0 20px 50px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(253, 185, 19, 0.3), 0 0 30px rgba(253, 185, 19, 0.4)`;
+                                e.currentTarget.style.borderColor = 'var(--gold)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.5)';
+                                e.currentTarget.style.borderColor = isWon ? '#4ade80' : isLost ? '#f87171' : 'rgba(255,255,255,0.05)';
+                            }}>
+                            <div style={{
+                                background: 'rgba(255,255,255,0.05)',
+                                padding: '12px 20px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)'
+                            }}>
+                                <span style={{
+                                    color: selectedType.color,
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                    textTransform: 'none'
+                                }}>{c.type}</span>
+                                {c.status && (
+                                    <span className={`status-badge ${c.status}`} style={{ fontSize: '12px', padding: '4px 12px' }}>
+                                        {isWon ? 'KAZANDI' : isLost ? 'KAYBETTİ' : ''}
+                                    </span>
+                                )}
                             </div>
-                        ))}
-                        <div className="coupon-footer" style={{ borderTop: '2px solid rgba(255,255,255,0.1)', background: 'transparent' }}>
-                            <span className="total-odds-label" style={{ color: '#aaa' }}>Toplam Oran</span>
-                            <span className="total-odds-value" style={{ color: selectedType.color, fontSize: '24px' }}>{c.totalOdds}</span>
+                            {c.matches.map((m, idx) => (
+                                <div key={idx} style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    padding: '15px 20px',
+                                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                    position: 'relative'
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px',
+                                        marginBottom: '8px'
+                                    }}>
+                                        <div style={{
+                                            width: '6px',
+                                            height: '6px',
+                                            borderRadius: '50%',
+                                            border: '1px solid #aaa'
+                                        }}></div>
+                                        <div style={{
+                                            fontSize: '15px',
+                                            fontWeight: '700',
+                                            color: '#fff',
+                                            marginRight: '20px'
+                                        }}>{m.prediction}</div>
+                                        <div style={{
+                                            color: '#fff',
+                                            fontWeight: '400',
+                                            fontSize: '14px'
+                                        }}>{m.odds}</div>
+                                    </div>
+                                    <div style={{
+                                        paddingLeft: '16px',
+                                        fontSize: '13px',
+                                        color: '#aaa',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '4px'
+                                    }}>
+                                        <div style={{ color: '#fff', fontSize: '14px' }}>{m.home}</div>
+                                        <div style={{ color: '#fff', fontSize: '14px' }}>{m.away}</div>
+                                    </div>
+                                </div>
+                            ))}
+                            <div style={{
+                                background: selectedType.color,
+                                marginTop: 0,
+                                padding: '15px 20px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                cursor: 'pointer',
+                                transition: 'filter 0.2s'
+                            }}
+                                onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+                                onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}>
+                                <span style={{
+                                    color: '#fff',
+                                    fontSize: '15px',
+                                    fontWeight: '700'
+                                }}>Toplam Oran</span>
+                                <span style={{
+                                    color: '#fff',
+                                    fontSize: '18px',
+                                    fontWeight: '700',
+                                    textShadow: 'none'
+                                }}>{c.totalOdds}</span>
+                            </div>
+
+                            {/* ADMIN ACTIONS */}
+                            {isAdmin && (
+                                <div style={{
+                                    padding: '15px',
+                                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    gap: '10px',
+                                    background: 'rgba(0,0,0,0.2)'
+                                }}>
+                                    <button className="admin-btn delete" onClick={() => handleDeleteCoupon(c.id)} style={{ flex: 1, padding: '8px', fontSize: '12px' }}>SİL</button>
+                                    <div style={{ display: 'flex', gap: '10px', flex: 2 }}>
+                                        <button className="admin-btn won" onClick={() => updateCouponStatus(c.id, 'won')} style={{ flex: 1, padding: '8px', fontSize: '12px' }}>KAZANDI</button>
+                                        <button className="admin-btn lost" onClick={() => updateCouponStatus(c.id, 'lost')} style={{ flex: 1, padding: '8px', fontSize: '12px' }}>KAYBETTİ</button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                )) : <p style={{ textAlign: 'center', color: '#666' }}>Henüz {selectedType.name} eklenmedi.</p>}
+                    );
+                }) : <p style={{ textAlign: 'center', color: '#666' }}>Henüz {selectedType.name} eklenmedi.</p>}
             </div>
         </div>
     );
@@ -3061,7 +3146,7 @@ export default function App() {
                 if (userData?.role === 'tipster') return <TipsterScreen onBack={navigate} showAlert={showAlert} userData={userData} />;
                 return <div className="loading">Yetkisiz erişim</div>;
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} userData={userData} onNavigate={navigate} />;
-            case 'coupons': return <CouponScreen onBack={() => navigate('home')} showAlert={showAlert} />;
+            case 'coupons': return <CouponScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />;
             case 'stats': return <PublicStats onBack={() => navigate('home')} />;
             case 'yapay-zeka-analizleri': return <OddsyKGAnaliz onBack={() => navigate('home')} />;
             case 'kart-analizi': return <Kart onBack={() => navigate('home')} />;
