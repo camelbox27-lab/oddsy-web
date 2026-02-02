@@ -1,36 +1,34 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import sqlite3
-from typing import List, Optional
+import psycopg2
+from typing import Optional
 
 app = FastAPI()
 
-# CORS ayarları (Frontend'den istek alabilmek için)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Production'da frontend URL'ini yaz
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Veritabanı bağlantısı
-def get_db():
-    conn = sqlite3.connect('finalveri.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+DATABASE_URL = "postgresql://postgres:Kemal2026_31@db.fpvazvcetymcoszuhptw.supabase.co:5432/postgres"
 
-# İstek modeli
+def get_db():
+    return psycopg2.connect(DATABASE_URL)
+
 class FiltreRequest(BaseModel):
-    ev_sahibi: str
-    deplasman: str
-    acilis_1: float
-    kapanis_1: float
-    acilis_0: float
-    kapanis_0: float
-    acilis_2: float
-    kapanis_2: float
+    lig: Optional[str] = None
+    ev_sahibi: Optional[str] = None
+    deplasman: Optional[str] = None
+    acilis_1_min: Optional[float] = None
+    acilis_1_max: Optional[float] = None
+    acilis_0_min: Optional[float] = None
+    acilis_0_max: Optional[float] = None
+    acilis_2_min: Optional[float] = None
+    acilis_2_max: Optional[float] = None
 
 @app.get("/")
 def ana_sayfa():
@@ -41,35 +39,41 @@ def filtrele(req: FiltreRequest):
     conn = get_db()
     cursor = conn.cursor()
     
-    # TAM EŞLEŞME sorgusu
-    query = """
-    SELECT * FROM maclar 
-    WHERE "Ev Sahibi" = ? 
-    AND "Deplasman" = ?
-    AND "Bet365 Açılış 1" = ?
-    AND "Bet365 Kapanış 1" = ?
-    AND "Bet365 Açılış 0" = ?
-    AND "Bet365 Kapanış 0" = ?
-    AND "Bet365 Açılış 2" = ?
-    AND "Bet365 Kapanış 2" = ?
-    """
+    query = 'SELECT * FROM maclar WHERE 1=1'
+    params = []
     
-    cursor.execute(query, (
-        req.ev_sahibi,
-        req.deplasman,
-        req.acilis_1,
-        req.kapanis_1,
-        req.acilis_0,
-        req.kapanis_0,
-        req.acilis_2,
-        req.kapanis_2
-    ))
+    if req.lig:
+        query += ' AND "Lig" = %s'
+        params.append(req.lig)
     
+    if req.ev_sahibi:
+        query += ' AND "Ev Sahibi" = %s'
+        params.append(req.ev_sahibi)
+    
+    if req.deplasman:
+        query += ' AND "Deplasman" = %s'
+        params.append(req.deplasman)
+    
+    if req.acilis_1_min and req.acilis_1_max:
+        query += ' AND "Bet365 Açılış 1" BETWEEN %s AND %s'
+        params.extend([req.acilis_1_min, req.acilis_1_max])
+    
+    if req.acilis_0_min and req.acilis_0_max:
+        query += ' AND "Bet365 Açılış 0" BETWEEN %s AND %s'
+        params.extend([req.acilis_0_min, req.acilis_0_max])
+    
+    if req.acilis_2_min and req.acilis_2_max:
+        query += ' AND "Bet365 Açılış 2" BETWEEN %s AND %s'
+        params.extend([req.acilis_2_min, req.acilis_2_max])
+    
+    cursor.execute(query, params)
+    
+    columns = [desc[0] for desc in cursor.description]
     rows = cursor.fetchall()
-    conn.close()
     
-    # Sonuçları dict'e çevir
-    sonuclar = [dict(row) for row in rows]
+    sonuclar = [dict(zip(columns, row)) for row in rows]
+    
+    conn.close()
     
     return {
         "toplam": len(sonuclar),
@@ -80,7 +84,7 @@ def filtrele(req: FiltreRequest):
 def test_db():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) as toplam FROM maclar")
+    cursor.execute("SELECT COUNT(*) FROM maclar")
     toplam = cursor.fetchone()[0]
     conn.close()
-    return {"veritabani": "bağlandı", "toplam_mac": toplam}
+    return {"veritabani": "PostgreSQL", "toplam_mac": toplam}
