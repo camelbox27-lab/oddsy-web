@@ -2,32 +2,21 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
+import { listenerRegistry, connectionMonitor } from './utils/performanceUtils';
 
-// Console'u production'da devre dışı bırak
-import * as Sentry from "@sentry/react";
-
-Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
-    integrations: [
-        Sentry.browserTracingIntegration(),
-        Sentry.replayIntegration(),
-    ],
-    tracesSampleRate: 1.0,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-});
-
+// Production optimizations
 if (import.meta.env.PROD) {
+    // Disable console in production
     console.log = () => { };
     console.error = () => { };
     console.warn = () => { };
     console.info = () => { };
     console.debug = () => { };
 
-    // Sağ tık engelleme
+    // Prevent right-click context menu
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U engelleme
+    // Block dev tools shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.key === 'F12' ||
             (e.ctrlKey && e.shiftKey && e.key === 'I') ||
@@ -38,8 +27,54 @@ if (import.meta.env.PROD) {
     });
 }
 
+// Global error handler for uncaught errors
+window.addEventListener('error', (event) => {
+    if (import.meta.env.DEV) {
+        console.error('Uncaught error:', event.error);
+    }
+});
+
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+    if (import.meta.env.DEV) {
+        console.error('Unhandled rejection:', event.reason);
+    }
+    // Prevent default logging in production
+    if (import.meta.env.PROD) {
+        event.preventDefault();
+    }
+});
+
+// Cleanup all listeners on page unload to prevent memory leaks
+window.addEventListener('beforeunload', () => {
+    listenerRegistry.unregisterAll();
+});
+
+// Handle visibility change - pause/resume operations
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Page is hidden - could pause expensive operations
+    } else {
+        // Page is visible again - resume operations
+    }
+});
+
+// Performance monitoring
+if (import.meta.env.DEV) {
+    // Log performance metrics in dev
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const perfData = performance.getEntriesByType('navigation')[0];
+            if (perfData) {
+                console.log('Page load time:', Math.round(perfData.loadEventEnd - perfData.startTime), 'ms');
+            }
+        }, 0);
+    });
+}
+
+// Render application
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
         <App />
     </React.StrictMode>,
-)
+);
