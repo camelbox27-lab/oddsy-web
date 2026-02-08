@@ -3344,33 +3344,36 @@ export default function App() {
 
                         // Sequential ID Assignment if missing
                         if (!data.displayId) {
-                            const isUserAdmin = data.role === 'admin' || data.isAdmin;
-                            // If admin, try to reserve 20260001
-                            const assignedId = await ensureUserDisplayId(u.uid, isUserAdmin ? 20260001 : null);
-                            data.displayId = assignedId;
+                            try {
+                                const isUserAdmin = data.role === 'admin' || data.isAdmin;
+                                const assignedId = await ensureUserDisplayId(u.uid, isUserAdmin ? 20260001 : null);
+                                data.displayId = assignedId;
+                            } catch (idErr) {
+                                console.error('DisplayId atanamadı:', idErr);
+                            }
                         }
 
                         // Eski isAdmin alanını yeni role sistemine çevir
                         if (data.isAdmin && !data.role) {
-                            await setDoc(doc(db, 'users', u.uid), { role: 'admin' }, { merge: true });
+                            try { await setDoc(doc(db, 'users', u.uid), { role: 'admin' }, { merge: true }); } catch (e2) { console.error('Role update failed:', e2); }
                             setUserData({ ...data, role: 'admin' });
                         } else if (!data.role) {
-                            await setDoc(doc(db, 'users', u.uid), { role: 'user' }, { merge: true });
+                            try { await setDoc(doc(db, 'users', u.uid), { role: 'user' }, { merge: true }); } catch (e2) { console.error('Role update failed:', e2); }
                             setUserData({ ...data, role: 'user' });
                         } else {
                             setUserData(data);
                         }
                     } else {
-                        const nextDisplayId = await getNextUserId();
+                        let nextDisplayId = null;
+                        try { nextDisplayId = await getNextUserId(); } catch (idErr) { console.error('DisplayId oluşturulamadı:', idErr); nextDisplayId = Date.now(); }
                         const initData = { uid: u.uid, email: u.email, username: u.email.split('@')[0], displayId: nextDisplayId, isAdmin: false, isPremium: false, role: 'user', tipsterName: null, createdAt: serverTimestamp() };
-                        await setDoc(doc(db, 'users', u.uid), initData);
+                        try { await setDoc(doc(db, 'users', u.uid), initData); } catch (setErr) { console.error('User doc oluşturulamadı:', setErr); }
                         setUserData(initData);
                     }
                 } catch (e) {
-                    console.error(e);
-                    const token = await getIdTokenResult(u);
-                    const isAdmin = !!token.claims.admin;
-                    setUserData({ uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], isAdmin, role: isAdmin ? 'admin' : 'user' });
+                    console.error('Auth flow hatası:', e);
+                    // Fallback: Firestore'a erişilemese bile kullanıcıyı giriş yaptır
+                    setUserData({ uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], isAdmin: false, role: 'user' });
                 }
             } else {
                 setUser(null);
