@@ -29,7 +29,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Kart from './components/Kart';
 import Korner from './components/Korner';
 import YapayZeka from './components/YapayZeka';
-
 import { auth, db, functions } from './firebaseConfig';
 import GununSurprizleri from './GununSurprizleri';
 import GununTercihleri from './GununTercihleri';
@@ -1393,7 +1392,7 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
     );
 }
 
-function Sidebar({ isOpen, onClose, onNavigate, currentRoute }) {
+function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
     return (
         <>
             <div className={`sidebar-overlay ${isOpen ? 'open' : ''}`} onClick={onClose} />
@@ -1427,6 +1426,24 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute }) {
                         <span className="sidebar-item-icon">{Icons.user}</span>
                         <span className="sidebar-item-text">Profilim</span>
                     </div>
+                    {userData?.role === 'admin' && (
+                        <div className={`sidebar-item ${currentRoute === 'admin' ? 'active' : ''}`} onClick={() => { onNavigate('admin'); onClose(); }}>
+                            <span className="sidebar-item-icon">{Icons.admin}</span>
+                            <span className="sidebar-item-text">Admin Paneli</span>
+                        </div>
+                    )}
+                    {userData?.role === 'editor' && (
+                        <div className={`sidebar-item ${currentRoute === 'editor' ? 'active' : ''}`} onClick={() => { onNavigate('editor'); onClose(); }}>
+                            <span className="sidebar-item-icon">{Icons.pen}</span>
+                            <span className="sidebar-item-text">Editör Paneli</span>
+                        </div>
+                    )}
+                    {userData?.role === 'tipster' && (
+                        <div className={`sidebar-item ${currentRoute === 'tipster' ? 'active' : ''}`} onClick={() => { onNavigate('tipster'); onClose(); }}>
+                            <span className="sidebar-item-icon">{Icons.soccer}</span>
+                            <span className="sidebar-item-text">Tahminci Paneli</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
@@ -1870,6 +1887,28 @@ function AdminDashboard({ onBack, userData }) {
         fetchData();
     }, []);
 
+    const handlePasswordReset = async (email) => {
+        if (!email) return alert('Bu kullanıcının e-posta adresi yok!');
+        if (!confirm(`${email} adresine şifre sıfırlama maili gönderilsin mi?`)) return;
+        try {
+            await sendPasswordResetEmail(auth, email);
+            alert(`Şifre sıfırlama maili gönderildi: ${email}`);
+        } catch (err) {
+            alert('Hata: ' + err.message);
+        }
+    };
+
+    const handleDeleteUser = async (userId, email) => {
+        if (!confirm(`${email || 'Bu kullanıcı'} Firestore'dan silinecek. Emin misiniz?`)) return;
+        try {
+            await deleteDoc(doc(db, 'users', userId));
+            setUsers(users.filter(u => u.id !== userId));
+            alert(`${email || 'Kullanıcı'} silindi. (Firebase Auth kaydı Firebase konsolundan silinmeli)`);
+        } catch (err) {
+            alert('Silme hatası: ' + err.message);
+        }
+    };
+
     const handleRoleChange = async (userId, newRole) => {
         // Kendine admin yetkisi veremez kontrolü
         if (userId === userData.uid && newRole !== 'admin' && userData.role === 'admin') {
@@ -2185,23 +2224,39 @@ function AdminDashboard({ onBack, userData }) {
                                         {u.tipsterName || '-'}
                                     </td>
                                     <td style={{ padding: 10, fontSize: 12 }}>
-                                        <select
-                                            style={{
-                                                background: '#222',
-                                                color: '#fff',
-                                                border: '1px solid #444',
-                                                padding: 5,
-                                                borderRadius: 5,
-                                                fontSize: 11
-                                            }}
-                                            value={u.role || 'user'}
-                                            onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                                        >
-                                            <option value="user">Üye</option>
-                                            <option value="editor">Editör</option>
-                                            <option value="admin">Admin</option>
-                                            <option value="tipster">Tahminci</option>
-                                        </select>
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                            <select
+                                                style={{
+                                                    background: '#222',
+                                                    color: '#fff',
+                                                    border: '1px solid #444',
+                                                    padding: 5,
+                                                    borderRadius: 5,
+                                                    fontSize: 11
+                                                }}
+                                                value={u.role || 'user'}
+                                                onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                                            >
+                                                <option value="user">Üye</option>
+                                                <option value="editor">Editör</option>
+                                                <option value="admin">Admin</option>
+                                                <option value="tipster">Tahminci</option>
+                                            </select>
+                                            <button
+                                                onClick={() => handlePasswordReset(u.email)}
+                                                style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 5, fontSize: 10, cursor: 'pointer' }}
+                                                title="Şifre sıfırlama maili gönder"
+                                            >
+                                                Şifre
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteUser(u.id, u.email)}
+                                                style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 5, fontSize: 10, cursor: 'pointer' }}
+                                                title="Kullanıcıyı sil"
+                                            >
+                                                Sil
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -2440,16 +2495,24 @@ function AdminScreen({ onBack, showAlert, userData }) {
             let finalData = { ...matchData };
             if (view === 'addCard') {
                 finalData.cornerHomeAvg = ''; finalData.cornerAwayAvg = ''; finalData.cornerGenAvg = '';
+                finalData.categoryKey = 3;
             } else if (view === 'addCorner') {
                 finalData.cardHomeAvg = ''; finalData.cardAwayAvg = ''; finalData.refereeInfo = '';
+                finalData.categoryKey = 3;
             } else if (view === 'addMatch' && matchData.categoryKey !== 3) {
                 finalData.cardHomeAvg = ''; finalData.cardAwayAvg = ''; finalData.refereeInfo = '';
                 finalData.cornerHomeAvg = ''; finalData.cornerAwayAvg = ''; finalData.cornerGenAvg = '';
             }
 
-            const submitFn = httpsCallable(functions, 'submitPrediction');
-            await submitFn(finalData);
-
+            // Doğrudan Firestore'a kaydet
+            await addDoc(collection(db, 'predictions'), {
+                ...finalData,
+                authorId: u.uid,
+                authorEmail: u.email,
+                createdAt: serverTimestamp(),
+                status: finalData.status || 'pending'
+            });
+            console.log(`AdminScreen: ${view} - Prediction added to Firestore`);
 
             showAlert('Eklendi!', 'success');
 
@@ -2523,7 +2586,8 @@ function AdminScreen({ onBack, showAlert, userData }) {
                                             <option value={4}>Günün Tercihleri</option>
                                             <option value={7}>İY/MS Tahminleri</option>
                                             <option value={0}>İlk Yarı Gol Listesi</option>
-                                            {MENU_ITEMS.filter(m => ![0, 4, 6, 7].includes(m.key)).map(m => <option key={m.key} value={m.key}>{m.title}</option>)}
+                                            <option value={8}>Editörün Seçimi</option>
+                                            <option value={2}>Tahminciler</option>
                                         </select>
                                     </div>
                                 )}
@@ -3362,33 +3426,28 @@ export default function App() {
                         return (
                             <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
                                 <button className="back-btn" onClick={() => navigate('home')}>Geri</button>
-                                <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, marginTop: 20 }}>
-                                    <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10, height: 'fit-content' }}>
-                                        <h3 style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 15, textAlign: 'center' }}>ADMIN MENU</h3>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                            <button
-                                                className={`hero-btn secondary ${adminView === 'dashboard' ? 'active' : ''}`}
-                                                style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }}
-                                                onClick={() => setAdminView('dashboard')}
-                                            >
-                                                Dashboard
-                                            </button>
-                                            <button
-                                                className={`hero-btn secondary ${adminView === 'content' ? 'active' : ''}`}
-                                                style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }}
-                                                onClick={() => setAdminView('content')}
-                                            >
-                                                İçerik Yönetimi
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
-                                        {adminView === 'dashboard' ? (
-                                            <AdminDashboard onBack={navigate} userData={userData} />
-                                        ) : (
-                                            <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />
-                                        )}
-                                    </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 20, marginBottom: 20 }}>
+                                    <button
+                                        className={`hero-btn secondary ${adminView === 'dashboard' ? 'active' : ''}`}
+                                        style={{ fontSize: '12px', padding: '10px 16px' }}
+                                        onClick={() => setAdminView('dashboard')}
+                                    >
+                                        Dashboard
+                                    </button>
+                                    <button
+                                        className={`hero-btn secondary ${adminView === 'content' ? 'active' : ''}`}
+                                        style={{ fontSize: '12px', padding: '10px 16px' }}
+                                        onClick={() => setAdminView('content')}
+                                    >
+                                        İçerik Yönetimi
+                                    </button>
+                                </div>
+                                <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10 }}>
+                                    {adminView === 'dashboard' ? (
+                                        <AdminDashboard onBack={navigate} userData={userData} />
+                                    ) : (
+                                        <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />
+                                    )}
                                 </div>
                             </div>
                         );
@@ -3405,7 +3464,7 @@ export default function App() {
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} userData={userData} onNavigate={navigate} />;
             case 'coupons': return <CouponScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />;
             case 'stats': return <PublicStats onBack={() => navigate('home')} />;
-            case 'yapay-zeka-analizleri': return <YapayZeka onBack={() => navigate('home')} />;
+            case 'yapay-zeka-analizleri': return <YapayZeka />;
             case 'kart-analizi': return <Kart onBack={() => navigate('home')} />;
             case 'korner-analizi': return <Korner onBack={() => navigate('home')} />;
             case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')} />;
@@ -3452,7 +3511,7 @@ export default function App() {
                     theme={theme}
                     onThemeToggle={toggleTheme}
                 />
-                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onNavigate={navigate} currentRoute={route} />
+                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onNavigate={navigate} currentRoute={route} userData={userData} />
                 <main className="main-content">{render()}</main>
             </div>
         </ErrorBoundary>
