@@ -1583,7 +1583,13 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 await sendEmailVerification(newUser);
 
                 // Firestore dökümanını oluştur
-                const nextDisplayId = await getNextUserId();
+                let nextDisplayId = null;
+                try {
+                    nextDisplayId = await getNextUserId();
+                } catch (idErr) {
+                    console.error('DisplayId oluşturulamadı:', idErr);
+                    nextDisplayId = Date.now();
+                }
                 await setDoc(doc(db, "users", newUser.uid), {
                     email: newUser.email,
                     username: cleanEmail.split('@')[0],

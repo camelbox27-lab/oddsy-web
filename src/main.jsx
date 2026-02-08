@@ -6,9 +6,8 @@ import { listenerRegistry, connectionMonitor } from './utils/performanceUtils';
 
 // Production optimizations
 if (import.meta.env.PROD) {
-    // Disable console in production
+    // Disable verbose console in production (keep error for debugging)
     console.log = () => { };
-    console.error = () => { };
     console.warn = () => { };
     console.info = () => { };
     console.debug = () => { };
