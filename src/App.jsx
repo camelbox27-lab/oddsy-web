@@ -17,6 +17,7 @@ import {
     getDocs,
     onSnapshot,
     query,
+    where,
     serverTimestamp,
     setDoc,
     updateDoc
@@ -3125,13 +3126,65 @@ function CategoryScreen({ category, onBack, userData, onNavigate }) {
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
     const [showStatsModal, setShowStatsModal] = useState(false);
     const [selectedTipsterStats, setSelectedTipsterStats] = useState(null);
+    const [tipsters, setTipsters] = useState([]);
+    const [tipstersLoading, setTipstersLoading] = useState(true);
 
-    const tipsters = [
-        { id: 'p1', name: 'GuedAus', role: 'Uzman Analist', image: 'https://i.ibb.co/60Tj8jJJ/Whats-App-mage-2025-12-07-at-23-21-34-1.jpg', stats: { total: 120, win: 85, rate: '%71' } },
-        { id: 'p2', name: 'Goalman', role: 'Goal Makinesi', image: 'https://i.ibb.co/5XXgkWSP/Whats-App-mage-2025-12-07-at-23-21-42-1.jpg', stats: { total: 210, win: 140, rate: '%67' } },
-        { id: 'p3', name: 'Casa De Luka', role: 'İspanya Ligi', image: 'https://i.ibb.co/2YqjD8BX/Whats-App-mage-2025-12-07-at-23-21-42.jpg', stats: { total: 95, win: 68, rate: '%72' } },
-        { id: 'p4', name: 'Nbavipbox', role: 'Basketbol Gurusu', image: 'https://i.ibb.co/xtJDGZhT/Whats-App-mage-2025-12-07-at-23-21-34.jpg', stats: { total: 155, win: 105, rate: '%68' } },
-    ];
+    // Varsayılan görseller (tipsterName bazlı)
+    const tipsterDefaults = {
+        'guedaus': { role: 'Uzman Analist', image: 'https://i.ibb.co/60Tj8jJJ/Whats-App-mage-2025-12-07-at-23-21-34-1.jpg' },
+        'goalman': { role: 'Goal Makinesi', image: 'https://i.ibb.co/5XXgkWSP/Whats-App-mage-2025-12-07-at-23-21-42-1.jpg' },
+        'casa de luka': { role: 'İspanya Ligi', image: 'https://i.ibb.co/2YqjD8BX/Whats-App-mage-2025-12-07-at-23-21-42.jpg' },
+        'nbavipbox': { role: 'Basketbol Gurusu', image: 'https://i.ibb.co/xtJDGZhT/Whats-App-mage-2025-12-07-at-23-21-34.jpg' },
+    };
+
+    // Firestore'dan tipster kullanıcılarını çek + istatistikleri hesapla
+    useEffect(() => {
+        if (category.key !== 2) return;
+        setTipstersLoading(true);
+
+        const tipsterQuery = query(collection(db, 'users'), where('role', '==', 'tipster'));
+        const predQuery = query(collection(db, 'predictions'), where('categoryKey', '==', 2));
+
+        const unsubTipsters = onSnapshot(tipsterQuery, (tipsterSnap) => {
+            const tipsterUsers = tipsterSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            const unsubPreds = onSnapshot(predQuery, (predSnap) => {
+                const allPreds = predSnap.docs.map(d => d.data());
+
+                const tipsterList = tipsterUsers
+                    .filter(u => u.tipsterName)
+                    .map(u => {
+                        const name = u.tipsterName;
+                        const myPreds = allPreds.filter(p => p.tipster?.toLowerCase() === name.toLowerCase());
+                        const total = myPreds.length;
+                        const win = myPreds.filter(p => p.status === 'won').length;
+                        const lost = myPreds.filter(p => p.status === 'lost').length;
+                        const rate = total > 0 ? Math.round((win / total) * 100) : 0;
+                        const defaults = tipsterDefaults[name.toLowerCase()] || {};
+
+                        return {
+                            id: u.id,
+                            name: name,
+                            role: defaults.role || 'Tahminci',
+                            image: u.photoURL || defaults.image || 'https://i.ibb.co/placeholder.png',
+                            stats: { total, win, lost, rate: `%${rate}` }
+                        };
+                    });
+
+                setTipsters(tipsterList);
+                setTipstersLoading(false);
+            });
+
+            listenerRegistry.register('tipster-preds', unsubPreds);
+        });
+
+        listenerRegistry.register('tipster-users', unsubTipsters);
+
+        return () => {
+            listenerRegistry.unregister('tipster-users');
+            listenerRegistry.unregister('tipster-preds');
+        };
+    }, [category.key]);
 
     const IS_BOT_MENU = [0, 4, 6, 7].includes(category.key);
     const IS_CARD_KORNER_MENU = category.key === 3;
@@ -3196,7 +3249,11 @@ function CategoryScreen({ category, onBack, userData, onNavigate }) {
             <div className="category-page">
                 <div className="category-header"><button className="category-back-btn" onClick={onBack}>{Icons.back}</button><h1 className="category-title">Tahminciler</h1></div>
                 <div className="predictions-list" style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800, margin: '0 auto' }}>
-                    {tipsters.map(t => (
+                    {tipstersLoading ? (
+                        <div className="loading"><div className="spinner" /></div>
+                    ) : tipsters.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: '#666', padding: '50px' }}>Henüz tahminci bulunmuyor.</p>
+                    ) : tipsters.map(t => (
                         <div key={t.id} className="menu-selection-card prediction-card" style={{ flexDirection: 'column', gap: 15, padding: 20, minHeight: 200 }} onClick={() => setSelectedTipster(t)}>
                             <img src={t.image} style={{ width: 80, height: 80, borderRadius: '50%', border: '3px solid var(--gold)', objectFit: 'cover' }} />
                             <div><h3 style={{ color: 'var(--gold)', fontSize: 20, fontWeight: '800' }}>{t.name}</h3><p style={{ fontSize: 13, color: '#aaa', marginTop: 5 }}>{t.role}</p></div>
@@ -3245,9 +3302,19 @@ function CategoryScreen({ category, onBack, userData, onNavigate }) {
                                     <span className="stat-label">Kaybeden</span>
                                     <div style={{ flex: 1, marginLeft: 20 }}>
                                         <div className="stat-bar-container">
-                                            <div className="stat-bar" style={{ width: `${((selectedTipsterStats.stats.total - selectedTipsterStats.stats.win) / selectedTipsterStats.stats.total) * 100}%`, background: '#dc2626' }}></div>
+                                            <div className="stat-bar" style={{ width: `${selectedTipsterStats.stats.total > 0 ? ((selectedTipsterStats.stats.lost || 0) / selectedTipsterStats.stats.total) * 100 : 0}%`, background: '#dc2626' }}></div>
                                         </div>
-                                        <span className="stat-value" style={{ color: '#dc2626', marginLeft: 10 }}>{selectedTipsterStats.stats.total - selectedTipsterStats.stats.win}</span>
+                                        <span className="stat-value" style={{ color: '#dc2626', marginLeft: 10 }}>{selectedTipsterStats.stats.lost || 0}</span>
+                                    </div>
+                                </div>
+
+                                <div className="stat-row">
+                                    <span className="stat-label">Bekleyen</span>
+                                    <div style={{ flex: 1, marginLeft: 20 }}>
+                                        <div className="stat-bar-container">
+                                            <div className="stat-bar" style={{ width: `${selectedTipsterStats.stats.total > 0 ? ((selectedTipsterStats.stats.total - (selectedTipsterStats.stats.win || 0) - (selectedTipsterStats.stats.lost || 0)) / selectedTipsterStats.stats.total) * 100 : 0}%`, background: '#f59e0b' }}></div>
+                                        </div>
+                                        <span className="stat-value" style={{ color: '#f59e0b', marginLeft: 10 }}>{selectedTipsterStats.stats.total - (selectedTipsterStats.stats.win || 0) - (selectedTipsterStats.stats.lost || 0)}</span>
                                     </div>
                                 </div>
 
