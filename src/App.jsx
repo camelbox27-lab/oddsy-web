@@ -1088,6 +1088,42 @@ html, body, #root, .app {
 .admin-btn.won { background: #00c853; color: white; }
 .admin-btn.lost { background: #ff1744; color: white; }
 .admin-btn:hover { opacity: 0.8; transform: scale(1.05); }
+
+/* Admin Panel Mobile Responsive */
+@media (max-width: 768px) {
+  .admin-dashboard-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .admin-dashboard-stats > div {
+    padding: 12px !important;
+  }
+  .admin-dashboard-stats .stat-number {
+    font-size: 22px !important;
+  }
+  .admin-category-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .admin-category-grid > div {
+    padding: 10px !important;
+  }
+  .admin-user-table th,
+  .admin-user-table td {
+    padding: 6px 4px !important;
+    font-size: 10px !important;
+  }
+  .admin-user-table .admin-col-hide-mobile {
+    display: none !important;
+  }
+  .admin-tab-buttons {
+    gap: 4px !important;
+  }
+  .admin-tab-buttons button {
+    font-size: 10px !important;
+    padding: 8px 10px !important;
+  }
+}
 `;
 
 // ICONS
@@ -1329,6 +1365,7 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
         { id: 'cat_7', title: "GÜNÜN SÜRPRİZLERİ", key: 6, route: 'category' },
         { id: 'cat_8', title: "EDİTÖRÜN SEÇİMİ", key: 8, route: 'category' },
         { id: 'cat_dropping', title: "ORANI DÜŞEN MAÇLAR", key: 99, route: 'dropping-odds' },
+        { id: 'cat_stats', title: "İSTATİSTİKLER", key: 100, route: 'stats' },
     ];
 
     const bottomRowCategories = [
@@ -1338,7 +1375,7 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
     ];
 
     const handleCategoryClick = (cat) => {
-        if (['coupons', 'yapay-zeka-analizleri', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'dropping-odds'].includes(cat.route)) {
+        if (['coupons', 'yapay-zeka-analizleri', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'dropping-odds', 'stats'].includes(cat.route)) {
             onNavigate(cat.route, cat);
         } else {
             const menuItem = MENU_ITEMS.find(m => m.key === cat.key);
@@ -1748,11 +1785,11 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label className="form-label">E-Posta</label>
-                        <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+                        <input className="form-input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck="false" value={email} onChange={e => setEmail(e.target.value)} placeholder="ornek@email.com" />
                     </div>
                     <div className="form-group">
                         <label className="form-label">Şifre</label>
-                        <input className="form-input" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+                        <input className="form-input" type="password" autoComplete={isLogin ? 'current-password' : 'new-password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="En az 6 karakter" />
                     </div>
                     <button
                         className="submit-btn"
@@ -1997,7 +2034,7 @@ function AdminDashboard({ onBack, userData }) {
             </h1>
 
             {/* İSTATİSTİKLER */}
-            <div style={{
+            <div className="admin-dashboard-stats" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                 gap: 15,
@@ -2090,7 +2127,7 @@ function AdminDashboard({ onBack, userData }) {
                 }}>
                     Kategori İstatistikleri
                 </h2>
-                <div style={{
+                <div className="admin-category-grid" style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                     gap: 15
@@ -2159,7 +2196,7 @@ function AdminDashboard({ onBack, userData }) {
                     Kullanıcı Yönetimi
                 </h2>
                 <div style={{ overflowX: 'auto' }}>
-                    <table style={{
+                    <table className="admin-user-table" style={{
                         width: '100%',
                         borderCollapse: 'collapse'
                     }}>
@@ -2181,7 +2218,7 @@ function AdminDashboard({ onBack, userData }) {
                                 }}>
                                     E-posta
                                 </th>
-                                <th style={{
+                                <th className="admin-col-hide-mobile" style={{
                                     padding: 10,
                                     textAlign: 'left',
                                     fontSize: 12,
@@ -2197,7 +2234,7 @@ function AdminDashboard({ onBack, userData }) {
                                 }}>
                                     Rol
                                 </th>
-                                <th style={{
+                                <th className="admin-col-hide-mobile" style={{
                                     padding: 10,
                                     textAlign: 'left',
                                     fontSize: 12,
@@ -2227,13 +2264,13 @@ function AdminDashboard({ onBack, userData }) {
                                     <td style={{ padding: 10, fontSize: 12 }}>
                                         {u.email}
                                     </td>
-                                    <td style={{ padding: 10, fontSize: 12 }}>
+                                    <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
                                         {u.username || '-'}
                                     </td>
                                     <td style={{ padding: 10, fontSize: 12 }}>
                                         {u.role || 'user'}
                                     </td>
-                                    <td style={{ padding: 10, fontSize: 12 }}>
+                                    <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
                                         {u.tipsterName || '-'}
                                     </td>
                                     <td style={{ padding: 10, fontSize: 12 }}>
@@ -3515,7 +3552,7 @@ export default function App() {
                         return (
                             <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
                                 <button className="back-btn" onClick={() => navigate('home')}>Geri</button>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 20, marginBottom: 20 }}>
+                                <div className="admin-tab-buttons" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 20, marginBottom: 20 }}>
                                     <button
                                         className={`hero-btn secondary ${adminView === 'dashboard' ? 'active' : ''}`}
                                         style={{ fontSize: '12px', padding: '10px 16px' }}
