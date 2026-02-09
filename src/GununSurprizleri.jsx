@@ -10,7 +10,7 @@ function GununSurprizleri() {
     useEffect(() => {
         const q = query(
             collection(db, 'predictions'),
-            where('categoryKey', '==', 'gunun-surprizleri')
+            where('categoryKey', '==', 6)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {

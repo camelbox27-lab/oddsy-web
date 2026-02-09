@@ -10,7 +10,7 @@ function IYMSTahminleri() {
     useEffect(() => {
         const q = query(
             collection(db, 'predictions'),
-            where('categoryKey', '==', 'iy-ms-tahminleri')
+            where('categoryKey', '==', 7)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {

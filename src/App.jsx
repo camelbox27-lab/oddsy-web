@@ -3148,17 +3148,9 @@ function CategoryScreen({ category, onBack, userData, onNavigate }) {
 
 
             let filtered = allDocs.filter(item => {
-                const dbKeyMap = { 0: 'ilk-yari-gol', 4: 'gunun-tercihleri', 6: 'gunun-surprizleri', 7: 'iy-ms-tahminleri' };
-                if (IS_BOT_MENU) {
-                    const botKey = dbKeyMap[category.key];
-                    const matches = item.categoryKey === botKey || parseInt(item.categoryKey) === category.key;
-
-                    return matches;
-                } else {
-                    const matches = parseInt(item.categoryKey) === category.key || item.categoryKey === category.key;
-
-                    return matches;
-                }
+                // categoryKey'i her zaman integer olarak karşılaştır (admin integer kaydediyor)
+                const itemKey = typeof item.categoryKey === 'string' ? parseInt(item.categoryKey) : item.categoryKey;
+                return itemKey === category.key;
             });
 
             console.log(`CategoryScreen: Filtered to ${filtered.length} items for category key ${category.key}`);
