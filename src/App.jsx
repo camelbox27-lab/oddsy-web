@@ -1577,36 +1577,42 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 const newUser = userCredential.user;
 
                 // Profil güncelleme
-                await updateProfile(newUser, { displayName: cleanEmail.split('@')[0] });
+                try { await updateProfile(newUser, { displayName: cleanEmail.split('@')[0] }); } catch (e) { console.error('Profile update failed:', e); }
 
                 // Doğrulama maili gönder
-                await sendEmailVerification(newUser);
+                try { await sendEmailVerification(newUser); } catch (e) { console.error('Email verification send failed:', e); }
 
-                // Firestore dökümanını oluştur
+                // Firestore dökümanını oluştur - hata olursa bile kayıt devam etsin
                 let nextDisplayId = null;
                 try {
                     nextDisplayId = await getNextUserId();
                 } catch (idErr) {
                     console.error('DisplayId oluşturulamadı:', idErr);
-                    nextDisplayId = Date.now();
+                    nextDisplayId = Math.floor(20260000 + Math.random() * 9999);
                 }
-                await setDoc(doc(db, "users", newUser.uid), {
-                    email: newUser.email,
-                    username: cleanEmail.split('@')[0],
-                    uid: newUser.uid,
-                    displayId: nextDisplayId,
-                    createdAt: serverTimestamp(),
-                    isAdmin: false,
-                    isPremium: false,
-                    role: 'user',
-                    tipsterName: null
-                });
 
-                // ÖNEMLİ: Firebase kayıt sonrası otomatik giriş yapar. 
+                try {
+                    await setDoc(doc(db, "users", newUser.uid), {
+                        email: newUser.email,
+                        username: cleanEmail.split('@')[0],
+                        uid: newUser.uid,
+                        displayId: nextDisplayId,
+                        createdAt: serverTimestamp(),
+                        isAdmin: false,
+                        isPremium: false,
+                        role: 'user',
+                        tipsterName: null
+                    });
+                } catch (firestoreErr) {
+                    console.error('Firestore user doc oluşturulamadı:', firestoreErr);
+                    // Firestore hatası olsa bile kayıt başarılı sayılır - onAuthStateChanged'de tekrar denenecek
+                }
+
+                // ÖNEMLİ: Firebase kayıt sonrası otomatik giriş yapar.
                 // Biz bunu istemiyoruz çünkü email doğrulanmadı.
                 await signOut(auth);
 
-                showAlert('Kayıt başarılı! Lütfen mail kutunuza gidin.', 'success');
+                showAlert('Kayıt başarılı! Lütfen mail kutunuza gidin ve doğrulama linkine tıklayın.', 'success');
                 setMode('verify');
                 setPassword('');
             }
@@ -3325,63 +3331,78 @@ export default function App() {
     }, []);
 
     useEffect(() => {
+        // 3 saniye timeout - loading takılmasını önle
+        const loadingTimeout = setTimeout(() => {
+            console.warn('Auth loading timeout - forcing load complete');
+            setLoading(false);
+        }, 3000);
+
         const unsub = onAuthStateChanged(auth, async (u) => {
-            setLoading(true);
-            if (u) {
-                // KRİTİK: Email doğrulanmadıysa kullanıcıyı session'a alma
-                if (!u.emailVerified) {
+            try {
+                if (u) {
+                    // KRİTİK: Email doğrulanmadıysa kullanıcıyı session'a alma
+                    if (!u.emailVerified) {
+                        setUser(null);
+                        setUserData(null);
+                        clearTimeout(loadingTimeout);
+                        setLoading(false);
+                        return;
+                    }
+
+                    setUser(u);
+                    try {
+                        const d = await getDoc(doc(db, 'users', u.uid));
+                        if (d.exists()) {
+                            let data = d.data();
+
+                            // Sequential ID Assignment if missing
+                            if (!data.displayId) {
+                                try {
+                                    const isUserAdmin = data.role === 'admin' || data.isAdmin;
+                                    const assignedId = await ensureUserDisplayId(u.uid, isUserAdmin ? 20260001 : null);
+                                    data.displayId = assignedId;
+                                } catch (idErr) {
+                                    console.error('DisplayId atanamadı:', idErr);
+                                    data.displayId = Math.floor(20260000 + Math.random() * 9999);
+                                }
+                            }
+
+                            // Eski isAdmin alanını yeni role sistemine çevir
+                            if (data.isAdmin && !data.role) {
+                                try { await setDoc(doc(db, 'users', u.uid), { role: 'admin' }, { merge: true }); } catch (e2) { console.error('Role update failed:', e2); }
+                                setUserData({ ...data, role: 'admin' });
+                            } else if (!data.role) {
+                                try { await setDoc(doc(db, 'users', u.uid), { role: 'user' }, { merge: true }); } catch (e2) { console.error('Role update failed:', e2); }
+                                setUserData({ ...data, role: 'user' });
+                            } else {
+                                setUserData(data);
+                            }
+                        } else {
+                            // User doc yok - oluştur
+                            let nextDisplayId = null;
+                            try { nextDisplayId = await getNextUserId(); } catch (idErr) { console.error('DisplayId oluşturulamadı:', idErr); nextDisplayId = Math.floor(20260000 + Math.random() * 9999); }
+                            const initData = { uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], displayId: nextDisplayId, isAdmin: false, isPremium: false, role: 'user', tipsterName: null, createdAt: serverTimestamp() };
+                            try { await setDoc(doc(db, 'users', u.uid), initData); } catch (setErr) { console.error('User doc oluşturulamadı:', setErr); }
+                            setUserData(initData);
+                        }
+                    } catch (e) {
+                        console.error('Auth flow hatası:', e);
+                        // Fallback: Firestore'a erişilemese bile kullanıcıyı giriş yaptır
+                        setUserData({ uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], isAdmin: false, role: 'user', displayId: null });
+                    }
+                } else {
                     setUser(null);
                     setUserData(null);
-                    setLoading(false);
-                    return;
                 }
-
-                setUser(u);
-                try {
-                    const d = await getDoc(doc(db, 'users', u.uid));
-                    if (d.exists()) {
-                        let data = d.data();
-
-                        // Sequential ID Assignment if missing
-                        if (!data.displayId) {
-                            try {
-                                const isUserAdmin = data.role === 'admin' || data.isAdmin;
-                                const assignedId = await ensureUserDisplayId(u.uid, isUserAdmin ? 20260001 : null);
-                                data.displayId = assignedId;
-                            } catch (idErr) {
-                                console.error('DisplayId atanamadı:', idErr);
-                            }
-                        }
-
-                        // Eski isAdmin alanını yeni role sistemine çevir
-                        if (data.isAdmin && !data.role) {
-                            try { await setDoc(doc(db, 'users', u.uid), { role: 'admin' }, { merge: true }); } catch (e2) { console.error('Role update failed:', e2); }
-                            setUserData({ ...data, role: 'admin' });
-                        } else if (!data.role) {
-                            try { await setDoc(doc(db, 'users', u.uid), { role: 'user' }, { merge: true }); } catch (e2) { console.error('Role update failed:', e2); }
-                            setUserData({ ...data, role: 'user' });
-                        } else {
-                            setUserData(data);
-                        }
-                    } else {
-                        let nextDisplayId = null;
-                        try { nextDisplayId = await getNextUserId(); } catch (idErr) { console.error('DisplayId oluşturulamadı:', idErr); nextDisplayId = Date.now(); }
-                        const initData = { uid: u.uid, email: u.email, username: u.email.split('@')[0], displayId: nextDisplayId, isAdmin: false, isPremium: false, role: 'user', tipsterName: null, createdAt: serverTimestamp() };
-                        try { await setDoc(doc(db, 'users', u.uid), initData); } catch (setErr) { console.error('User doc oluşturulamadı:', setErr); }
-                        setUserData(initData);
-                    }
-                } catch (e) {
-                    console.error('Auth flow hatası:', e);
-                    // Fallback: Firestore'a erişilemese bile kullanıcıyı giriş yaptır
-                    setUserData({ uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], isAdmin: false, role: 'user' });
-                }
-            } else {
+            } catch (fatalErr) {
+                console.error('onAuthStateChanged fatal error:', fatalErr);
                 setUser(null);
                 setUserData(null);
             }
+            clearTimeout(loadingTimeout);
             setLoading(false);
         });
-        return () => unsub();
+        return () => { unsub(); clearTimeout(loadingTimeout); };
     }, []);
 
     useEffect(() => {

@@ -6,14 +6,10 @@ import { listenerRegistry, connectionMonitor } from './utils/performanceUtils';
 
 // Production optimizations
 if (import.meta.env.PROD) {
-    // Disable verbose console in production (keep error for debugging)
+    // Keep console.error and console.warn for debugging production issues
     console.log = () => { };
-    console.warn = () => { };
     console.info = () => { };
     console.debug = () => { };
-
-    // Prevent right-click context menu
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
 // Global error handler for uncaught errors
@@ -25,13 +21,7 @@ window.addEventListener('error', (event) => {
 
 // Handle unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
-    if (import.meta.env.DEV) {
-        console.error('Unhandled rejection:', event.reason);
-    }
-    // Prevent default logging in production
-    if (import.meta.env.PROD) {
-        event.preventDefault();
-    }
+    console.error('Unhandled rejection:', event.reason);
 });
 
 // Cleanup all listeners on page unload to prevent memory leaks

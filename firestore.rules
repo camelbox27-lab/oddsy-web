@@ -113,7 +113,8 @@ service cloud.firestore {
     // ===== NOTIFICATIONS =====
     match /notifications/{id} {
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow write: if false;
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
     }
 
     // ===== RATE LIMITS (Cloud Function için) =====
