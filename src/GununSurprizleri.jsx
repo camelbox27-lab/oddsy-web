@@ -15,7 +15,11 @@ function GununSurprizleri() {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            console.log('GununSurprizleri data:', list);
             setMatches(list);
+            setLoading(false);
+        }, (error) => {
+            console.error('GununSurprizleri error:', error);
             setLoading(false);
         });
 
@@ -60,8 +64,8 @@ function GununSurprizleri() {
             }}>
                 {matches.length > 0 ? (
                     matches.map(match => {
-                        const homeTeam = match.home_team || match.homeTeam || 'Ev Sahibi';
-                        const awayTeam = match.away_team || match.awayTeam || 'Deplasman';
+                        const homeTeam = match.homeTeam || match.home_team || 'Ev Sahibi';
+                        const awayTeam = match.awayTeam || match.away_team || 'Deplasman';
 
                         return (
                             <div

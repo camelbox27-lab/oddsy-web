@@ -15,7 +15,11 @@ function IYMSTahminleri() {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            console.log('IYMSTahminleri data:', list);
             setMatches(list);
+            setLoading(false);
+        }, (error) => {
+            console.error('IYMSTahminleri error:', error);
             setLoading(false);
         });
 
