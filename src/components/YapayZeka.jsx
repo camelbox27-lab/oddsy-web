@@ -1,5 +1,6 @@
-import { ArrowLeft, Search, Trophy, Zap } from 'lucide-react';
+import { ArrowLeft, Search, Star, Trophy, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { getTeamLogo, handleLogoError } from '../helper';
 
 // Lig listesi - {görünenAd: dosyaAdı} formatında
 const LEAGUES = [
@@ -100,6 +101,8 @@ export default function YapayZeka() {
     const [guncelMatches, setGuncelMatches] = useState([]);
     const [selectedMatch, setSelectedMatch] = useState(null);
     const [matchLoading, setMatchLoading] = useState(true);
+    const [showFeatured, setShowFeatured] = useState(false);
+    const [pendingFeaturedAnalysis, setPendingFeaturedAnalysis] = useState(false);
 
     // Güncel JSON dosyasını yükle
     useEffect(() => {
@@ -153,6 +156,13 @@ export default function YapayZeka() {
         }
     };
 
+    // Featured maç seçildiğinde otomatik analiz başlat
+    const handleFeaturedSelect = (match) => {
+        setShowFeatured(false);
+        handleMatchSelect(String(match.Id));
+        setPendingFeaturedAnalysis(true);
+    };
+
     // Oran türü değiştiğinde oranları güncelle
     useEffect(() => {
         if (selectedMatch) {
@@ -167,6 +177,14 @@ export default function YapayZeka() {
             }
         }
     }, [oranTuru, selectedMatch]);
+
+    // Featured maç seçildikten sonra oranlar dolunca analizi başlat
+    useEffect(() => {
+        if (pendingFeaturedAnalysis && selectedMatch && (oran1 || oran0 || oran2)) {
+            setPendingFeaturedAnalysis(false);
+            startAnalysis();
+        }
+    }, [pendingFeaturedAnalysis, selectedMatch, oran1, oran0, oran2]);
 
     // Seçilen maça göre oran seçenekleri
     const getOddsOptions = (key) => {
@@ -682,6 +700,53 @@ export default function YapayZeka() {
                         <p className="text-xs sm:text-sm text-gray-300 font-semibold">Bet365 oranlarına dayalı yapay zeka analiz sistemi</p>
                     </div>
                 </div>
+
+                {/* Öne Çıkan Eşleşmeler Butonu */}
+                <div className="flex justify-end">
+                    <button
+                        onClick={() => setShowFeatured(!showFeatured)}
+                        className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
+                            showFeatured
+                                ? 'bg-[#FDB913] text-[#333] shadow-[0_0_15px_rgba(253,185,19,0.4)]'
+                                : 'bg-[#404040] text-[#FDB913] border border-[#FDB913] hover:bg-[#4a4a4a]'
+                        }`}
+                    >
+                        <Star size={18} fill={showFeatured ? '#333' : 'none'} />
+                        ÖNE ÇIKAN EŞLEŞMELER
+                    </button>
+                </div>
+
+                {/* Featured Maç Kartları */}
+                {showFeatured && (
+                    <div className="bg-[#404040] p-4 rounded-xl border-2 border-[#FDB913] space-y-3">
+                        <h3 className="text-[#FDB913] font-bold text-center text-sm mb-3">
+                            Günün Öne Çıkan Maçları - Analiz için birini seçin
+                        </h3>
+                        {guncelMatches.filter(m => m.featured).length > 0 ? (
+                            <div className="flex flex-col gap-3">
+                                {guncelMatches.filter(m => m.featured).map(match => (
+                                    <button
+                                        key={match.Id}
+                                        onClick={() => handleFeaturedSelect(match)}
+                                        className="flex items-center justify-between gap-4 bg-[#333] p-4 rounded-xl border border-[#555] hover:border-[#FDB913] hover:shadow-[0_0_10px_rgba(253,185,19,0.2)] transition-all cursor-pointer"
+                                    >
+                                        <div className="flex-1 flex flex-col items-center gap-2">
+                                            <img src={getTeamLogo(match.Ev)} alt={match.Ev} onError={handleLogoError} style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
+                                            <span className="text-white font-bold text-sm text-center">{match.Ev}</span>
+                                        </div>
+                                        <span className="text-[#FDB913] font-black text-lg">VS</span>
+                                        <div className="flex-1 flex flex-col items-center gap-2">
+                                            <img src={getTeamLogo(match.Dep)} alt={match.Dep} onError={handleLogoError} style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
+                                            <span className="text-white font-bold text-sm text-center">{match.Dep}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-400 text-center text-sm py-4">Bugün öne çıkan eşleşme bulunmuyor.</p>
+                        )}
+                    </div>
+                )}
 
                 {/* Hata Mesajı */}
                 {error && (
