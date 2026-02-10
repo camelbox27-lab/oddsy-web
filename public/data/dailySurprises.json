@@ -1,0 +1,47 @@
+[
+  {
+    "id": "ds-0-S. Shenhua-Machida Z.",
+    "homeTeam": "S. Shenhua",
+    "awayTeam": "Machida Z.",
+    "saat": "15:15",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-10T10:51:34.550757+00:00",
+    "iy_kg_var": 3.43
+  },
+  {
+    "id": "ds-1-Al Wehda-Al Faisaly",
+    "homeTeam": "Al Wehda",
+    "awayTeam": "Al Faisaly",
+    "saat": "18:55",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-10T10:51:34.550757+00:00",
+    "iy_kg_var": 3.66
+  },
+  {
+    "id": "ds-2-Al Zawraa-Al Wasl",
+    "homeTeam": "Al Zawraa",
+    "awayTeam": "Al Wasl",
+    "saat": "19:00",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-10T10:51:34.550757+00:00",
+    "iy_kg_var": 4.13
+  },
+  {
+    "id": "ds-3-Venezia-Modena",
+    "homeTeam": "Venezia",
+    "awayTeam": "Modena",
+    "saat": "22:00",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-10T10:51:34.550757+00:00",
+    "iy_kg_var": 4.43
+  },
+  {
+    "id": "ds-4-Tottenham-Newcastle",
+    "homeTeam": "Tottenham",
+    "awayTeam": "Newcastle",
+    "saat": "22:30",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-10T10:51:34.550757+00:00",
+    "iy_kg_var": 3.49
+  }
+]
