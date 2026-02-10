@@ -5,7 +5,7 @@
     "awayTeam": "Al Nassr",
     "saat": "16:45",
     "kategori": "MS 5.5 Ust",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
+    "createdAt": "2026-02-11T02:32:55.437013+03:00",
     "ms_5_5_ust": 4.62
   },
   {
@@ -14,7 +14,7 @@
     "awayTeam": "Heerenveen",
     "saat": "20:45",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
+    "createdAt": "2026-02-11T02:32:55.437013+03:00",
     "iy_kg_var": 3.32
   },
   {
@@ -23,7 +23,7 @@
     "awayTeam": "Brighton",
     "saat": "22:30",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
+    "createdAt": "2026-02-11T02:32:55.437013+03:00",
     "iy_kg_var": 3.87
   },
   {
@@ -32,7 +32,7 @@
     "awayTeam": "Wolverhampton",
     "saat": "22:30",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
+    "createdAt": "2026-02-11T02:32:55.437013+03:00",
     "iy_kg_var": 4.52
   },
   {
@@ -41,52 +41,34 @@
     "awayTeam": "Young Boys",
     "saat": "22:30",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
+    "createdAt": "2026-02-11T02:32:55.437013+03:00",
     "iy_kg_var": 3.14
   },
   {
-    "id": "ds-5-Zürih-Winterthur",
-    "homeTeam": "Zürih",
-    "awayTeam": "Winterthur",
-    "saat": "22:30",
-    "kategori": "IY KG Var",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
-    "iy_kg_var": 3.4
-  },
-  {
-    "id": "ds-6-Falkirk-Dundee FC",
+    "id": "ds-5-Falkirk-Dundee FC",
     "homeTeam": "Falkirk",
     "awayTeam": "Dundee FC",
     "saat": "22:45",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
+    "createdAt": "2026-02-11T02:32:55.437013+03:00",
     "iy_kg_var": 4.58
   },
   {
-    "id": "ds-7-Motherwell-Rangers",
+    "id": "ds-6-Motherwell-Rangers",
     "homeTeam": "Motherwell",
     "awayTeam": "Rangers",
     "saat": "23:00",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
+    "createdAt": "2026-02-11T02:32:55.437013+03:00",
     "iy_kg_var": 3.95
   },
   {
-    "id": "ds-8-Paris FC (K)-Real Madrid (K)",
+    "id": "ds-7-Paris FC (K)-Real Madrid (K)",
     "homeTeam": "Paris FC (K)",
     "awayTeam": "Real Madrid (K)",
     "saat": "23:00",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
+    "createdAt": "2026-02-11T02:32:55.437013+03:00",
     "iy_kg_var": 3.98
-  },
-  {
-    "id": "ds-9-Sunderland-Liverpool",
-    "homeTeam": "Sunderland",
-    "awayTeam": "Liverpool",
-    "saat": "23:15",
-    "kategori": "IY KG Var",
-    "createdAt": "2026-02-11T02:25:36.143166+03:00",
-    "iy_kg_var": 4.08
   }
 ]
