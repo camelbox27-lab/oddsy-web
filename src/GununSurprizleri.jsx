@@ -1,6 +1,4 @@
-import { collection, onSnapshot, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { db } from './firebaseConfig';
 import { getTeamLogo, handleLogoError } from './helper';
 
 function GununSurprizleri() {
@@ -8,19 +6,17 @@ function GununSurprizleri() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const q = query(collection(db, 'dailySurprises'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-            console.log('GununSurprizleri data:', list);
-            setMatches(list);
-            setLoading(false);
-        }, (error) => {
-            console.error('GununSurprizleri error:', error);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
+        fetch('/data/dailySurprises.json')
+            .then(res => res.json())
+            .then(data => {
+                setMatches(data);
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error('GununSurprizleri error:', error);
+                setMatches([]);
+                setLoading(false);
+            });
     }, []);
 
     if (loading) {
@@ -121,7 +117,7 @@ function GununSurprizleri() {
                                         if (match['2_5_ust']) { label = '2.5 Üst'; odds = match['2_5_ust']; }
                                         else if (match['3_5_ust']) { label = '3.5 Üst'; odds = match['3_5_ust']; }
                                         else if (match['ms_5_5_ust']) { label = 'MS 5.5 Üst'; odds = match['ms_5_5_ust']; }
-                                        // Check generic keys
+                                        else if (match['iy_kg_var']) { label = 'IY KG Var'; odds = match['iy_kg_var']; }
                                         else if (match.prediction) { label = match.prediction; odds = match.odds || '-'; }
                                         else if (match.kategori) { label = match.kategori; odds = match.odds || '-'; }
 
