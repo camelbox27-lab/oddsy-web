@@ -834,7 +834,7 @@ export const getTeamLogo = (teamName) => {
         'dortmund': 'borussia-dortmund', 'bvb': 'borussia-dortmund', 'mgladbach': 'borussia-mgladbach', 'gladbach': 'borussia-mgladbach',
         'rb leipzig': 'rb-leipzig', 'leipzig': 'rb-leipzig', 'frankfurt': 'eintracht-frankfurt', 'wolfsburg': 'vfl-wolfsburg',
         'hoffenheim': 'tsg-hoffenheim', 'augsburg': 'fc-augsburg', 'union berlin': '1-fc-union-berlin', 'mainz': '1-fsv-mainz-05',
-        'man city': 'manchester-city', 'man utd': 'manchester-united', 'man united': 'manchester-united',
+        'man city': 'manchester-city', 'man. city': 'manchester-city', 'man utd': 'manchester-united', 'man united': 'manchester-united', 'man. united': 'manchester-united',
         'liverpool': 'liverpool', 'chelsea': 'chelsea', 'arsenal': 'arsenal', 'tottenham': 'tottenham-hotspur', 'spurs': 'tottenham-hotspur',
         'newcastle': 'newcastle-united', 'west ham': 'west-ham-united', 'brighton': 'brighton-hove-albion', 'everton': 'everton',
         'aston villa': 'aston-villa', 'villa': 'aston-villa', 'wolves': 'wolverhampton', 'crystal palace': 'crystal-palace', 'palace': 'crystal-palace',
