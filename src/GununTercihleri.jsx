@@ -1,6 +1,4 @@
-import { collection, onSnapshot, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { db } from './firebaseConfig';
 import { getTeamLogo, handleLogoError } from './helper';
 
 function GununTercihleri() {
@@ -8,19 +6,20 @@ function GununTercihleri() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const q = query(collection(db, 'dailyChoices'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-            console.log('GununTercihleri data:', list);
-            setMatches(list);
-            setLoading(false);
-        }, (error) => {
-            console.error('GununTercihleri error:', error);
-            setLoading(false);
-        });
+        const fetchData = async () => {
+            try {
+                const res = await fetch('/data/dailyChoices.json?t=' + Date.now());
+                const list = await res.json();
+                console.log('GununTercihleri data:', list);
+                setMatches(list);
+            } catch (error) {
+                console.error('GununTercihleri error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchData();
     }, []);
 
     if (loading) {

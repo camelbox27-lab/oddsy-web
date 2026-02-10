@@ -6,7 +6,7 @@ function IlkYariGolListesi() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/data/halfTimeGoals.json')
+        fetch('/data/halfTimeGoals.json?t=' + Date.now())
             .then(res => res.json())
             .then(data => {
                 setMatches(data);

@@ -1,6 +1,4 @@
-import { collection, onSnapshot, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { db } from './firebaseConfig';
 import { getTeamLogo, handleLogoError } from './helper';
 
 function GununSurprizleri() {
@@ -8,19 +6,20 @@ function GununSurprizleri() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const q = query(collection(db, 'dailySurprises'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-            console.log('GununSurprizleri data:', list);
-            setMatches(list);
-            setLoading(false);
-        }, (error) => {
-            console.error('GununSurprizleri error:', error);
-            setLoading(false);
-        });
+        const fetchData = async () => {
+            try {
+                const res = await fetch('/data/dailySurprises.json?t=' + Date.now());
+                const list = await res.json();
+                console.log('GununSurprizleri data:', list);
+                setMatches(list);
+            } catch (error) {
+                console.error('GununSurprizleri error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchData();
     }, []);
 
     if (loading) {
