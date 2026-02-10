@@ -1,170 +1,100 @@
 [
   {
-    "id": "htg-0-Chengdu-Buriram Utd",
-    "homeTeam": "Chengdu",
-    "awayTeam": "Buriram Utd",
-    "saat": "15:15",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-1-S. Shenhua-Machida Z.",
-    "homeTeam": "S. Shenhua",
-    "awayTeam": "Machida Z.",
-    "saat": "15:15",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-2-Al Wehda-Al Faisaly",
-    "homeTeam": "Al Wehda",
-    "awayTeam": "Al Faisaly",
-    "saat": "18:55",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-3-Al Zawraa-Al Wasl",
-    "homeTeam": "Al Zawraa",
-    "awayTeam": "Al Wasl",
-    "saat": "19:00",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-4-Al Ittihad-Al Gharrafa",
-    "homeTeam": "Al Ittihad",
-    "awayTeam": "Al Gharrafa",
-    "saat": "21:15",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-5-Venezia-Modena",
-    "homeTeam": "Venezia",
-    "awayTeam": "Modena",
-    "saat": "22:00",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-6-Chelsea-Leeds United",
-    "homeTeam": "Chelsea",
-    "awayTeam": "Leeds United",
-    "saat": "22:30",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-7-Luzern-Grasshoppers",
-    "homeTeam": "Luzern",
-    "awayTeam": "Grasshoppers",
-    "saat": "22:30",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-8-Tottenham-Newcastle",
-    "homeTeam": "Tottenham",
-    "awayTeam": "Newcastle",
-    "saat": "22:30",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-9-West Ham-Man. United",
-    "homeTeam": "West Ham",
-    "awayTeam": "Man. United",
-    "saat": "23:15",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
-  },
-  {
-    "id": "htg-10-Gangwon-Shanghai Port",
+    "id": "htg-0-Gangwon-Shanghai Port",
     "homeTeam": "Gangwon",
     "awayTeam": "Shanghai Port",
     "saat": "13:00",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-11-Arkadag-Al Nassr",
+    "id": "htg-1-Arkadag-Al Nassr",
     "homeTeam": "Arkadag",
     "awayTeam": "Al Nassr",
     "saat": "16:45",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-12-Go Ahead-Heerenveen",
+    "id": "htg-2-Go Ahead-Heerenveen",
     "homeTeam": "Go Ahead",
     "awayTeam": "Heerenveen",
     "saat": "20:45",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-13-Aston Villa-Brighton",
+    "id": "htg-3-Aston Villa-Brighton",
     "homeTeam": "Aston Villa",
     "awayTeam": "Brighton",
     "saat": "22:30",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-14-Crystal Palace-Burnley",
+    "id": "htg-4-Crystal Palace-Burnley",
     "homeTeam": "Crystal Palace",
     "awayTeam": "Burnley",
     "saat": "22:30",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-15-Man. City-Fulham",
+    "id": "htg-5-Man. City-Fulham",
     "homeTeam": "Man. City",
     "awayTeam": "Fulham",
     "saat": "22:30",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-16-Not. Forest-Wolverhampton",
+    "id": "htg-6-Not. Forest-Wolverhampton",
     "homeTeam": "Not. Forest",
     "awayTeam": "Wolverhampton",
     "saat": "22:30",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-17-St. Gallen-Young Boys",
+    "id": "htg-7-St. Gallen-Young Boys",
     "homeTeam": "St. Gallen",
     "awayTeam": "Young Boys",
     "saat": "22:30",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-18-Zürih-Winterthur",
+    "id": "htg-8-Zürih-Winterthur",
     "homeTeam": "Zürih",
     "awayTeam": "Winterthur",
     "saat": "22:30",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-19-Falkirk-Dundee FC",
+    "id": "htg-9-Falkirk-Dundee FC",
     "homeTeam": "Falkirk",
     "awayTeam": "Dundee FC",
     "saat": "22:45",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-20-Motherwell-Rangers",
+    "id": "htg-10-Motherwell-Rangers",
     "homeTeam": "Motherwell",
     "awayTeam": "Rangers",
     "saat": "23:00",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-21-NEC Nijmegen-Utrecht",
+    "id": "htg-11-NEC Nijmegen-Utrecht",
     "homeTeam": "NEC Nijmegen",
     "awayTeam": "Utrecht",
     "saat": "23:00",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-22-Paris FC (K)-Real Madrid (K)",
+    "id": "htg-12-Paris FC (K)-Real Madrid (K)",
     "homeTeam": "Paris FC (K)",
     "awayTeam": "Real Madrid (K)",
     "saat": "23:00",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   },
   {
-    "id": "htg-23-Sunderland-Liverpool",
+    "id": "htg-13-Sunderland-Liverpool",
     "homeTeam": "Sunderland",
     "awayTeam": "Liverpool",
     "saat": "23:15",
-    "createdAt": "2026-02-10T22:58:46.336110+00:00"
+    "createdAt": "2026-02-10T23:08:19.774188+00:00"
   }
 ]
