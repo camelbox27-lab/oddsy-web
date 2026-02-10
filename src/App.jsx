@@ -34,6 +34,7 @@ import { auth, db, functions } from './firebaseConfig';
 import GununSurprizleri from './GununSurprizleri';
 import GununTercihleri from './GununTercihleri';
 import IYMSTahminleri from './IYMSTahminleri';
+import IlkYariGolListesi from './IlkYariGolListesi';
 import { getTeamLogo, handleLogoError } from './helper';
 import { getNextUserId, ensureUserDisplayId } from './utils/userId';
 import { debounce, throttle, listenerRegistry, connectionMonitor } from './utils/performanceUtils';
@@ -1149,7 +1150,7 @@ const Icons = {
 // CONSTANTS
 const MENU_ITEMS = [
     { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: '🤖', color: "#FFD700", route: 'yapay-zeka-analizleri' },
-    { id: 'cat_1', title: "ILK YARI GOL LISTESI", key: 0, icon: '⚽', color: "#10B981", route: 'category' },
+    { id: 'cat_1', title: "ILK YARI GOL LISTESI", key: 0, icon: '⚽', color: "#10B981", route: 'ilk-yari-gol' },
     { id: 'cat_coupons_new', title: "GÜNÜN KUPONLARI", key: 20, icon: '🎫', color: "#f87171", route: 'coupons' },
     { id: 'cat_3', title: "TAHMINCILER", key: 2, icon: '👥', color: "#a78bfa", route: 'category' },
     { id: 'cat_kart_analiz', title: "KART ANALİZ BOTU", key: 31, icon: '🟨', color: "#FFD700", route: 'kart-analizi' },
@@ -1375,7 +1376,7 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
     ];
 
     const handleCategoryClick = (cat) => {
-        if (['coupons', 'yapay-zeka-analizleri', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'dropping-odds', 'stats'].includes(cat.route)) {
+        if (['coupons', 'yapay-zeka-analizleri', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'ilk-yari-gol', 'dropping-odds', 'stats'].includes(cat.route)) {
             onNavigate(cat.route, cat);
         } else {
             const menuItem = MENU_ITEMS.find(m => m.key === cat.key);
@@ -3594,6 +3595,14 @@ export default function App() {
             case 'kart-analizi': return <Kart onBack={() => navigate('home')} />;
             case 'korner-analizi': return <Korner onBack={() => navigate('home')} />;
             case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')} />;
+            case 'ilk-yari-gol': return (
+                <div style={{ paddingTop: '20px' }}>
+                    <div className="category-header">
+                        <button className="category-back-btn" onClick={() => navigate('home')}>{Icons.back}</button>
+                    </div>
+                    <IlkYariGolListesi />
+                </div>
+            );
             case 'iy-ms-tahminleri': return (
                 <div style={{ paddingTop: '20px' }}>
                     <div className="category-header">

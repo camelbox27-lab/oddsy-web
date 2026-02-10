@@ -121,7 +121,7 @@ function GununSurprizleri() {
                                         if (match['2_5_ust']) { label = '2.5 Üst'; odds = match['2_5_ust']; }
                                         else if (match['3_5_ust']) { label = '3.5 Üst'; odds = match['3_5_ust']; }
                                         else if (match['ms_5_5_ust']) { label = 'MS 5.5 Üst'; odds = match['ms_5_5_ust']; }
-                                        // Check generic keys
+                                        else if (match['iy_kg_var']) { label = 'IY KG Var'; odds = match['iy_kg_var']; }
                                         else if (match.prediction) { label = match.prediction; odds = match.odds || '-'; }
                                         else if (match.kategori) { label = match.kategori; odds = match.odds || '-'; }
 
