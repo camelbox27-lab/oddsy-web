@@ -838,7 +838,7 @@ export const getTeamLogo = (teamName) => {
         'liverpool': 'liverpool', 'chelsea': 'chelsea', 'arsenal': 'arsenal', 'tottenham': 'tottenham-hotspur', 'spurs': 'tottenham-hotspur',
         'newcastle': 'newcastle-united', 'west ham': 'west-ham-united', 'brighton': 'brighton-hove-albion', 'everton': 'everton',
         'aston villa': 'aston-villa', 'villa': 'aston-villa', 'wolves': 'wolverhampton', 'crystal palace': 'crystal-palace', 'palace': 'crystal-palace',
-        'bournemouth': 'bournemouth', 'fulham': 'fulham', 'brentford': 'brentford', 'nottm forest': 'nottingham-forest', 'nottingham': 'nottingham-forest',
+        'bournemouth': 'bournemouth', 'fulham': 'fulham', 'brentford': 'brentford', 'nottm forest': 'nottingham-forest', 'nottingham': 'nottingham-forest', 'not. forest': 'nottingham-forest',
         'real madrid': 'real-madrid', 'madrid': 'real-madrid', 'barcelona': 'barcelona', 'barca': 'barcelona', 'fcb': 'barcelona',
         'atletico': 'atletico-madrid', 'atletico madrid': 'atletico-madrid', 'atl madrid': 'atletico-madrid',
         'sevilla': 'sevilla', 'valencia': 'valencia', 'villarreal': 'villarreal', 'athletic': 'athletic-club', 'athletic bilbao': 'athletic-club',
@@ -849,12 +849,12 @@ export const getTeamLogo = (teamName) => {
         'inter': 'inter', 'inter milan': 'inter', 'milan': 'milan', 'ac milan': 'milan', 'juventus': 'juventus', 'juve': 'juventus',
         'roma': 'roma', 'as roma': 'roma', 'napoli': 'napoli', 'lazio': 'lazio', 'atalanta': 'atalanta', 'fiorentina': 'fiorentina',
         'torino': 'torino', 'bologna': 'bologna', 'udinese': 'udinese', 'sassuolo': 'sassuolo', 'verona': 'hellas-verona', 'hellas verona': 'hellas-verona',
-        'genoa': 'genoa', 'lecce': 'lecce', 'monza': 'monza', 'cagliari': 'cagliari',
+        'genoa': 'genoa', 'lecce': 'lecce', 'monza': 'monza', 'cagliari': 'cagliari', 'südtirol': 'and-sudtirol', 'bari': 'bari', 'spezia': 'spezia', 'empoli': 'empoli', 'frosinone': 'frosinone', 'juve stabia': 'juve-stabia',
         'galatasaray': 'galatasaray', 'gs': 'galatasaray', 'fenerbahce': 'fenerbahce', 'fb': 'fenerbahce',
         'besiktas': 'besiktas-jk', 'bjk': 'besiktas-jk', 'trabzonspor': 'trabzonspor', 'ts': 'trabzonspor',
         'basaksehir': 'basaksehir', 'istanbul basaksehir': 'basaksehir', 'sivasspor': 'sivasspor', 'adana demirspor': 'adana-demirspor',
         'hatayspor': 'hatayspor', 'samsunspor': 'samsunspor', 'bodrum fk': 'bodrum-fk', 'pendikspor': 'pendikspor',
-        'psg': 'paris-saint-germain', 'paris sg': 'paris-saint-germain', 'paris': 'paris-saint-germain',
+        'psg': 'paris-saint-germain', 'paris sg': 'paris-saint-germain', 'paris': 'paris-saint-germain', 'paris fc': 'psg-paris-fc',
         'marseille': 'olympique-de-marseille', 'om': 'olympique-de-marseille', 'lyon': 'olympique-lyonnais', 'ol': 'olympique-lyonnais',
         'monaco': 'as-monaco', 'lille': 'lille', 'nice': 'nice', 'lens': 'lens', 'rennes': 'rennes',
         'cc mariners': 'central-coast-mariners', 'cc-mariners': 'central-coast-mariners', 'central coast': 'central-coast-mariners',
@@ -862,10 +862,13 @@ export const getTeamLogo = (teamName) => {
         'melbourne city': 'melbourne-city', 'melbourne victory': 'melbourne-victory', 'western sydney': 'western-sydney-wanderers',
         'adelaide': 'adelaide-united', 'adelaide united': 'adelaide-united', 'brisbane': 'brisbane-roar', 'brisbane roar': 'brisbane-roar',
         'celtic': 'celtic', 'rangers': 'rangers', 'aberdeen': 'aberdeen', 'hearts': 'hearts', 'hibernian': 'hibernian', 'hibs': 'hibernian',
-        'dundee utd': 'dundee-united', 'dundee united': 'dundee-united', 'st johnstone': 'st-johnstone', 'st. johnstone': 'st-johnstone',
+        'dundee utd': 'dundee-united', 'dundee united': 'dundee-united', 'dundee utd.': 'dundee-united', 'st johnstone': 'st-johnstone', 'st. johnstone': 'st-johnstone', 'kilmarnock': 'kilmarnock-fc', 'st mirren': 'st-mirren', 'livingston': 'livingston-fc', 'falkirk': 'falkirk-fc',
         'porto': 'fc-porto', 'fc porto': 'fc-porto', 'benfica': 'benfica', 'sl benfica': 'benfica', 'sporting': 'sporting-cp', 'sporting cp': 'sporting-cp', 'sporting lisbon': 'sporting-cp', 'braga': 'sporting-braga', 'sporting braga': 'sporting-braga',
-        'ajax': 'afc-ajax', 'psv': 'psv-eindhoven', 'psv eindhoven': 'psv-eindhoven', 'feyenoord': 'feyenoord', 'az': 'az-alkmaar', 'az alkmaar': 'az-alkmaar', 'twente': 'fc-twente', 'fc twente': 'fc-twente', 'utrecht': 'fc-utrecht', 'fc utrecht': 'fc-utrecht',
-        'walsall': 'walsall'
+        'ajax': 'afc-ajax', 'psv': 'psv-eindhoven', 'psv eindhoven': 'psv-eindhoven', 'feyenoord': 'feyenoord', 'az': 'az-alkmaar', 'az alkmaar': 'az-alkmaar', 'twente': 'fc-twente', 'fc twente': 'fc-twente', 'utrecht': 'fc-utrecht', 'fc utrecht': 'fc-utrecht', 'nec nijmegen': 'nec-nijmegen', 'go ahead': 'go-ahead-eagles', 'heerenveen': 'sc-heerenveen',
+        'lugano': 'fc-lugano', 'servette': 'servette-fc', 'st gallen': 'fc-st-gallen', 'st. gallen': 'fc-st-gallen', 'young boys': 'young-boys', 'zurich': 'fc-zurich', 'zürih': 'fc-zurich', 'winterthur': 'fc-winterthur',
+        'charlton': 'charlton-athletic', 'stoke city': 'stoke-city', 'avellino': 'us-avellino',
+        'gangwon': 'gangwon-fc', 'ulsan': 'ulsan-hyundai', 'ulsan hora': 'ulsan-hyundai', 'shanghai port': 'shanghai-port-fc', 'ratchaburi': 'ratchaburi-mitr-phol', 'persib bandung': 'persib-bandung', 'arkadag': 'arkadag-fk', 'al nassr': 'al-nassr', 'al ahli': 'al-ahli', 'al ahli doha': 'al-ahli-doha',
+        'oh leuven': 'oud-heverlee-leuven', 'oud-heverlee leuven': 'oud-heverlee-leuven', 'walsall': 'walsall'
     };
 
     if (specialCases[lowerName]) {
