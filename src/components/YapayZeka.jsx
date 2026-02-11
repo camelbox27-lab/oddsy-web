@@ -722,9 +722,9 @@ export default function YapayZeka() {
                         <h3 className="text-[#FDB913] font-bold text-center text-sm mb-3">
                             Günün Öne Çıkan Maçları - Analiz için birini seçin
                         </h3>
-                        {guncelMatches.filter(m => m.featured).length > 0 ? (
+                        {guncelMatches.filter(m => m.Featured).length > 0 ? (
                             <div className="flex flex-col gap-3">
-                                {guncelMatches.filter(m => m.featured).map(match => (
+                                {guncelMatches.filter(m => m.Featured).map(match => (
                                     <button
                                         key={match.Id}
                                         onClick={() => handleFeaturedSelect(match)}
