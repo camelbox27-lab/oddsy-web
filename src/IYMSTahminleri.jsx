@@ -1,26 +1,45 @@
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { db } from './firebaseConfig';
 import { getTeamLogo, handleLogoError } from './helper';
 
 function IYMSTahminleri() {
-    const [matches, setMatches] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [htMatches, setHtMatches] = useState([]);
+    const [firestoreMatches, setFirestoreMatches] = useState([]);
+    const [htLoading, setHtLoading] = useState(true);
+    const [fsLoading, setFsLoading] = useState(true);
 
+    const loading = htLoading || fsLoading;
+    const matches = [...firestoreMatches, ...htMatches];
+
+    // halfTimeGoals koleksiyonundan çek (eski veri kaynağı)
     useEffect(() => {
         const q = query(collection(db, 'halfTimeGoals'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-            console.log('IYMSTahminleri data:', list);
-            setMatches(list);
-            setLoading(false);
+            setHtMatches(list);
+            setHtLoading(false);
         }, (error) => {
-            console.error('IYMSTahminleri error:', error);
-            setLoading(false);
+            console.error('IYMSTahminleri halfTimeGoals error:', error);
+            setHtLoading(false);
         });
-
         return () => unsubscribe();
+    }, []);
+
+    // Firestore'dan admin eklenen maçları çek (categoryKey=7)
+    useEffect(() => {
+        const q = query(collection(db, 'predictions'), where('categoryKey', '==', 7));
+        const unsub = onSnapshot(q, (snap) => {
+            const list = snap.docs.map(d => ({ id: d.id, ...d.data(), source: 'admin' }));
+            list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            setFirestoreMatches(list);
+            setFsLoading(false);
+        }, (error) => {
+            console.error('IYMSTahminleri Firestore error:', error);
+            setFsLoading(false);
+        });
+        return () => unsub();
     }, []);
 
     if (loading) {

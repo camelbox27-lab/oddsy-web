@@ -1,22 +1,45 @@
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
+import { db } from './firebaseConfig';
 import { getTeamLogo, handleLogoError } from './helper';
 
 function IlkYariGolListesi() {
-    const [matches, setMatches] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [jsonMatches, setJsonMatches] = useState([]);
+    const [firestoreMatches, setFirestoreMatches] = useState([]);
+    const [jsonLoading, setJsonLoading] = useState(true);
+    const [fsLoading, setFsLoading] = useState(true);
 
+    const loading = jsonLoading || fsLoading;
+    const matches = [...firestoreMatches, ...jsonMatches];
+
+    // JSON verilerini çek (bot tahminleri)
     useEffect(() => {
         fetch('/data/halfTimeGoals.json?t=' + Date.now())
             .then(res => res.json())
             .then(data => {
-                setMatches(data);
-                setLoading(false);
+                setJsonMatches(data);
+                setJsonLoading(false);
             })
             .catch(error => {
-                console.error('IlkYariGolListesi error:', error);
-                setMatches([]);
-                setLoading(false);
+                console.error('IlkYariGolListesi JSON error:', error);
+                setJsonMatches([]);
+                setJsonLoading(false);
             });
+    }, []);
+
+    // Firestore'dan admin eklenen maçları çek (categoryKey=0)
+    useEffect(() => {
+        const q = query(collection(db, 'predictions'), where('categoryKey', '==', 0));
+        const unsub = onSnapshot(q, (snap) => {
+            const list = snap.docs.map(d => ({ id: d.id, ...d.data(), source: 'admin' }));
+            list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            setFirestoreMatches(list);
+            setFsLoading(false);
+        }, (error) => {
+            console.error('IlkYariGolListesi Firestore error:', error);
+            setFsLoading(false);
+        });
+        return () => unsub();
     }, []);
 
     if (loading) {

@@ -1124,6 +1124,23 @@ html, body, #root, .app {
     font-size: 10px !important;
     padding: 8px 10px !important;
   }
+  .admin-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-content-grid .admin-sidebar-buttons {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+  }
+  .admin-content-grid .admin-sidebar-buttons button {
+    flex: 1 !important;
+    min-width: 80px !important;
+  }
+  .admin-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-route-wrapper {
+    padding: 10px !important;
+  }
 }
 `;
 
@@ -2608,14 +2625,12 @@ function AdminScreen({ onBack, showAlert, userData }) {
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
-            <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, marginTop: 20 }}>
+        <div>
+            <div className="admin-content-grid" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20 }}>
                 {/* Sol Taraf - Input Listesi */}
                 <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10, height: 'fit-content' }}>
                     <h3 style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 15, textAlign: 'center' }}>INPUT</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div className="admin-sidebar-buttons" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <button className={`hero-btn secondary ${view === 'addMatch' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addMatch')}>Tahmin Ekle</button>
                         <button className={`hero-btn secondary ${view === 'addCard' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => { setView('addCard'); setMatchData({ ...matchData, categoryKey: 3 }); }}>Kart Ekle</button>
                         <button className={`hero-btn secondary ${view === 'addCorner' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => { setView('addCorner'); setMatchData({ ...matchData, categoryKey: 3 }); }}>Korner Ekle</button>
@@ -2628,7 +2643,7 @@ function AdminScreen({ onBack, showAlert, userData }) {
                 <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
                     {(view === 'addMatch' || view === 'addCard' || view === 'addCorner') && (
                         <form onSubmit={handleAddMatch}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                            <div className="admin-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                                 {view === 'addMatch' && (
                                     <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}>
                                         <label className="form-label" style={{ fontSize: 10 }}>Kategori</label>
@@ -3551,7 +3566,7 @@ export default function App() {
                         const [adminView, setAdminView] = useState('content');
 
                         return (
-                            <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
+                            <div className="admin-route-wrapper" style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
                                 <button className="back-btn" onClick={() => navigate('home')}>Geri</button>
                                 <div className="admin-tab-buttons" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 20, marginBottom: 20 }}>
                                     <button

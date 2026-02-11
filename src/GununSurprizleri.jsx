@@ -1,25 +1,46 @@
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
+import { db } from './firebaseConfig';
 import { getTeamLogo, handleLogoError } from './helper';
 
 function GununSurprizleri() {
-    const [matches, setMatches] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [jsonMatches, setJsonMatches] = useState([]);
+    const [firestoreMatches, setFirestoreMatches] = useState([]);
+    const [jsonLoading, setJsonLoading] = useState(true);
+    const [fsLoading, setFsLoading] = useState(true);
 
+    const loading = jsonLoading || fsLoading;
+    const matches = [...firestoreMatches, ...jsonMatches];
+
+    // JSON verilerini çek (bot tahminleri)
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const res = await fetch('/data/dailySurprises.json?t=' + Date.now());
                 const list = await res.json();
-                console.log('GununSurprizleri data:', list);
-                setMatches(list);
+                setJsonMatches(list);
             } catch (error) {
-                console.error('GununSurprizleri error:', error);
+                console.error('GununSurprizleri JSON error:', error);
             } finally {
-                setLoading(false);
+                setJsonLoading(false);
             }
         };
-
         fetchData();
+    }, []);
+
+    // Firestore'dan admin eklenen maçları çek (categoryKey=6)
+    useEffect(() => {
+        const q = query(collection(db, 'predictions'), where('categoryKey', '==', 6));
+        const unsub = onSnapshot(q, (snap) => {
+            const list = snap.docs.map(d => ({ id: d.id, ...d.data(), source: 'admin' }));
+            list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            setFirestoreMatches(list);
+            setFsLoading(false);
+        }, (error) => {
+            console.error('GununSurprizleri Firestore error:', error);
+            setFsLoading(false);
+        });
+        return () => unsub();
     }, []);
 
     if (loading) {
