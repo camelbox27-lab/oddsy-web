@@ -1166,17 +1166,17 @@ const Icons = {
 
 // CONSTANTS
 const MENU_ITEMS = [
-    { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: '🤖', color: "#FFD700", route: 'yapay-zeka-analizleri' },
+    { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: '🤖', color: "#FFD700", route: 'yapay-zeka-analizleri', vipOnly: true },
     { id: 'cat_1', title: "ILK YARI GOL LISTESI", key: 0, icon: '⚽', color: "#10B981", route: 'ilk-yari-gol' },
     { id: 'cat_coupons_new', title: "GÜNÜN KUPONLARI", key: 20, icon: '🎫', color: "#f87171", route: 'coupons' },
-    { id: 'cat_3', title: "TAHMINCILER", key: 2, icon: '👥', color: "#a78bfa", route: 'category' },
-    { id: 'cat_kart_analiz', title: "KART ANALİZ BOTU", key: 31, icon: '🟨', color: "#FFD700", route: 'kart-analizi' },
-    { id: 'cat_korner_analiz', title: "KORNER ANALİZ BOTU", key: 32, icon: '🚩', color: "#10B981", route: 'korner-analizi' },
+    { id: 'cat_kart_analiz', title: "KART ANALİZ BOTU", key: 31, icon: '🟨', color: "#FFD700", route: 'kart-analizi', vipOnly: true },
+    { id: 'cat_korner_analiz', title: "KORNER ANALİZ BOTU", key: 32, icon: '🚩', color: "#10B981", route: 'korner-analizi', vipOnly: true },
 
     { id: 'cat_5', title: "GUNUN TERCIHLERI", key: 4, icon: '⭐', color: "#4ade80", route: 'gunun-tercihleri' },
     { id: 'cat_7', title: "SURPRIZLER", key: 6, icon: '💥', color: "#fb7185", route: 'gunun-surprizleri' },
     { id: 'cat_8', title: "IY / MS TAHMINLERI", key: 7, icon: '🔄', color: "#FFD700", route: 'iy-ms-tahminleri' },
-    { id: 'cat_9', title: "EDITORUN SECIMI", key: 8, icon: '✍️', color: "#4ade80", route: 'category' },
+    { id: 'cat_9', title: "EDITORUN SECIMI", key: 8, icon: '✍️', color: "#4ade80", route: 'category', vipOnly: true },
+    { id: 'cat_abonelik', title: "ABONELIK PLANI", key: 200, icon: '👑', color: "#FFD700", route: 'abonelik' },
 ];
 
 const COUPON_TYPES = [
@@ -1378,12 +1378,10 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
         { id: 'cat_2', title: "İLK YARI GOL LİSTESİ", key: 0, route: 'category' },
         { id: 'cat_8_new', title: "İY / MS TAHMİNLERİ", key: 7, route: 'iy-ms-tahminleri' },
         { id: 'cat_coupons', title: "GÜNÜN KUPONLARI", key: 20, route: 'coupons' },
-        { id: 'cat_4', title: "TAHMİNCİLER", key: 2, route: 'category' },
         { id: 'cat_6', title: "GÜNÜN TERCİHLERİ", key: 4, route: 'category' },
         { id: 'cat_7', title: "GÜNÜN SÜRPRİZLERİ", key: 6, route: 'category' },
         { id: 'cat_8', title: "EDİTÖRÜN SEÇİMİ", key: 8, route: 'category' },
         { id: 'cat_dropping', title: "ORANI DÜŞEN MAÇLAR", key: 99, route: 'dropping-odds' },
-        { id: 'cat_stats', title: "İSTATİSTİKLER", key: 100, route: 'stats' },
     ];
 
     const bottomRowCategories = [
@@ -1393,7 +1391,7 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
     ];
 
     const handleCategoryClick = (cat) => {
-        if (['coupons', 'yapay-zeka-analizleri', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'ilk-yari-gol', 'dropping-odds', 'stats'].includes(cat.route)) {
+        if (['coupons', 'yapay-zeka-analizleri', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'ilk-yari-gol', 'dropping-odds', 'abonelik'].includes(cat.route)) {
             onNavigate(cat.route, cat);
         } else {
             const menuItem = MENU_ITEMS.find(m => m.key === cat.key);
@@ -1466,21 +1464,20 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
                     {MENU_ITEMS.map(item => (
                         <div key={item.id} className={`sidebar-item ${currentRoute === item.route ? 'active' : ''}`} onClick={() => { onNavigate(item.route, { ...item }); onClose(); }}>
                             <span className="sidebar-item-icon">{item.icon}</span>
-                            <span className="sidebar-item-text">{item.title}</span>
+                            <span className="sidebar-item-text">{item.title}{item.vipOnly && !userData?.isVip && userData?.role !== 'admin' ? ' 🔒' : ''}</span>
                         </div>
                     ))}
                 </div>
                 <div className="sidebar-divider" />
                 <div className="sidebar-section">
-                    <div className="sidebar-section-title">Kurumsal</div>
-                    <div className="sidebar-item" onClick={() => { onNavigate('stats'); onClose(); }}>
-                        <span className="sidebar-item-icon">📊</span>
-                        <span className="sidebar-item-text">İstatistikler</span>
-                    </div>
                     <div className="sidebar-section-title">Hesap</div>
                     <div className="sidebar-item" onClick={() => { onNavigate('profile'); onClose(); }}>
                         <span className="sidebar-item-icon">{Icons.user}</span>
                         <span className="sidebar-item-text">Profilim</span>
+                    </div>
+                    <div className={`sidebar-item ${currentRoute === 'abonelik' ? 'active' : ''}`} onClick={() => { onNavigate('abonelik'); onClose(); }}>
+                        <span className="sidebar-item-icon">👑</span>
+                        <span className="sidebar-item-text">Abonelik Planı</span>
                     </div>
                     {userData?.role === 'admin' && (
                         <div className={`sidebar-item ${currentRoute === 'admin' ? 'active' : ''}`} onClick={() => { onNavigate('admin'); onClose(); }}>
@@ -1492,12 +1489,6 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
                         <div className={`sidebar-item ${currentRoute === 'editor' ? 'active' : ''}`} onClick={() => { onNavigate('editor'); onClose(); }}>
                             <span className="sidebar-item-icon">{Icons.pen}</span>
                             <span className="sidebar-item-text">Editör Paneli</span>
-                        </div>
-                    )}
-                    {userData?.role === 'tipster' && (
-                        <div className={`sidebar-item ${currentRoute === 'tipster' ? 'active' : ''}`} onClick={() => { onNavigate('tipster'); onClose(); }}>
-                            <span className="sidebar-item-icon">{Icons.soccer}</span>
-                            <span className="sidebar-item-text">Tahminci Paneli</span>
                         </div>
                     )}
                 </div>
@@ -1586,6 +1577,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
     const [mode, setMode] = useState(initialIsLogin ? 'login' : 'register'); // login, register, forgot, verify
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
 
@@ -1609,6 +1601,8 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
         }
 
         if (!cleanEmail || !password) return showAlert('Lütfen bilgileri eksiksiz girin.', 'error');
+        if (mode === 'register' && !username.trim()) return showAlert('Kullanıcı adı boş olamaz.', 'error');
+        if (mode === 'register' && username.trim().length < 3) return showAlert('Kullanıcı adı en az 3 karakter olmalıdır.', 'error');
         if (password.length < 6) return showAlert('Şifre en az 6 karakter olmalıdır.', 'error');
 
         setLoading(true);
@@ -1633,7 +1627,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 const newUser = userCredential.user;
 
                 // Profil güncelleme
-                try { await updateProfile(newUser, { displayName: cleanEmail.split('@')[0] }); } catch (e) { console.error('Profile update failed:', e); }
+                try { await updateProfile(newUser, { displayName: username.trim() }); } catch (e) { console.error('Profile update failed:', e); }
 
                 // Doğrulama maili gönder
                 try { await sendEmailVerification(newUser); } catch (e) { console.error('Email verification send failed:', e); }
@@ -1650,14 +1644,14 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 try {
                     await setDoc(doc(db, "users", newUser.uid), {
                         email: newUser.email,
-                        username: cleanEmail.split('@')[0],
+                        username: username.trim(),
                         uid: newUser.uid,
                         displayId: nextDisplayId,
                         createdAt: serverTimestamp(),
                         isAdmin: false,
                         isPremium: false,
-                        role: 'user',
-                        tipsterName: null
+                        isVip: false,
+                        role: 'user'
                     });
                 } catch (firestoreErr) {
                     console.error('Firestore user doc oluşturulamadı:', firestoreErr);
@@ -1801,6 +1795,12 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 <button className="back-btn" onClick={onBack}>{Icons.back} Geri</button>
                 <h1 style={{ marginBottom: 20 }}>{isLogin ? 'Giriş Yap' : 'Kayıt Ol'}</h1>
                 <form onSubmit={handleSubmit}>
+                    {!isLogin && (
+                        <div className="form-group">
+                            <label className="form-label">Kullanıcı Adı</label>
+                            <input className="form-input" type="text" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} placeholder="Kullanıcı adınızı girin" />
+                        </div>
+                    )}
                     <div className="form-group">
                         <label className="form-label">E-Posta</label>
                         <input className="form-input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck="false" value={email} onChange={e => setEmail(e.target.value)} placeholder="ornek@email.com" />
@@ -1890,12 +1890,14 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
                 </button>
             )}
 
-            <div className="profile-row"><span>Üyelik</span><span>{userData?.isPremium ? 'Premium' : 'Standart'}</span></div>
-            <div className="profile-row"><span>Rol</span><span>{userData?.role === 'admin' ? 'Admin' : userData?.role === 'editor' ? 'Editör' : userData?.role === 'tipster' ? `Tahminci (${userData?.tipsterName})` : 'Üye'}</span></div>
+            <div className="profile-row"><span>Üyelik</span><span style={{ color: userData?.isVip ? 'var(--gold)' : '#aaa', fontWeight: userData?.isVip ? 'bold' : 'normal' }}>{userData?.isVip ? '👑 VIP Üye' : 'Standart'}</span></div>
+            <div className="profile-row"><span>Rol</span><span>{userData?.role === 'admin' ? 'Admin' : userData?.role === 'editor' ? 'Editör' : 'Üye'}</span></div>
 
+            {!userData?.isVip && (
+                <button className="submit-btn" style={{ marginTop: 20, background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', fontWeight: 'bold' }} onClick={() => onBack('abonelik')}>👑 VIP Üye Ol</button>
+            )}
             {userData?.role === 'admin' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('admin')}>Admin Paneli</button>}
             {userData?.role === 'editor' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('editor')}>Editör Paneli</button>}
-            {userData?.role === 'tipster' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('tipster')}>Tahminci Paneli</button>}
 
             <button className="logout-btn" onClick={handleLogout}>Çıkış Yap</button>
         </div>
@@ -1985,44 +1987,40 @@ function AdminDashboard({ onBack, userData }) {
             }
         }
 
-        const userToUpdate = users.find(u => u.id === userId);
-        let tipsterName = userToUpdate?.tipsterName || null;
-
-        // Tahminci yapılıyorsa isim iste
-        if (newRole === 'tipster') {
-            const newName = prompt(
-                "Tahminci adını giriniz:",
-                tipsterName || userToUpdate?.username || ""
-            );
-            if (newName === null) return; // İptal
-            if (!newName.trim()) {
-                alert('Tahminci adı boş olamaz!');
-                return;
-            }
-            tipsterName = newName.trim();
-        } else {
-            tipsterName = null; // Tahminci değilse sıfırla
-        }
-
         try {
-            // ✅ DOĞRU: Firestore users koleksiyonuna kaydet
             await updateDoc(doc(db, 'users', userId), {
                 role: newRole,
-                tipsterName: tipsterName,
                 updatedAt: new Date()
             });
 
-            // UI'ı güncelle
             setUsers(users.map(u =>
                 u.id === userId
-                    ? { ...u, role: newRole, tipsterName }
+                    ? { ...u, role: newRole }
                     : u
             ));
-
-            // Rol güncellendi
         } catch (err) {
-            console.error('❌ Rol güncelleme hatası:', err);
+            console.error('Rol güncelleme hatası:', err);
             alert('Yetki değiştirilemedi: ' + err.message);
+        }
+    };
+
+    const handleVipToggle = async (userId, currentVip) => {
+        try {
+            const newVip = !currentVip;
+            await updateDoc(doc(db, 'users', userId), {
+                isVip: newVip,
+                vipUpdatedAt: new Date()
+            });
+
+            setUsers(users.map(u =>
+                u.id === userId
+                    ? { ...u, isVip: newVip }
+                    : u
+            ));
+            alert(newVip ? 'VIP üyelik aktif edildi!' : 'VIP üyelik kaldırıldı.');
+        } catch (err) {
+            console.error('VIP güncelleme hatası:', err);
+            alert('VIP değiştirilemedi: ' + err.message);
         }
     };
 
@@ -2252,13 +2250,13 @@ function AdminDashboard({ onBack, userData }) {
                                 }}>
                                     Rol
                                 </th>
-                                <th className="admin-col-hide-mobile" style={{
+                                <th style={{
                                     padding: 10,
                                     textAlign: 'left',
                                     fontSize: 12,
                                     color: '#aaa'
                                 }}>
-                                    Tahminci Adı
+                                    VIP
                                 </th>
                                 <th style={{
                                     padding: 10,
@@ -2288,8 +2286,22 @@ function AdminDashboard({ onBack, userData }) {
                                     <td style={{ padding: 10, fontSize: 12 }}>
                                         {u.role || 'user'}
                                     </td>
-                                    <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
-                                        {u.tipsterName || '-'}
+                                    <td style={{ padding: 10, fontSize: 12 }}>
+                                        <button
+                                            onClick={() => handleVipToggle(u.id, u.isVip)}
+                                            style={{
+                                                background: u.isVip ? 'linear-gradient(135deg, #FFD700, #FFA500)' : '#333',
+                                                color: u.isVip ? '#000' : '#aaa',
+                                                border: 'none',
+                                                padding: '4px 10px',
+                                                borderRadius: 5,
+                                                fontSize: 11,
+                                                cursor: 'pointer',
+                                                fontWeight: u.isVip ? 'bold' : 'normal'
+                                            }}
+                                        >
+                                            {u.isVip ? '👑 VIP' : 'Standart'}
+                                        </button>
                                     </td>
                                     <td style={{ padding: 10, fontSize: 12 }}>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -2308,7 +2320,6 @@ function AdminDashboard({ onBack, userData }) {
                                                 <option value="user">Üye</option>
                                                 <option value="editor">Editör</option>
                                                 <option value="admin">Admin</option>
-                                                <option value="tipster">Tahminci</option>
                                             </select>
                                             <button
                                                 onClick={() => handlePasswordReset(u.email)}
@@ -2336,56 +2347,155 @@ function AdminDashboard({ onBack, userData }) {
     );
 }
 
-function PublicStats({ onBack }) {
-    const [menuStats, setMenuStats] = useState({});
-    const [loading, setLoading] = useState(true);
+function AbonelikScreen({ onBack, userData, user, onNavigate }) {
+    const TELEGRAM_BOT_USERNAME = 'OddsyAbonelikBot';
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            const snap = await getDocs(collection(db, 'predictions'));
-            const mStats = {};
-            snap.docs.forEach(d => {
-                const p = d.data();
-                const key = p.categoryKey || 0;
-                if (!mStats[key]) mStats[key] = { total: 0, won: 0, lost: 0 };
-                mStats[key].total++;
-                if (p.status === 'won') mStats[key].won++;
-                else if (p.status === 'lost') mStats[key].lost++;
-            });
-            setMenuStats(mStats);
-            setLoading(false);
-        };
-        fetchStats();
-    }, []);
+    const handleSubscribe = () => {
+        const userId = userData?.displayId || '';
+        const username = userData?.username || '';
+        const message = encodeURIComponent(`Merhaba! Oddsy VIP abonelik almak istiyorum.\n\nKullanıcı Adı: ${username}\nKullanıcı ID: ${userId}`);
+        window.open(`https://t.me/${TELEGRAM_BOT_USERNAME}?text=${message}`, '_blank');
+    };
 
-    if (loading) return <div className="loading"><div className="spinner" /></div>;
+    const features = [
+        'Yapay Zeka ile Günün Tahminleri sayfasına erişim',
+        'Seçilen maçlar için detaylı algoritma analizi',
+        'Kart Analiz Botu ekranına erişim',
+        'Korner Analiz Botu ekranına erişim',
+        'Editörün Seçimi özel analizlerine erişim',
+        'Üyelik süresince sınırsız kullanım'
+    ];
 
     return (
-        <div className="category-page" style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-            <div className="category-header"><button className="category-back-btn" onClick={onBack}>{Icons.back}</button><h1 className="category-title">SİTE İSTATİSTİKLERİ</h1></div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15 }}>
-                {MENU_ITEMS.map(item => {
-                    const s = menuStats[item.key] || { total: 0, won: 0, lost: 0 };
-                    const winRate = s.total > 0 ? ((s.won / (s.won + s.lost || 1)) * 100).toFixed(1) : 0;
-                    return (
-                        <div key={item.id} className="prediction-card" style={{ minHeight: 'auto', padding: 20 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ color: item.color, fontWeight: 'bold' }}>{item.title}</div>
-                                <div style={{ color: 'var(--gold)', fontSize: 20, fontWeight: 900 }}>%{winRate} BAŞARI</div>
-                            </div>
-                            <div style={{ display: 'flex', gap: 20, marginTop: 15, fontSize: 13, color: '#aaa' }}>
-                                <span>Toplam: {s.total}</span>
-                                <span style={{ color: '#4ade80' }}>Kazanan: {s.won}</span>
-                                <span style={{ color: '#f87171' }}>Kaybeden: {s.lost}</span>
-                            </div>
+        <div className="category-page" style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+            <div className="category-header">
+                <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
+            </div>
+
+            <div style={{
+                background: 'var(--bg-card)',
+                borderRadius: 20,
+                padding: '40px 30px',
+                textAlign: 'center',
+                border: '2px solid rgba(255, 215, 0, 0.2)',
+                marginTop: 20
+            }}>
+                <h1 style={{ color: 'var(--text-primary)', fontSize: 28, fontWeight: 900, marginBottom: 10 }}>
+                    Tahmira Abonelik Planı
+                </h1>
+                <p style={{ color: '#aaa', fontSize: 14, marginBottom: 30, lineHeight: 1.6 }}>
+                    Tüm gelişmiş analiz özelliklerinden ve günlük yapay zeka tahminlerinden sınırsız şekilde faydalanın.
+                </p>
+
+                <div style={{ textAlign: 'left', maxWidth: 400, margin: '0 auto 30px' }}>
+                    {features.map((f, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 15 }}>
+                            <span style={{ color: '#10B981', fontSize: 20, flexShrink: 0 }}>✔</span>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{f}</span>
                         </div>
-                    );
-                })}
+                    ))}
+                </div>
+
+                {userData?.isVip ? (
+                    <div style={{
+                        background: 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,165,0,0.15))',
+                        border: '2px solid var(--gold)',
+                        borderRadius: 12,
+                        padding: '20px',
+                        marginBottom: 20
+                    }}>
+                        <p style={{ color: 'var(--gold)', fontSize: 18, fontWeight: 'bold', margin: 0 }}>
+                            👑 VIP Üyeliğiniz Aktif
+                        </p>
+                        <p style={{ color: '#aaa', fontSize: 13, marginTop: 8, margin: 0 }}>
+                            Tüm premium özelliklere erişiminiz bulunmaktadır.
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        {!user ? (
+                            <button
+                                onClick={() => onNavigate('auth', { isLogin: false })}
+                                style={{
+                                    width: '100%',
+                                    padding: '16px 32px',
+                                    background: 'linear-gradient(135deg, #28a745, #20c997)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 12,
+                                    fontSize: 17,
+                                    fontWeight: 800,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                Önce Kayıt Ol / Giriş Yap
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleSubscribe}
+                                style={{
+                                    width: '100%',
+                                    padding: '16px 32px',
+                                    background: 'linear-gradient(135deg, #28a745, #20c997)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 12,
+                                    fontSize: 17,
+                                    fontWeight: 800,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                1 Aylık Abonelik Satın Al – 499₺
+                            </button>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );
 }
 
+function VipGate({ userData, user, onNavigate, children }) {
+    const isVipOrAdmin = userData?.isVip || userData?.role === 'admin';
+    if (isVipOrAdmin) return children;
+
+    return (
+        <div className="category-page" style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{
+                background: 'var(--bg-card)',
+                borderRadius: 20,
+                padding: '50px 30px',
+                border: '2px solid rgba(255, 215, 0, 0.2)',
+                marginTop: 40
+            }}>
+                <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
+                <h2 style={{ color: 'var(--gold)', fontSize: 22, fontWeight: 800, marginBottom: 15 }}>
+                    VIP Üyelik Gerekli
+                </h2>
+                <p style={{ color: '#aaa', fontSize: 14, marginBottom: 30, lineHeight: 1.6 }}>
+                    Bu içeriğe erişmek için VIP üye olmanız gerekmektedir. Abonelik planımızı inceleyin ve tüm premium özelliklere erişim kazanın.
+                </p>
+                <button
+                    onClick={() => onNavigate('abonelik')}
+                    style={{
+                        padding: '14px 32px',
+                        background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                        color: '#000',
+                        border: 'none',
+                        borderRadius: 12,
+                        fontSize: 16,
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                    }}
+                >
+                    👑 Abonelik Planını İncele
+                </button>
+            </div>
+        </div>
+    );
+}
 
 function EditorScreen({ onBack, showAlert, userData }) {
     const [loading, setLoading] = useState(false);
@@ -2437,64 +2547,6 @@ function EditorScreen({ onBack, showAlert, userData }) {
     );
 }
 
-function TipsterScreen({ onBack, showAlert, userData }) {
-    const [loading, setLoading] = useState(false);
-    const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 2, status: 'pending', analysis: '', tipster: userData?.tipsterName || '' });
-
-    const handleAddMatch = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const u = auth.currentUser;
-            if (!u) throw new Error('Oturum kapalı');
-            if (!userData?.tipsterName) throw new Error('Tahminci adı atanmamış');
-
-            const submitFn = httpsCallable(functions, 'submitPrediction');
-            await submitFn({ ...matchData, tipster: userData.tipsterName });
-
-            showAlert('Tahmin eklendi!', 'success');
-            // Form alanlarını temizle
-            setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 2, status: 'pending', analysis: '', tipster: userData.tipsterName });
-        } catch (err) {
-            console.error('Match Save Error:', err);
-            showAlert('Hata: ' + err.message, 'error');
-        } finally { setLoading(false); }
-    };
-
-    if (!userData?.tipsterName) {
-        return (
-            <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
-                <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
-                <div style={{ textAlign: 'center', marginTop: 50, color: '#aaa' }}>
-                    <h2>Tahminci adınız atanmamış</h2>
-                    <p>Lütfen admin ile iletişime geçin.</p>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
-            <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
-            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 30 }}>Tahminci Paneli - {userData.tipsterName}</h1>
-
-            <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
-                <form onSubmit={handleAddMatch}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Ev Sahibi</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.homeTeam} onChange={e => setMatchData({ ...matchData, homeTeam: e.target.value })} /></div>
-                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Deplasman</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.awayTeam} onChange={e => setMatchData({ ...matchData, awayTeam: e.target.value })} /></div>
-                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Lig</label><select className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.league} onChange={e => setMatchData({ ...matchData, league: e.target.value })}>{LEAGUES.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}</select></div>
-                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Saat</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} placeholder="20:45" value={matchData.time} onChange={e => setMatchData({ ...matchData, time: e.target.value })} /></div>
-                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Tahmin</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.prediction} onChange={e => setMatchData({ ...matchData, prediction: e.target.value })} /></div>
-                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Oran</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.odds} onChange={e => setMatchData({ ...matchData, odds: e.target.value })} /></div>
-                        <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Maç Analizi</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="2" value={matchData.analysis} onChange={e => setMatchData({ ...matchData, analysis: e.target.value })} placeholder="Bu maç için analizini buraya yaz..." /></div>
-                    </div>
-                    <button className="submit-btn" disabled={loading} style={{ marginTop: 15, padding: 10, fontSize: 13 }}>Kaydet</button>
-                </form>
-            </div>
-        </div>
-    );
-}
 
 function AdminScreen({ onBack, showAlert, userData }) {
     const [view, setView] = useState('addMatch');
@@ -3175,69 +3227,34 @@ function CategoryScreen({ category, onBack, userData, onNavigate }) {
     const [predictions, setPredictions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedLeague, setSelectedLeague] = useState(null);
-    const [selectedTipster, setSelectedTipster] = useState(null);
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
-    const [showStatsModal, setShowStatsModal] = useState(false);
-    const [selectedTipsterStats, setSelectedTipsterStats] = useState(null);
-    const [tipsters, setTipsters] = useState([]);
-    const [tipstersLoading, setTipstersLoading] = useState(true);
 
-    // Varsayılan görseller (tipsterName bazlı)
-    const tipsterDefaults = {
-        'guedaus': { role: 'Uzman Analist', image: 'https://i.ibb.co/60Tj8jJJ/Whats-App-mage-2025-12-07-at-23-21-34-1.jpg' },
-        'goalman': { role: 'Goal Makinesi', image: 'https://i.ibb.co/5XXgkWSP/Whats-App-mage-2025-12-07-at-23-21-42-1.jpg' },
-        'casa de luka': { role: 'İspanya Ligi', image: 'https://i.ibb.co/2YqjD8BX/Whats-App-mage-2025-12-07-at-23-21-42.jpg' },
-        'nbavipbox': { role: 'Basketbol Gurusu', image: 'https://i.ibb.co/xtJDGZhT/Whats-App-mage-2025-12-07-at-23-21-34.jpg' },
-    };
-
-    // Firestore'dan tipster kullanıcılarını çek + istatistikleri hesapla
-    useEffect(() => {
-        if (category.key !== 2) return;
-        setTipstersLoading(true);
-
-        const tipsterQuery = query(collection(db, 'users'), where('role', '==', 'tipster'));
-        const predQuery = query(collection(db, 'predictions'), where('categoryKey', '==', 2));
-
-        const unsubTipsters = onSnapshot(tipsterQuery, (tipsterSnap) => {
-            const tipsterUsers = tipsterSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-            const unsubPreds = onSnapshot(predQuery, (predSnap) => {
-                const allPreds = predSnap.docs.map(d => d.data());
-
-                const tipsterList = tipsterUsers
-                    .filter(u => u.tipsterName)
-                    .map(u => {
-                        const name = u.tipsterName;
-                        const myPreds = allPreds.filter(p => p.tipster?.toLowerCase() === name.toLowerCase());
-                        const total = myPreds.length;
-                        const win = myPreds.filter(p => p.status === 'won').length;
-                        const lost = myPreds.filter(p => p.status === 'lost').length;
-                        const rate = total > 0 ? Math.round((win / total) * 100) : 0;
-                        const defaults = tipsterDefaults[name.toLowerCase()] || {};
-
-                        return {
-                            id: u.id,
-                            name: name,
-                            role: defaults.role || 'Tahminci',
-                            image: u.photoURL || defaults.image || 'https://i.ibb.co/placeholder.png',
-                            stats: { total, win, lost, rate: `%${rate}` }
-                        };
-                    });
-
-                setTipsters(tipsterList);
-                setTipstersLoading(false);
-            });
-
-            listenerRegistry.register('tipster-preds', unsubPreds);
-        });
-
-        listenerRegistry.register('tipster-users', unsubTipsters);
-
-        return () => {
-            listenerRegistry.unregister('tipster-users');
-            listenerRegistry.unregister('tipster-preds');
-        };
-    }, [category.key]);
+    // VIP gate for category key 8 (Editörün Seçimi)
+    const isVipCategory = category.key === 8;
+    const isVipOrAdmin = userData?.isVip || userData?.role === 'admin';
+    if (isVipCategory && !isVipOrAdmin) {
+        return (
+            <div className="category-page" style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+                <div className="category-header">
+                    <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
+                </div>
+                <div style={{
+                    background: 'var(--bg-card)',
+                    borderRadius: 20,
+                    padding: '50px 30px',
+                    border: '2px solid rgba(255, 215, 0, 0.2)',
+                    marginTop: 40
+                }}>
+                    <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
+                    <h2 style={{ color: 'var(--gold)', fontSize: 22, fontWeight: 800, marginBottom: 15 }}>VIP Üyelik Gerekli</h2>
+                    <p style={{ color: '#aaa', fontSize: 14, marginBottom: 30, lineHeight: 1.6 }}>Bu içeriğe erişmek için VIP üye olmanız gerekmektedir.</p>
+                    <button onClick={() => onNavigate('abonelik')} style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', border: 'none', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+                        👑 Abonelik Planını İncele
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const IS_BOT_MENU = [0, 4, 6, 7].includes(category.key);
     const IS_CARD_KORNER_MENU = category.key === 3;
@@ -3295,102 +3312,14 @@ function CategoryScreen({ category, onBack, userData, onNavigate }) {
         };
     }, [category.key, selectedSubCategory, IS_BOT_MENU, IS_CARD_KORNER_MENU]);
 
-    const filtered = selectedTipster ? predictions.filter(p => p.tipster?.toLowerCase().includes(selectedTipster.name.toLowerCase())) : (selectedLeague ? predictions.filter(p => p.league === selectedLeague) : predictions);
-
-    if (category.key === 2 && !selectedTipster) {
-        return (
-            <div className="category-page">
-                <div className="category-header"><button className="category-back-btn" onClick={onBack}>{Icons.back}</button><h1 className="category-title">Tahminciler</h1></div>
-                <div className="predictions-list" style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800, margin: '0 auto' }}>
-                    {tipstersLoading ? (
-                        <div className="loading"><div className="spinner" /></div>
-                    ) : tipsters.length === 0 ? (
-                        <p style={{ textAlign: 'center', color: '#666', padding: '50px' }}>Henüz tahminci bulunmuyor.</p>
-                    ) : tipsters.map(t => (
-                        <div key={t.id} className="menu-selection-card prediction-card" style={{ flexDirection: 'column', gap: 15, padding: 20, minHeight: 200 }} onClick={() => setSelectedTipster(t)}>
-                            <img src={t.image} style={{ width: 80, height: 80, borderRadius: '50%', border: '3px solid var(--gold)', objectFit: 'cover' }} />
-                            <div><h3 style={{ color: 'var(--gold)', fontSize: 20, fontWeight: '800' }}>{t.name}</h3><p style={{ fontSize: 13, color: '#aaa', marginTop: 5 }}>{t.role}</p></div>
-                            <button
-                                className="tipster-stats-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedTipsterStats(t);
-                                    setShowStatsModal(true);
-                                }}
-                            >
-                                📊 İstatistik
-                            </button>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Stats Modal */}
-                {showStatsModal && selectedTipsterStats && (
-                    <div className="modal-overlay" onClick={() => setShowStatsModal(false)}>
-                        <div className="stats-modal" onClick={(e) => e.stopPropagation()}>
-                            <button className="modal-close-btn" onClick={() => setShowStatsModal(false)}>✕</button>
-                            <div style={{ textAlign: 'center', marginBottom: 30 }}>
-                                <img src={selectedTipsterStats.image} style={{ width: 100, height: 100, borderRadius: '50%', border: '3px solid var(--gold)', marginBottom: 15 }} />
-                                <h2 style={{ color: 'var(--gold)', fontSize: 24, marginBottom: 5 }}>{selectedTipsterStats.name}</h2>
-                                <p style={{ color: '#aaa', fontSize: 14 }}>{selectedTipsterStats.role}</p>
-                            </div>
-
-                            <div className="stats-content">
-                                <div className="stat-row">
-                                    <span className="stat-label">Toplam Tahmin</span>
-                                    <span className="stat-value" style={{ color: 'var(--gold)' }}>{selectedTipsterStats.stats.total}</span>
-                                </div>
-
-                                <div className="stat-row">
-                                    <span className="stat-label">Kazanan</span>
-                                    <div style={{ flex: 1, marginLeft: 20 }}>
-                                        <div className="stat-bar-container">
-                                            <div className="stat-bar" style={{ width: `${(selectedTipsterStats.stats.win / selectedTipsterStats.stats.total) * 100}%`, background: '#006A4E' }}></div>
-                                        </div>
-                                        <span className="stat-value" style={{ color: '#006A4E', marginLeft: 10 }}>{selectedTipsterStats.stats.win}</span>
-                                    </div>
-                                </div>
-
-                                <div className="stat-row">
-                                    <span className="stat-label">Kaybeden</span>
-                                    <div style={{ flex: 1, marginLeft: 20 }}>
-                                        <div className="stat-bar-container">
-                                            <div className="stat-bar" style={{ width: `${selectedTipsterStats.stats.total > 0 ? ((selectedTipsterStats.stats.lost || 0) / selectedTipsterStats.stats.total) * 100 : 0}%`, background: '#dc2626' }}></div>
-                                        </div>
-                                        <span className="stat-value" style={{ color: '#dc2626', marginLeft: 10 }}>{selectedTipsterStats.stats.lost || 0}</span>
-                                    </div>
-                                </div>
-
-                                <div className="stat-row">
-                                    <span className="stat-label">Bekleyen</span>
-                                    <div style={{ flex: 1, marginLeft: 20 }}>
-                                        <div className="stat-bar-container">
-                                            <div className="stat-bar" style={{ width: `${selectedTipsterStats.stats.total > 0 ? ((selectedTipsterStats.stats.total - (selectedTipsterStats.stats.win || 0) - (selectedTipsterStats.stats.lost || 0)) / selectedTipsterStats.stats.total) * 100 : 0}%`, background: '#f59e0b' }}></div>
-                                        </div>
-                                        <span className="stat-value" style={{ color: '#f59e0b', marginLeft: 10 }}>{selectedTipsterStats.stats.total - (selectedTipsterStats.stats.win || 0) - (selectedTipsterStats.stats.lost || 0)}</span>
-                                    </div>
-                                </div>
-
-                                <div className="stat-row" style={{ marginTop: 30, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <span className="stat-label" style={{ fontSize: 18, fontWeight: 700 }}>Başarı Oranı</span>
-                                    <span className="stat-value" style={{ color: 'var(--gold)', fontSize: 28, fontWeight: 900 }}>{selectedTipsterStats.stats.rate}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    }
+    const filtered = selectedLeague ? predictions.filter(p => p.league === selectedLeague) : predictions;
 
     return (
         <div className="category-page">
             <div className="category-header">
-                <button className="category-back-btn" onClick={selectedTipster ? () => setSelectedTipster(null) : selectedLeague ? () => setSelectedLeague(null) : onBack}>{Icons.back}</button>
+                <button className="category-back-btn" onClick={selectedLeague ? () => setSelectedLeague(null) : onBack}>{Icons.back}</button>
                 <h1 className="category-title">
-                    {selectedTipster ? selectedTipster.name :
-                        selectedLeague ? selectedLeague :
-                            category.title}
+                    {selectedLeague ? selectedLeague : category.title}
                 </h1>
             </div>
             <div className="predictions-list">
@@ -3493,14 +3422,14 @@ export default function App() {
                             // User doc yok - oluştur
                             let nextDisplayId = null;
                             try { nextDisplayId = await getNextUserId(); } catch (idErr) { console.error('DisplayId oluşturulamadı:', idErr); nextDisplayId = Math.floor(20260000 + Math.random() * 9999); }
-                            const initData = { uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], displayId: nextDisplayId, isAdmin: false, isPremium: false, role: 'user', tipsterName: null, createdAt: serverTimestamp() };
+                            const initData = { uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], displayId: nextDisplayId, isAdmin: false, isPremium: false, isVip: false, role: 'user', createdAt: serverTimestamp() };
                             try { await setDoc(doc(db, 'users', u.uid), initData); } catch (setErr) { console.error('User doc oluşturulamadı:', setErr); }
                             setUserData(initData);
                         }
                     } catch (e) {
                         console.error('Auth flow hatası:', e);
                         // Fallback: Firestore'a erişilemese bile kullanıcıyı giriş yaptır
-                        setUserData({ uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], isAdmin: false, role: 'user', displayId: null });
+                        setUserData({ uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], isAdmin: false, isVip: false, role: 'user', displayId: null });
                     }
                 } else {
                     setUser(null);
@@ -3600,15 +3529,24 @@ export default function App() {
             case 'editor':
                 if (userData?.role === 'editor') return <EditorScreen onBack={navigate} showAlert={showAlert} userData={userData} />;
                 return <div className="loading">Yetkisiz erişim</div>;
-            case 'tipster':
-                if (userData?.role === 'tipster') return <TipsterScreen onBack={navigate} showAlert={showAlert} userData={userData} />;
-                return <div className="loading">Yetkisiz erişim</div>;
+            case 'abonelik': return <AbonelikScreen onBack={() => navigate('home')} userData={userData} user={user} onNavigate={navigate} />;
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} userData={userData} onNavigate={navigate} />;
             case 'coupons': return <CouponScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />;
-            case 'stats': return <PublicStats onBack={() => navigate('home')} />;
-            case 'yapay-zeka-analizleri': return <YapayZeka />;
-            case 'kart-analizi': return <Kart onBack={() => navigate('home')} />;
-            case 'korner-analizi': return <Korner onBack={() => navigate('home')} />;
+            case 'yapay-zeka-analizleri': return (
+                <VipGate userData={userData} user={user} onNavigate={navigate}>
+                    <YapayZeka />
+                </VipGate>
+            );
+            case 'kart-analizi': return (
+                <VipGate userData={userData} user={user} onNavigate={navigate}>
+                    <Kart onBack={() => navigate('home')} />
+                </VipGate>
+            );
+            case 'korner-analizi': return (
+                <VipGate userData={userData} user={user} onNavigate={navigate}>
+                    <Korner onBack={() => navigate('home')} />
+                </VipGate>
+            );
             case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')} />;
             case 'ilk-yari-gol': return (
                 <div style={{ paddingTop: '20px' }}>

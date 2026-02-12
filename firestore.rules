@@ -19,12 +19,8 @@ service cloud.firestore {
       return isSignedIn() && getUserData().role == 'editor';
     }
 
-    function isTipster() {
-      return isSignedIn() && getUserData().role == 'tipster';
-    }
-
     function hasRole() {
-      return isSignedIn() && (isAdmin() || isEditor() || isTipster());
+      return isSignedIn() && (isAdmin() || isEditor());
     }
 
     function isValidSize() {
@@ -44,7 +40,7 @@ service cloud.firestore {
       allow update: if isSignedIn() &&
                        (request.auth.uid == userId || isAdmin()) &&
                        isValidSize() &&
-                       (request.auth.uid == userId ? !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) : true);
+                       (request.auth.uid == userId ? !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isVip', 'isAdmin']) : true);
       allow delete: if isAdmin();
     }
 
@@ -94,7 +90,6 @@ service cloud.firestore {
       allow write: if hasRole();
     }
 
-    // ===== DİĞER KATEGORİLER =====
     match /halfTimeGoals/{id} {
       allow read: if true;
       allow write: if hasRole();
