@@ -1176,7 +1176,7 @@ const MENU_ITEMS = [
     { id: 'cat_7', title: "SURPRIZLER", key: 6, icon: '💥', color: "#fb7185", route: 'gunun-surprizleri' },
     { id: 'cat_8', title: "IY / MS TAHMINLERI", key: 7, icon: '🔄', color: "#FFD700", route: 'iy-ms-tahminleri' },
     { id: 'cat_9', title: "EDITORUN SECIMI", key: 8, icon: '✍️', color: "#4ade80", route: 'category', vipOnly: true },
-    { id: 'cat_abonelik', title: "ABONELIK PLANI", key: 200, icon: '👑', color: "#FFD700", route: 'abonelik' },
+    { id: 'cat_abonelik', title: "ABONELİK PLANLARI", key: 200, icon: '👑', color: "#FFD700", route: 'abonelik' },
 ];
 
 const COUPON_TYPES = [
@@ -1477,7 +1477,7 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
                     </div>
                     <div className={`sidebar-item ${currentRoute === 'abonelik' ? 'active' : ''}`} onClick={() => { onNavigate('abonelik'); onClose(); }}>
                         <span className="sidebar-item-icon">👑</span>
-                        <span className="sidebar-item-text">Abonelik Planı</span>
+                        <span className="sidebar-item-text">Abonelik Planları</span>
                     </div>
                     {userData?.role === 'admin' && (
                         <div className={`sidebar-item ${currentRoute === 'admin' ? 'active' : ''}`} onClick={() => { onNavigate('admin'); onClose(); }}>
@@ -1890,7 +1890,7 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
                 </button>
             )}
 
-            <div className="profile-row"><span>Üyelik</span><span style={{ color: userData?.isVip ? 'var(--gold)' : '#aaa', fontWeight: userData?.isVip ? 'bold' : 'normal' }}>{userData?.isVip ? '👑 VIP Üye' : 'Standart'}</span></div>
+            <div className="profile-row"><span>Üyelik</span><span style={{ color: userData?.isVip ? (userData?.vipTier === 'platinum' ? '#B0C4DE' : userData?.vipTier === 'silver' ? '#C0C0C0' : 'var(--gold)') : '#aaa', fontWeight: userData?.isVip ? 'bold' : 'normal' }}>{userData?.isVip ? (userData?.vipTier === 'platinum' ? '💎 Platin VIP' : userData?.vipTier === 'silver' ? '🥈 Gümüş VIP' : '👑 Altın VIP') : 'Standart'}</span></div>
             <div className="profile-row"><span>Rol</span><span>{userData?.role === 'admin' ? 'Admin' : userData?.role === 'editor' ? 'Editör' : 'Üye'}</span></div>
 
             {!userData?.isVip && (
@@ -2004,20 +2004,22 @@ function AdminDashboard({ onBack, userData }) {
         }
     };
 
-    const handleVipToggle = async (userId, currentVip) => {
+    const handleVipTierChange = async (userId, newTier) => {
         try {
-            const newVip = !currentVip;
+            const isVip = newTier !== 'none';
             await updateDoc(doc(db, 'users', userId), {
-                isVip: newVip,
+                isVip: isVip,
+                vipTier: isVip ? newTier : null,
                 vipUpdatedAt: new Date()
             });
 
             setUsers(users.map(u =>
                 u.id === userId
-                    ? { ...u, isVip: newVip }
+                    ? { ...u, isVip: isVip, vipTier: isVip ? newTier : null }
                     : u
             ));
-            alert(newVip ? 'VIP üyelik aktif edildi!' : 'VIP üyelik kaldırıldı.');
+            const tierNames = { silver: 'Gümüş VIP', gold: 'Altın VIP', platinum: 'Platin VIP', none: 'Standart' };
+            alert(`Üyelik "${tierNames[newTier]}" olarak güncellendi!`);
         } catch (err) {
             console.error('VIP güncelleme hatası:', err);
             alert('VIP değiştirilemedi: ' + err.message);
@@ -2256,7 +2258,7 @@ function AdminDashboard({ onBack, userData }) {
                                     fontSize: 12,
                                     color: '#aaa'
                                 }}>
-                                    VIP
+                                    VIP Tier
                                 </th>
                                 <th style={{
                                     padding: 10,
@@ -2287,21 +2289,25 @@ function AdminDashboard({ onBack, userData }) {
                                         {u.role || 'user'}
                                     </td>
                                     <td style={{ padding: 10, fontSize: 12 }}>
-                                        <button
-                                            onClick={() => handleVipToggle(u.id, u.isVip)}
+                                        <select
+                                            value={u.vipTier || (u.isVip ? 'gold' : 'none')}
+                                            onChange={(e) => handleVipTierChange(u.id, e.target.value)}
                                             style={{
-                                                background: u.isVip ? 'linear-gradient(135deg, #FFD700, #FFA500)' : '#333',
-                                                color: u.isVip ? '#000' : '#aaa',
+                                                background: u.vipTier === 'platinum' ? '#7B68EE' : u.vipTier === 'gold' || (u.isVip && !u.vipTier) ? '#B8860B' : u.vipTier === 'silver' ? '#808080' : '#333',
+                                                color: u.isVip || u.vipTier ? '#fff' : '#aaa',
                                                 border: 'none',
-                                                padding: '4px 10px',
+                                                padding: '4px 8px',
                                                 borderRadius: 5,
                                                 fontSize: 11,
                                                 cursor: 'pointer',
-                                                fontWeight: u.isVip ? 'bold' : 'normal'
+                                                fontWeight: u.isVip || u.vipTier ? 'bold' : 'normal'
                                             }}
                                         >
-                                            {u.isVip ? '👑 VIP' : 'Standart'}
-                                        </button>
+                                            <option value="none">Standart</option>
+                                            <option value="silver">🥈 Gümüş VIP</option>
+                                            <option value="gold">👑 Altın VIP</option>
+                                            <option value="platinum">💎 Platin VIP</option>
+                                        </select>
                                     </td>
                                     <td style={{ padding: 10, fontSize: 12 }}>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -2350,108 +2356,240 @@ function AdminDashboard({ onBack, userData }) {
 function AbonelikScreen({ onBack, userData, user, onNavigate }) {
     const TELEGRAM_BOT_USERNAME = 'OddsyAbonelikBot';
 
-    const handleSubscribe = () => {
+    const handleSubscribe = (planName) => {
         const userId = userData?.displayId || '';
         const username = userData?.username || '';
-        const message = encodeURIComponent(`Merhaba! Oddsy VIP abonelik almak istiyorum.\n\nKullanıcı Adı: ${username}\nKullanıcı ID: ${userId}`);
+        const message = encodeURIComponent(`Merhaba! Oddsy ${planName} abonelik almak istiyorum.\n\nKullanıcı Adı: ${username}\nKullanıcı ID: ${userId}`);
         window.open(`https://t.me/${TELEGRAM_BOT_USERNAME}?text=${message}`, '_blank');
     };
 
-    const features = [
-        'Yapay Zeka ile Günün Tahminleri sayfasına erişim',
-        'Seçilen maçlar için detaylı algoritma analizi',
-        'Kart Analiz Botu ekranına erişim',
-        'Korner Analiz Botu ekranına erişim',
-        'Editörün Seçimi özel analizlerine erişim',
-        'Üyelik süresince sınırsız kullanım'
+    const userTier = userData?.vipTier || (userData?.isVip ? 'gold' : null);
+
+    const plans = [
+        {
+            id: 'silver',
+            name: 'Gümüş',
+            icon: '🥈',
+            price: '499',
+            duration: '1 Aylık',
+            gradient: 'linear-gradient(135deg, #C0C0C0, #A8A8A8)',
+            borderColor: 'rgba(192, 192, 192, 0.4)',
+            glowColor: 'rgba(192, 192, 192, 0.15)',
+            textColor: '#C0C0C0',
+            features: [
+                'Yapay Zeka ile Günün Tahminleri sayfasına erişim',
+                'Seçilen maçlar için detaylı algoritma analizi',
+                'Kart Analiz Botu ekranına erişim',
+                'Korner Analiz Botu ekranına erişim',
+                'Editörün Seçimi özel analizlerine erişim',
+                '1 Aylık üyelik süresince erişim'
+            ]
+        },
+        {
+            id: 'gold',
+            name: 'Altın',
+            icon: '👑',
+            price: '1299',
+            duration: '3 Aylık',
+            gradient: 'linear-gradient(135deg, #FFD700, #FFA500)',
+            borderColor: 'rgba(255, 215, 0, 0.4)',
+            glowColor: 'rgba(255, 215, 0, 0.15)',
+            textColor: '#FFD700',
+            popular: true,
+            features: [
+                'Yapay Zeka ile Günün Tahminleri sayfasına erişim',
+                'Seçilen maçlar için detaylı algoritma analizi',
+                'Kart Analiz Botu ekranına erişim',
+                'Korner Analiz Botu ekranına erişim',
+                'Editörün Seçimi özel analizlerine erişim',
+                'Canlı tercihler içeren özel Telegram kanalına erişim',
+                '3 Aylık üyelik süresince erişim'
+            ]
+        },
+        {
+            id: 'platinum',
+            name: 'Platin',
+            icon: '💎',
+            price: '2499',
+            duration: '6 Aylık',
+            gradient: 'linear-gradient(135deg, #E5E4E2, #B0C4DE, #7B68EE)',
+            borderColor: 'rgba(123, 104, 238, 0.4)',
+            glowColor: 'rgba(123, 104, 238, 0.15)',
+            textColor: '#B0C4DE',
+            features: [
+                'Yapay Zeka ile Günün Tahminleri sayfasına erişim',
+                'Seçilen maçlar için detaylı algoritma analizi',
+                'Kart Analiz Botu ekranına erişim',
+                'Korner Analiz Botu ekranına erişim',
+                'Editörün Seçimi özel analizlerine erişim',
+                'Canlı tercihler içeren özel Telegram kanalına erişim',
+                'Özel birebir analiz desteği',
+                '6 Aylık üyelik süresince erişim'
+            ]
+        }
     ];
 
+    const tierOrder = { silver: 1, gold: 2, platinum: 3 };
+
     return (
-        <div className="category-page" style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+        <div className="category-page" style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
             <div className="category-header">
                 <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
             </div>
 
+            <div style={{ textAlign: 'center', marginTop: 20, marginBottom: 30 }}>
+                <h1 style={{ color: 'var(--text-primary)', fontSize: 28, fontWeight: 900, marginBottom: 10 }}>
+                    Oddsy Abonelik Planları
+                </h1>
+                <p style={{ color: '#aaa', fontSize: 14, lineHeight: 1.6 }}>
+                    Gelişmiş analiz özelliklerinden ve yapay zeka tahminlerinden faydalanmak için size uygun planı seçin.
+                </p>
+            </div>
+
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: 20,
+                marginBottom: 30
+            }}>
+                {plans.map(plan => {
+                    const isActive = userTier === plan.id;
+                    const hasHigherTier = userTier && tierOrder[userTier] >= tierOrder[plan.id];
+
+                    return (
+                        <div key={plan.id} style={{
+                            background: 'var(--bg-card)',
+                            borderRadius: 20,
+                            padding: '30px 24px',
+                            border: `2px solid ${plan.borderColor}`,
+                            position: 'relative',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            boxShadow: plan.popular ? `0 0 30px ${plan.glowColor}` : 'none',
+                            transform: plan.popular ? 'scale(1.03)' : 'none',
+                            transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+                        }}>
+                            {plan.popular && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: -12,
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    background: plan.gradient,
+                                    color: '#000',
+                                    padding: '4px 16px',
+                                    borderRadius: 20,
+                                    fontSize: 11,
+                                    fontWeight: 800,
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    En Popüler
+                                </div>
+                            )}
+
+                            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                                <div style={{ fontSize: 40, marginBottom: 8 }}>{plan.icon}</div>
+                                <h3 style={{ color: plan.textColor, fontSize: 22, fontWeight: 800, margin: 0 }}>
+                                    {plan.name}
+                                </h3>
+                                <p style={{ color: '#888', fontSize: 13, margin: '4px 0 0' }}>{plan.duration} Plan</p>
+                            </div>
+
+                            <div style={{
+                                textAlign: 'center',
+                                marginBottom: 20,
+                                padding: '15px 0',
+                                borderTop: '1px solid rgba(255,255,255,0.05)',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)'
+                            }}>
+                                <span style={{ fontSize: 36, fontWeight: 900, color: plan.textColor }}>{plan.price}</span>
+                                <span style={{ fontSize: 16, color: '#888', marginLeft: 4 }}>TL</span>
+                            </div>
+
+                            <div style={{ flex: 1, marginBottom: 20 }}>
+                                {plan.features.map((f, i) => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12 }}>
+                                        <span style={{ color: plan.textColor, fontSize: 16, flexShrink: 0, marginTop: 1 }}>✔</span>
+                                        <span style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.4 }}>{f}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {isActive ? (
+                                <div style={{
+                                    background: `linear-gradient(135deg, ${plan.glowColor}, ${plan.glowColor})`,
+                                    border: `2px solid ${plan.textColor}`,
+                                    borderRadius: 12,
+                                    padding: '14px',
+                                    textAlign: 'center'
+                                }}>
+                                    <span style={{ color: plan.textColor, fontSize: 15, fontWeight: 'bold' }}>
+                                        {plan.icon} Aktif Planınız
+                                    </span>
+                                </div>
+                            ) : hasHigherTier ? (
+                                <div style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    borderRadius: 12,
+                                    padding: '14px',
+                                    textAlign: 'center'
+                                }}>
+                                    <span style={{ color: '#666', fontSize: 14 }}>Mevcut planınız bu planı kapsar</span>
+                                </div>
+                            ) : !user ? (
+                                <button
+                                    onClick={() => onNavigate('auth', { isLogin: false })}
+                                    style={{
+                                        width: '100%',
+                                        padding: '14px',
+                                        background: plan.gradient,
+                                        color: '#000',
+                                        border: 'none',
+                                        borderRadius: 12,
+                                        fontSize: 15,
+                                        fontWeight: 800,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    Önce Kayıt Ol / Giriş Yap
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => handleSubscribe(plan.name + ' VIP')}
+                                    style={{
+                                        width: '100%',
+                                        padding: '14px',
+                                        background: plan.gradient,
+                                        color: '#000',
+                                        border: 'none',
+                                        borderRadius: 12,
+                                        fontSize: 15,
+                                        fontWeight: 800,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease, transform 0.2s ease'
+                                    }}
+                                    onMouseEnter={e => e.target.style.transform = 'translateY(-2px)'}
+                                    onMouseLeave={e => e.target.style.transform = 'translateY(0)'}
+                                >
+                                    {plan.name} Üyelik Satın Al
+                                </button>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
             <div style={{
                 background: 'var(--bg-card)',
-                borderRadius: 20,
-                padding: '40px 30px',
+                borderRadius: 12,
+                padding: '20px',
                 textAlign: 'center',
-                border: '2px solid rgba(255, 215, 0, 0.2)',
-                marginTop: 20
+                border: '1px solid rgba(255,255,255,0.05)'
             }}>
-                <h1 style={{ color: 'var(--text-primary)', fontSize: 28, fontWeight: 900, marginBottom: 10 }}>
-                    Tahmira Abonelik Planı
-                </h1>
-                <p style={{ color: '#aaa', fontSize: 14, marginBottom: 30, lineHeight: 1.6 }}>
-                    Tüm gelişmiş analiz özelliklerinden ve günlük yapay zeka tahminlerinden sınırsız şekilde faydalanın.
+                <p style={{ color: '#888', fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+                    Ödeme işlemleri Telegram üzerinden gerçekleştirilmektedir. Plan seçtikten sonra yönlendirileceksiniz.
                 </p>
-
-                <div style={{ textAlign: 'left', maxWidth: 400, margin: '0 auto 30px' }}>
-                    {features.map((f, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 15 }}>
-                            <span style={{ color: '#10B981', fontSize: 20, flexShrink: 0 }}>✔</span>
-                            <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{f}</span>
-                        </div>
-                    ))}
-                </div>
-
-                {userData?.isVip ? (
-                    <div style={{
-                        background: 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,165,0,0.15))',
-                        border: '2px solid var(--gold)',
-                        borderRadius: 12,
-                        padding: '20px',
-                        marginBottom: 20
-                    }}>
-                        <p style={{ color: 'var(--gold)', fontSize: 18, fontWeight: 'bold', margin: 0 }}>
-                            👑 VIP Üyeliğiniz Aktif
-                        </p>
-                        <p style={{ color: '#aaa', fontSize: 13, marginTop: 8, margin: 0 }}>
-                            Tüm premium özelliklere erişiminiz bulunmaktadır.
-                        </p>
-                    </div>
-                ) : (
-                    <>
-                        {!user ? (
-                            <button
-                                onClick={() => onNavigate('auth', { isLogin: false })}
-                                style={{
-                                    width: '100%',
-                                    padding: '16px 32px',
-                                    background: 'linear-gradient(135deg, #28a745, #20c997)',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: 12,
-                                    fontSize: 17,
-                                    fontWeight: 800,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                Önce Kayıt Ol / Giriş Yap
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleSubscribe}
-                                style={{
-                                    width: '100%',
-                                    padding: '16px 32px',
-                                    background: 'linear-gradient(135deg, #28a745, #20c997)',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: 12,
-                                    fontSize: 17,
-                                    fontWeight: 800,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                1 Aylık Abonelik Satın Al – 499₺
-                            </button>
-                        )}
-                    </>
-                )}
             </div>
         </div>
     );
