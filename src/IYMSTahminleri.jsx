@@ -1,9 +1,10 @@
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { db } from './firebaseConfig';
 import { getTeamLogo, handleLogoError } from './helper';
 
-function IYMSTahminleri() {
+function IYMSTahminleri({ userData }) {
+    const isAdmin = userData?.role === 'admin';
     const [htMatches, setHtMatches] = useState([]);
     const [firestoreMatches, setFirestoreMatches] = useState([]);
     const [htLoading, setHtLoading] = useState(true);
@@ -169,6 +170,24 @@ function IYMSTahminleri() {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Durum Badge */}
+                                {match.status && (
+                                    <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                                        <span className={`status-badge ${match.status}`}>
+                                            {match.status === 'won' ? 'KAZANDI' : match.status === 'lost' ? 'KAYBETTİ' : ''}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Admin: Kazandı/Kaybetti/Sil */}
+                                {isAdmin && match.source === 'admin' && (
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px' }}>
+                                        <button className="admin-btn delete" onClick={async () => { if (window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) await deleteDoc(doc(db, 'predictions', match.id)); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
+                                        <button className="admin-btn won" onClick={async () => await setDoc(doc(db, 'predictions', match.id), { status: 'won' }, { merge: true })} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAZANDI</button>
+                                        <button className="admin-btn lost" onClick={async () => await setDoc(doc(db, 'predictions', match.id), { status: 'lost' }, { merge: true })} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAYBETTİ</button>
+                                    </div>
+                                )}
                             </div>
                         );
                     })

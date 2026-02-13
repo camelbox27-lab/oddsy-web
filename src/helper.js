@@ -1148,13 +1148,60 @@ const ALL_TEAM_LOGOS = [
     "zulte-waregem"
 ];
 
+// Akıllı kısaltma açma: "B.Dortmund" -> "dortmund", "M.Gladbach" -> "gladbach", "W.Bremen" -> "bremen"
+const expandAbbreviation = (name) => {
+    if (!name) return name;
+    // "X." veya "X. " ile başlayan kısaltmaları kaldır (tek harf + nokta)
+    let expanded = name.replace(/^[A-Za-z]\.\s*/g, '').trim();
+    // "XX." ile başlayan kısaltmaları da kaldır (iki harf + nokta)
+    expanded = expanded.replace(/^[A-Za-z]{1,3}\.\s*/g, '').trim();
+    return expanded;
+};
+
+// Levenshtein mesafesi - iki string arası benzerlik
+const levenshtein = (a, b) => {
+    const matrix = Array.from({ length: a.length + 1 }, (_, i) =>
+        Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+    );
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            matrix[i][j] = a[i - 1] === b[j - 1]
+                ? matrix[i - 1][j - 1]
+                : 1 + Math.min(matrix[i - 1][j], matrix[i][j - 1], matrix[i - 1][j - 1]);
+        }
+    }
+    return matrix[a.length][b.length];
+};
+
 export const getTeamLogo = (teamName) => {
     if (!teamName || typeof teamName !== 'string') return '/logos/default-team-logo.png';
 
     const lowerName = teamName.trim().toLowerCase();
 
+    // Kısaltma açılmış versiyonları da dene
+    const expandedName = expandAbbreviation(lowerName);
+    const expandedNorm = normalizeTeamName(expandAbbreviation(teamName));
+
     // YAYGIN KISALTMALAR VE OZEL DURUMLAR
     const specialCases = {
+        'b.dortmund': 'borussia-dortmund', 'b. dortmund': 'borussia-dortmund', 'bor. dortmund': 'borussia-dortmund',
+        'b.mgladbach': 'borussia-mgladbach', 'b. mgladbach': 'borussia-mgladbach', 'b.m.gladbach': 'borussia-mgladbach', 'bor. mgladbach': 'borussia-mgladbach', 'bor. mönchengladbach': 'borussia-mgladbach',
+        'w.bremen': 'sv-werder-bremen', 'w. bremen': 'sv-werder-bremen', 'werder bremen': 'sv-werder-bremen', 'werder': 'sv-werder-bremen',
+        'e.frankfurt': 'eintracht-frankfurt', 'e. frankfurt': 'eintracht-frankfurt', 'eintr. frankfurt': 'eintracht-frankfurt',
+        'h.berlin': 'hertha-bsc', 'hertha berlin': 'hertha-bsc', 'hertha bsc': 'hertha-bsc', 'hertha': 'hertha-bsc',
+        'arm.bielefeld': 'arminia-bielefeld', 'arminia bielefeld': 'arminia-bielefeld',
+        'gr.furth': 'spvgg-greuther-furth', 'greuther furth': 'spvgg-greuther-furth', 'greuther fürth': 'spvgg-greuther-furth',
+        'sc paderborn': 'sc-paderborn-07', 'paderborn': 'sc-paderborn-07',
+        'f.dusseldorf': 'fortuna-dusseldorf', 'fortuna düsseldorf': 'fortuna-dusseldorf', 'düsseldorf': 'fortuna-dusseldorf', 'dusseldorf': 'fortuna-dusseldorf',
+        'h.kiel': 'holstein-kiel', 'holstein kiel': 'holstein-kiel',
+        'braunschweig': 'eintracht-braunschweig', 'e.braunschweig': 'eintracht-braunschweig',
+        'st.pauli': 'fc-st-pauli', 'st. pauli': 'fc-st-pauli', 'fc st. pauli': 'fc-st-pauli',
+        'heidenheim': '1-fc-heidenheim', '1.fc heidenheim': '1-fc-heidenheim',
+        'darmstadt': 'sv-darmstadt-98', 'darmstadt 98': 'sv-darmstadt-98',
+        'nurnberg': '1-fc-nurnberg', 'nürnberg': '1-fc-nurnberg', '1.fc nürnberg': '1-fc-nurnberg',
+        'k.lautern': '1-fc-kaiserslautern', 'kaiserslautern': '1-fc-kaiserslautern',
+        'hannover': 'hannover-96', 'hannover 96': 'hannover-96',
+        'schalke': 'fc-schalke-04', 'schalke 04': 'fc-schalke-04',
         'b.leverkusen': 'bayer-04-leverkusen', 'b leverkusen': 'bayer-04-leverkusen', 'bayer leverkusen': 'bayer-04-leverkusen', 'leverkusen': 'bayer-04-leverkusen',
         'fc koln': '1-fc-koln', 'fc köln': '1-fc-koln', 'koln': '1-fc-koln', 'köln': '1-fc-koln', '1. fc koln': '1-fc-koln',
         'sc freiburg': 'sc-freiburg', 'freiburg': 'sc-freiburg', 'vfb stuttgart': 'vfb-stuttgart', 'stuttgart': 'vfb-stuttgart',
@@ -1222,8 +1269,10 @@ export const getTeamLogo = (teamName) => {
         'standard liege': 'standard-liege', 'standard liège': 'standard-liege'
     };
 
-    if (specialCases[lowerName]) {
-        return `/logos/${specialCases[lowerName]}.png`;
+    // specialCases'te ara - orijinal, expanded ve nokta temizlenmiş versiyonlarla
+    const namesToTry = [lowerName, expandedName, lowerName.replace(/\./g, ' ').replace(/\s+/g, ' ').trim()];
+    for (const n of namesToTry) {
+        if (specialCases[n]) return `/logos/${specialCases[n]}.png`;
     }
 
     // FC/FK/SC prefix ve F/FC suffix temizle, tekrar specialCases'e bak
@@ -1235,46 +1284,102 @@ export const getTeamLogo = (teamName) => {
         return `/logos/${specialCases[stripped]}.png`;
     }
 
+    // Expanded name'i de stripped olarak dene
+    const expandedStripped = expandedName
+        .replace(/^(fc |fk |sc |cf |afc |rsc |ssc |us |rb )/, '')
+        .replace(/ (f|fc|fk|sc|cf)$/, '')
+        .trim();
+    if (expandedStripped !== expandedName && specialCases[expandedStripped]) {
+        return `/logos/${specialCases[expandedStripped]}.png`;
+    }
+
     try {
         // 1. TAM ESLESME
         const exactMatch = lowerName.replace(/\s+/g, '-').replace(/\./g, '').replace(/'/g, '');
         if (ALL_TEAM_LOGOS.includes(exactMatch)) return `/logos/${exactMatch}.png`;
 
+        // 1.5 TAM ESLESME - Expanded versiyonla
+        const expandedExact = expandedName.replace(/\s+/g, '-').replace(/\./g, '').replace(/'/g, '');
+        if (expandedExact !== exactMatch && ALL_TEAM_LOGOS.includes(expandedExact)) return `/logos/${expandedExact}.png`;
+
         // 2. NORMALIZE EDILMIS TAM ESLESME
         const normalized = normalizeTeamName(teamName);
         if (ALL_TEAM_LOGOS.includes(normalized)) return `/logos/${normalized}.png`;
+
+        // 2.2 EXPANDED NORMALIZE ESLESME
+        if (expandedNorm !== normalized && ALL_TEAM_LOGOS.includes(expandedNorm)) return `/logos/${expandedNorm}.png`;
 
         // 2.5 STRIPPED ESLESME (FC/FK prefix/suffix kaldırılmış)
         const strippedNorm = normalizeTeamName(stripped);
         if (strippedNorm !== normalized && ALL_TEAM_LOGOS.includes(strippedNorm)) return `/logos/${strippedNorm}.png`;
 
         // 3. KISMI ESLESME (Logo icinde geciyorsa)
-        const partialMatch = ALL_TEAM_LOGOS.find(logo => logo.includes(normalized) && normalized.length > 3);
-        if (partialMatch) return `/logos/${partialMatch}.png`;
-
-        // 3.5 STRIPPED KISMI ESLESME
-        if (strippedNorm !== normalized && strippedNorm.length > 3) {
-            const strippedPartial = ALL_TEAM_LOGOS.find(logo => logo.includes(strippedNorm));
-            if (strippedPartial) return `/logos/${strippedPartial}.png`;
+        const allNormalized = [normalized, expandedNorm, strippedNorm].filter((v, i, a) => v.length > 3 && a.indexOf(v) === i);
+        for (const norm of allNormalized) {
+            const partialMatch = ALL_TEAM_LOGOS.find(logo => logo.includes(norm));
+            if (partialMatch) return `/logos/${partialMatch}.png`;
         }
 
         // 4. TERSTEN KISMI ESLESME (Normalized logo icinde geciyorsa)
-        const reverseMatch = ALL_TEAM_LOGOS.find(logo => normalized.includes(logo) && logo.length > 3);
-        if (reverseMatch) return `/logos/${reverseMatch}.png`;
+        for (const norm of allNormalized) {
+            const reverseMatch = ALL_TEAM_LOGOS.find(logo => norm.includes(logo) && logo.length > 3);
+            if (reverseMatch) return `/logos/${reverseMatch}.png`;
+        }
 
-        // 5. ENTELLI ESLESME (Kelime bazli)
-        const words = normalized.split('-').filter(w => w.length > 2);
-        if (words.length > 0) {
+        // 5. AKILLI KELIME ESLESME (Kelime bazli - tüm versiyonlar)
+        const allWords = [...new Set([
+            ...normalized.split('-').filter(w => w.length > 2),
+            ...expandedNorm.split('-').filter(w => w.length > 2)
+        ])];
+        if (allWords.length > 0) {
+            // Tek kelimelik takım isimleri için özel: tam kelime eşleşmesi
             for (const logo of ALL_TEAM_LOGOS) {
                 const logoWords = logo.split('-');
-                let matchCount = 0;
-                // Eger 1 kelime varsa ve tam eslesiyorsa direk dondur
-                if (words.length === 1 && logoWords.length === 1 && words[0] === logoWords[0]) return `/logos/${logo}.png`;
 
-                for (const word of words) {
+                // Tek kelime - ana kelime logo'nun herhangi bir kelimesiyle tam eşleşiyor mu
+                if (allWords.length === 1) {
+                    if (logoWords.includes(allWords[0])) return `/logos/${logo}.png`;
+                }
+
+                let matchCount = 0;
+                for (const word of allWords) {
                     if (logoWords.includes(word)) matchCount++;
                 }
                 if (matchCount >= 2) return `/logos/${logo}.png`;
+            }
+        }
+
+        // 6. BULANIK ESLESME (Levenshtein mesafesi - son çare)
+        // Sadece 5+ karakter isimler için, mesafe <= 2
+        for (const norm of allNormalized) {
+            if (norm.length >= 5) {
+                let bestMatch = null;
+                let bestDist = 3; // max mesafe 2
+                for (const logo of ALL_TEAM_LOGOS) {
+                    // Logo'nun her kelimesini veya tamamını karşılaştır
+                    const dist = levenshtein(norm, logo);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestMatch = logo;
+                    }
+                    // Logo kelimelerini de dene
+                    const logoWords = logo.split('-');
+                    for (const lw of logoWords) {
+                        if (lw.length >= 4) {
+                            const normWords = norm.split('-');
+                            for (const nw of normWords) {
+                                if (nw.length >= 4) {
+                                    const wd = levenshtein(nw, lw);
+                                    if (wd <= 1 && nw.length >= 5) {
+                                        // Kelime seviyesinde çok yakın eşleşme
+                                        return `/logos/${logo}.png`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (bestMatch) return `/logos/${bestMatch}.png`;
             }
         }
     } catch (e) {

@@ -29,6 +29,7 @@ import DroppingOddsModal from './components/DroppingOddsModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import Kart from './components/Kart';
 import Korner from './components/Korner';
+import ManuelAnaliz from './components/ManuelAnaliz';
 import YapayZeka from './components/YapayZeka';
 import { auth, db, functions } from './firebaseConfig';
 import GununSurprizleri from './GununSurprizleri';
@@ -1167,8 +1168,9 @@ const Icons = {
 // CONSTANTS
 const MENU_ITEMS = [
     { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: '🤖', color: "#FFD700", route: 'yapay-zeka-analizleri', vipOnly: true },
+    { id: 'cat_manuel_analiz', title: "MANUEL ANALİZ YAP", key: 33, icon: '✏️', color: "#FFD700", route: 'manuel-analiz', vipOnly: true },
     { id: 'cat_1', title: "ILK YARI GOL LISTESI", key: 0, icon: '⚽', color: "#10B981", route: 'ilk-yari-gol' },
-    { id: 'cat_coupons_new', title: "GÜNÜN KUPONLARI", key: 20, icon: '🎫', color: "#f87171", route: 'coupons' },
+    { id: 'cat_coupons_new', title: "GÜNÜN KUPONLARI", key: 20, icon: '🎫', color: "#f87171", route: 'coupons', vipOnly: true },
     { id: 'cat_kart_analiz', title: "KART ANALİZ BOTU", key: 31, icon: '🟨', color: "#FFD700", route: 'kart-analizi', vipOnly: true },
     { id: 'cat_korner_analiz', title: "KORNER ANALİZ BOTU", key: 32, icon: '🚩', color: "#10B981", route: 'korner-analizi', vipOnly: true },
 
@@ -1386,12 +1388,13 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
 
     const bottomRowCategories = [
         { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZLERİ", key: 10, route: 'yapay-zeka-analizleri' },
+        { id: 'cat_manuel_analiz_top', title: "MANUEL ANALİZ", key: 33, route: 'manuel-analiz' },
         { id: 'cat_kart_analiz_top', title: "KART ANALİZİ", key: 31, route: 'kart-analizi' },
         { id: 'cat_korner_analiz_top', title: "KORNER ANALİZİ", key: 32, route: 'korner-analizi' },
     ];
 
     const handleCategoryClick = (cat) => {
-        if (['coupons', 'yapay-zeka-analizleri', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'ilk-yari-gol', 'dropping-odds', 'abonelik'].includes(cat.route)) {
+        if (['coupons', 'yapay-zeka-analizleri', 'manuel-analiz', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'ilk-yari-gol', 'dropping-odds', 'abonelik'].includes(cat.route)) {
             onNavigate(cat.route, cat);
         } else {
             const menuItem = MENU_ITEMS.find(m => m.key === cat.key);
@@ -3247,7 +3250,7 @@ function PredictionCard({ item, userData }) {
         >
             {/* Top Right Badges (Floating) */}
             <div className="card-header-overlay" style={{ top: 10, right: 10 }}>
-                {item.status && <span className={`status-badge ${item.status}`}>{item.status === 'won' ? 'WON' : item.status === 'lost' ? 'LOST' : ''}</span>}
+                {item.status && <span className={`status-badge ${item.status}`}>{item.status === 'won' ? 'KAZANDI' : item.status === 'lost' ? 'KAYBETTİ' : ''}</span>}
                 {isPremium && <span className="premium-badge-icon">★</span>}
             </div>
 
@@ -3372,12 +3375,19 @@ function PredictionCard({ item, userData }) {
                 </div>
             )}
 
-            {/* Admin Actions */}
+            {/* Sonuçlandırma Butonları */}
             {isAdmin && (
-                <div className="admin-actions-premium">
-                    <button className="admin-btn delete" onClick={handleDelete}>SİL</button>
-                    <button className="admin-btn won" onClick={() => updateStatus('won')}>WON</button>
-                    <button className="admin-btn lost" onClick={() => updateStatus('lost')}>LOST</button>
+                <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                    marginTop: '16px',
+                    padding: '12px',
+                    background: 'rgba(0,0,0,0.3)',
+                    borderRadius: '12px'
+                }}>
+                    <button className="admin-btn delete" onClick={handleDelete} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
+                    <button className="admin-btn won" onClick={() => updateStatus('won')} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAZANDI</button>
+                    <button className="admin-btn lost" onClick={() => updateStatus('lost')} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAYBETTİ</button>
                 </div>
             )}
         </div>
@@ -3698,10 +3708,19 @@ export default function App() {
                 return <div className="loading">Yetkisiz erişim</div>;
             case 'abonelik': return <AbonelikScreen onBack={() => navigate('home')} userData={userData} user={user} onNavigate={navigate} />;
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} userData={userData} onNavigate={navigate} />;
-            case 'coupons': return <CouponScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />;
+            case 'coupons': return (
+                <VipGate userData={userData} user={user} onNavigate={navigate}>
+                    <CouponScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />
+                </VipGate>
+            );
             case 'yapay-zeka-analizleri': return (
                 <VipGate userData={userData} user={user} onNavigate={navigate}>
                     <YapayZeka />
+                </VipGate>
+            );
+            case 'manuel-analiz': return (
+                <VipGate userData={userData} user={user} onNavigate={navigate}>
+                    <ManuelAnaliz />
                 </VipGate>
             );
             case 'kart-analizi': return (
@@ -3720,7 +3739,7 @@ export default function App() {
                     <div className="category-header">
                         <button className="category-back-btn" onClick={() => navigate('home')}>{Icons.back}</button>
                     </div>
-                    <IlkYariGolListesi />
+                    <IlkYariGolListesi userData={userData} />
                 </div>
             );
             case 'iy-ms-tahminleri': return (
@@ -3728,7 +3747,7 @@ export default function App() {
                     <div className="category-header">
                         <button className="category-back-btn" onClick={() => navigate('home')}>{Icons.back}</button>
                     </div>
-                    <IYMSTahminleri />
+                    <IYMSTahminleri userData={userData} />
                 </div>
             );
             case 'gunun-surprizleri': return (
@@ -3736,7 +3755,7 @@ export default function App() {
                     <div className="category-header">
                         <button className="category-back-btn" onClick={() => navigate('home')}>{Icons.back}</button>
                     </div>
-                    <GununSurprizleri />
+                    <GununSurprizleri userData={userData} />
                 </div>
             );
             case 'gunun-tercihleri': return (
@@ -3744,7 +3763,7 @@ export default function App() {
                     <div className="category-header">
                         <button className="category-back-btn" onClick={() => navigate('home')}>{Icons.back}</button>
                     </div>
-                    <GununTercihleri />
+                    <GununTercihleri userData={userData} />
                 </div>
             );
 
