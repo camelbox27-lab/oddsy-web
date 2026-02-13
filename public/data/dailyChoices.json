@@ -1,20 +1,65 @@
 [
   {
-    "id": "dc-0-Crystal Palace-Burnley",
-    "homeTeam": "Crystal Palace",
-    "awayTeam": "Burnley",
-    "saat": "22:30",
+    "id": "dc-0-Esenler Erokspor-Manisa FK",
+    "homeTeam": "Esenler Erokspor",
+    "awayTeam": "Manisa FK",
+    "saat": "20:00",
     "kategori": "2.5 Ust",
-    "createdAt": "2026-02-11T02:32:55.437013+03:00",
-    "2_5_ust": 1.7
+    "createdAt": "2026-02-13T14:49:39.908783+03:00",
+    "2_5_ust": 1.43
   },
   {
-    "id": "dc-1-Arkadag-Al Nassr",
-    "homeTeam": "Arkadag",
-    "awayTeam": "Al Nassr",
-    "saat": "16:45",
+    "id": "dc-1-Nürnberg-Karlsruher",
+    "homeTeam": "Nürnberg",
+    "awayTeam": "Karlsruher",
+    "saat": "20:30",
+    "kategori": "2.5 Ust",
+    "createdAt": "2026-02-13T14:49:39.908783+03:00",
+    "2_5_ust": 1.41
+  },
+  {
+    "id": "dc-2-Almere City-Helmond",
+    "homeTeam": "Almere City",
+    "awayTeam": "Helmond",
+    "saat": "22:00",
+    "kategori": "2.5 Ust",
+    "createdAt": "2026-02-13T14:49:39.908783+03:00",
+    "2_5_ust": 1.22
+  },
+  {
+    "id": "dc-3-Jong PSV-De Graafschap",
+    "homeTeam": "Jong PSV",
+    "awayTeam": "De Graafschap",
+    "saat": "22:00",
+    "kategori": "2.5 Ust",
+    "createdAt": "2026-02-13T14:49:39.908783+03:00",
+    "2_5_ust": 1.13
+  },
+  {
+    "id": "dc-4-B. Dortmund-Mainz",
+    "homeTeam": "B. Dortmund",
+    "awayTeam": "Mainz",
+    "saat": "22:30",
+    "kategori": "2.5 Ust",
+    "createdAt": "2026-02-13T14:49:39.908783+03:00",
+    "2_5_ust": 1.44
+  },
+  {
+    "id": "dc-5-Monaco-Nantes",
+    "homeTeam": "Monaco",
+    "awayTeam": "Nantes",
+    "saat": "23:05",
+    "kategori": "2.5 Ust",
+    "createdAt": "2026-02-13T14:49:39.908783+03:00",
+    "2_5_ust": 1.34
+  },
+  {
+    "id": "dc-6-Den Haag-Maastricht",
+    "homeTeam": "Den Haag",
+    "awayTeam": "Maastricht",
+    "saat": "22:00",
     "kategori": "3.5 Ust",
-    "createdAt": "2026-02-11T02:32:55.437013+03:00",
-    "3_5_ust": 2.51
+    "createdAt": "2026-02-13T14:49:39.908783+03:00",
+    "3_5_ust": 1.51
   }
 ]
