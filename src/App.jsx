@@ -1587,21 +1587,36 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
 
 function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
     const [mode, setMode] = useState(initialIsLogin ? 'login' : 'register'); // login, register, forgot, verify
+    const [loginIdentifier, setLoginIdentifier] = useState(''); // kullanıcı adı veya email
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
 
+    const resolveEmail = async (identifier) => {
+        const trimmed = identifier.trim();
+        if (trimmed.includes('@')) return trimmed;
+        const q = query(collection(db, 'users'), where('username', '==', trimmed));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+            const qLower = query(collection(db, 'users'), where('username', '==', trimmed.toLowerCase()));
+            const snapLower = await getDocs(qLower);
+            if (snapLower.empty) throw new Error('Bu kullanıcı adı ile kayıtlı hesap bulunamadı.');
+            return snapLower.docs[0].data().email;
+        }
+        return snap.docs[0].data().email;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const cleanEmail = email.trim();
 
         if (mode === 'forgot') {
-            if (!cleanEmail) return showAlert('Lütfen email adresinizi girin.', 'error');
+            if (!loginIdentifier.trim()) return showAlert('Lütfen kullanıcı adınızı veya email adresinizi girin.', 'error');
             setLoading(true);
             try {
-                await sendPasswordResetEmail(auth, cleanEmail);
+                const resolvedEmail = await resolveEmail(loginIdentifier);
+                await sendPasswordResetEmail(auth, resolvedEmail);
                 showAlert('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success');
                 setMode('login');
             } catch (err) {
@@ -1612,28 +1627,33 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
             return;
         }
 
-        if (!cleanEmail || !password) return showAlert('Lütfen bilgileri eksiksiz girin.', 'error');
+        if (mode === 'login') {
+            if (!loginIdentifier.trim() || !password) return showAlert('Lütfen bilgileri eksiksiz girin.', 'error');
+        } else {
+            if (!email.trim() || !password) return showAlert('Lütfen bilgileri eksiksiz girin.', 'error');
+        }
         if (mode === 'register' && !username.trim()) return showAlert('Kullanıcı adı boş olamaz.', 'error');
         if (mode === 'register' && username.trim().length < 3) return showAlert('Kullanıcı adı en az 3 karakter olmalıdır.', 'error');
         if (password.length < 6) return showAlert('Şifre en az 6 karakter olmalıdır.', 'error');
 
         setLoading(true);
         try {
-            console.log('İşlem başlatıldı. Mod:', mode, 'Email:', cleanEmail);
-
             if (mode === 'login') {
-                const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+                const resolvedEmail = await resolveEmail(loginIdentifier);
+                const userCredential = await signInWithEmailAndPassword(auth, resolvedEmail, password);
 
                 if (!userCredential.user.emailVerified) {
                     await sendEmailVerification(userCredential.user);
                     await signOut(auth);
                     showAlert('Email adresiniz henüz doğrulanmamış. Yeni bir doğrulama linki gönderildi.', 'error');
+                    setEmail(resolvedEmail);
                     setMode('verify');
                     return;
                 }
                 showAlert('Giriş başarılı!', 'success');
                 onBack();
             } else if (mode === 'register') {
+                const cleanEmail = email.trim();
                 // Kayıt İşlemi
                 const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
                 const newUser = userCredential.user;
@@ -1681,7 +1701,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
         } catch (err) {
             console.error('Firebase Auth Hatası:', err.code, err.message);
             let msg = 'İşlem sırasında bir hata oluştu.';
-            if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') msg = 'Email veya şifre hatalı. Kayıtlı değilseniz önce Kaydolun.';
+            if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') msg = 'Kullanıcı adı/email veya şifre hatalı. Kayıtlı değilseniz önce Kaydolun.';
             else if (err.code === 'auth/email-already-in-use') msg = 'Bu email zaten kullanımda.';
             else if (err.code === 'auth/weak-password') msg = 'Şifre çok zayıf.';
             else msg = err.message;
@@ -1693,10 +1713,11 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
 
     const handleForgotPassword = async (e) => {
         e.preventDefault();
-        if (!email) return showAlert('Lütfen e-posta adresinizi girin.', 'error');
+        if (!loginIdentifier.trim()) return showAlert('Lütfen kullanıcı adınızı veya e-posta adresinizi girin.', 'error');
         setLoading(true);
         try {
-            await sendPasswordResetEmail(auth, email.trim());
+            const resolvedEmail = await resolveEmail(loginIdentifier);
+            await sendPasswordResetEmail(auth, resolvedEmail);
             showAlert('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success');
             setShowForgotPassword(false);
         } catch (err) {
@@ -1785,8 +1806,8 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                     <h1 style={{ marginBottom: 20 }}>Şifremi Unuttum</h1>
                     <form onSubmit={handleForgotPassword}>
                         <div className="form-group">
-                            <label className="form-label">E-Posta</label>
-                            <input className="form-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="E-posta adresinizi girin" />
+                            <label className="form-label">Kullanıcı Adı veya E-Posta</label>
+                            <input className="form-input" type="text" autoCapitalize="none" autoCorrect="off" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} placeholder="Kullanıcı adı veya e-posta" />
                         </div>
                         <button className="submit-btn" disabled={loading}>{loading ? 'Gönderiliyor...' : 'Şifre Sıfırlama Linki Gönder'}</button>
                     </form>
@@ -1813,10 +1834,17 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                             <input className="form-input" type="text" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} placeholder="Kullanıcı adınızı girin" />
                         </div>
                     )}
-                    <div className="form-group">
-                        <label className="form-label">E-Posta</label>
-                        <input className="form-input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck="false" value={email} onChange={e => setEmail(e.target.value)} placeholder="ornek@email.com" />
-                    </div>
+                    {isLogin ? (
+                        <div className="form-group">
+                            <label className="form-label">Kullanıcı Adı veya E-Posta</label>
+                            <input className="form-input" type="text" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck="false" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} placeholder="Kullanıcı adı veya e-posta" />
+                        </div>
+                    ) : (
+                        <div className="form-group">
+                            <label className="form-label">E-Posta</label>
+                            <input className="form-input" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck="false" value={email} onChange={e => setEmail(e.target.value)} placeholder="ornek@email.com" />
+                        </div>
+                    )}
                     <div className="form-group">
                         <label className="form-label">Şifre</label>
                         <input className="form-input" type="password" autoComplete={isLogin ? 'current-password' : 'new-password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="En az 6 karakter" />

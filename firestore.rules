@@ -35,7 +35,10 @@ service cloud.firestore {
 
     // ===== USERS COLLECTION =====
     match /users/{userId} {
-      allow read: if isSignedIn();
+      // list: login sırasında username->email çözümlemesi için herkes sorgulayabilir
+      // get: sadece giriş yapmış kullanıcılar belirli bir dökümanı okuyabilir
+      allow list: if true;
+      allow get: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == userId && isValidSize();
       allow update: if isSignedIn() &&
                        (request.auth.uid == userId || isAdmin()) &&
