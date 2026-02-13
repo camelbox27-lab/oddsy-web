@@ -1428,7 +1428,7 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
                         </div>
                     ))}
                     <div
-                        className={`header-nav-item ripple ${currentRoute === 'abonelik' ? 'active' : ''}`}
+                        className="header-nav-item ripple"
                         onClick={() => onNavigate('abonelik')}
                         style={{
                             background: 'linear-gradient(135deg, #FFD700, #FFA500)',
