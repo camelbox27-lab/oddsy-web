@@ -1427,6 +1427,18 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
                             {cat.title}
                         </div>
                     ))}
+                    <div
+                        className={`header-nav-item ripple ${currentRoute === 'abonelik' ? 'active' : ''}`}
+                        onClick={() => onNavigate('abonelik')}
+                        style={{
+                            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                            color: '#000',
+                            border: '1px solid #FFD700',
+                            fontWeight: 800
+                        }}
+                    >
+                        👑 ODDSY VIP
+                    </div>
                 </div>
             </nav>
             <div className="header-right">
@@ -2580,17 +2592,6 @@ function AbonelikScreen({ onBack, userData, user, onNavigate }) {
                 })}
             </div>
 
-            <div style={{
-                background: 'var(--bg-card)',
-                borderRadius: 12,
-                padding: '20px',
-                textAlign: 'center',
-                border: '1px solid rgba(255,255,255,0.05)'
-            }}>
-                <p style={{ color: '#888', fontSize: 13, margin: 0, lineHeight: 1.6 }}>
-                    Ödeme işlemleri Telegram üzerinden gerçekleştirilmektedir. Plan seçtikten sonra yönlendirileceksiniz.
-                </p>
-            </div>
         </div>
     );
 }
