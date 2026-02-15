@@ -1,261 +1,226 @@
 [
   {
-    "id": "htg-0-Melbourne V.-Brisbane",
-    "homeTeam": "Melbourne V.",
-    "awayTeam": "Brisbane",
-    "saat": "09:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-0-Feyenoord-Go Ahead",
+    "homeTeam": "Feyenoord",
+    "awayTeam": "Go Ahead",
+    "saat": "14:15",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-1-Sydney-Adelaide Utd",
-    "homeTeam": "Sydney",
-    "awayTeam": "Adelaide Utd",
-    "saat": "11:35",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-1-Parma (K)-Inter (K)",
+    "homeTeam": "Parma (K)",
+    "awayTeam": "Inter (K)",
+    "saat": "14:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-2-Bandırmaspor-Serik Spor",
-    "homeTeam": "Bandırmaspor",
-    "awayTeam": "Serik Spor",
-    "saat": "13:30",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-2-Cercle Brugge-Club Brugge",
+    "homeTeam": "Cercle Brugge",
+    "awayTeam": "Club Brugge",
+    "saat": "15:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-3-Freiburg (K)-Union Berlin (K)",
-    "homeTeam": "Freiburg (K)",
-    "awayTeam": "Union Berlin (K)",
-    "saat": "14:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-3-Magdeburg-A. Bielefeld",
+    "homeTeam": "Magdeburg",
+    "awayTeam": "A. Bielefeld",
+    "saat": "15:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-4-Braunschweig-Darmstadt 98",
-    "homeTeam": "Braunschweig",
-    "awayTeam": "Darmstadt 98",
-    "saat": "15:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-5-Hertha Berlin-Hannover 96",
-    "homeTeam": "Hertha Berlin",
-    "awayTeam": "Hannover 96",
-    "saat": "15:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-6-Kaiserslautern-Greuther Fürth",
-    "homeTeam": "Kaiserslautern",
-    "awayTeam": "Greuther Fürth",
-    "saat": "15:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-7-RB Leipzig (K)-Nürnberg (K)",
-    "homeTeam": "RB Leipzig (K)",
-    "awayTeam": "Nürnberg (K)",
+    "id": "htg-4-Amed SK-Sakaryaspor",
+    "homeTeam": "Amed SK",
+    "awayTeam": "Sakaryaspor",
     "saat": "16:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-8-Como-Fiorentina",
-    "homeTeam": "Como",
-    "awayTeam": "Fiorentina",
+    "id": "htg-5-Thun-Sion",
+    "homeTeam": "Thun",
+    "awayTeam": "Sion",
+    "saat": "16:00",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
+  },
+  {
+    "id": "htg-6-Grazer AK-Salzburg",
+    "homeTeam": "Grazer AK",
+    "awayTeam": "Salzburg",
+    "saat": "16:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
+  },
+  {
+    "id": "htg-7-Heerenveen-Zwolle",
+    "homeTeam": "Heerenveen",
+    "awayTeam": "Zwolle",
+    "saat": "16:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
+  },
+  {
+    "id": "htg-8-Telstar-Twente",
+    "homeTeam": "Telstar",
+    "awayTeam": "Twente",
+    "saat": "16:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
+  },
+  {
+    "id": "htg-9-Göztepe-Kayserispor",
+    "homeTeam": "Göztepe",
+    "awayTeam": "Kayserispor",
     "saat": "17:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-9-Modena-Carrarese",
-    "homeTeam": "Modena",
-    "awayTeam": "Carrarese",
+    "id": "htg-10-Juventus (K)-Lazio (K)",
+    "homeTeam": "Juventus (K)",
+    "awayTeam": "Lazio (K)",
     "saat": "17:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-10-Palermo-Virtus Entella",
-    "homeTeam": "Palermo",
-    "awayTeam": "Virtus Entella",
+    "id": "htg-11-Kilmarnock-Celtic",
+    "homeTeam": "Kilmarnock",
+    "awayTeam": "Celtic",
     "saat": "17:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-11-Viseu-UD Oliveirense",
-    "homeTeam": "Viseu",
-    "awayTeam": "UD Oliveirense",
+    "id": "htg-12-Monza-Juve Stabia",
+    "homeTeam": "Monza",
+    "awayTeam": "Juve Stabia",
     "saat": "17:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-12-B. Leverkusen-St. Pauli",
-    "homeTeam": "B. Leverkusen",
-    "awayTeam": "St. Pauli",
+    "id": "htg-13-Augsburg-Heidenheim",
+    "homeTeam": "Augsburg",
+    "awayTeam": "Heidenheim",
     "saat": "17:30",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-13-E. Frankfurt-M'gladbach",
-    "homeTeam": "E. Frankfurt",
-    "awayTeam": "M'gladbach",
+    "id": "htg-14-Motherwell-Aberdeen",
+    "homeTeam": "Motherwell",
+    "awayTeam": "Aberdeen",
     "saat": "17:30",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-14-Hoffenheim-Freiburg",
-    "homeTeam": "Hoffenheim",
-    "awayTeam": "Freiburg",
-    "saat": "17:30",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-15-Werder Bremen-Bayern Münih",
-    "homeTeam": "Werder Bremen",
-    "awayTeam": "Bayern Münih",
-    "saat": "17:30",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-16-Falkirk-Dundee Utd.",
-    "homeTeam": "Falkirk",
-    "awayTeam": "Dundee Utd.",
+    "id": "htg-15-Antwerp-Westerlo",
+    "homeTeam": "Antwerp",
+    "awayTeam": "Westerlo",
     "saat": "18:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-17-Hibernian-St. Mirren",
-    "homeTeam": "Hibernian",
-    "awayTeam": "St. Mirren",
+    "id": "htg-16-Francs Borains-W. Beveren",
+    "homeTeam": "Francs Borains",
+    "awayTeam": "W. Beveren",
     "saat": "18:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-18-Portsmouth-Sheffield Utd",
-    "homeTeam": "Portsmouth",
-    "awayTeam": "Sheffield Utd",
+    "id": "htg-17-Odense-Midtjylland",
+    "homeTeam": "Odense",
+    "awayTeam": "Midtjylland",
     "saat": "18:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-19-Ross County-Queen's Park",
-    "homeTeam": "Ross County",
-    "awayTeam": "Queen's Park",
-    "saat": "18:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-18-Rayo Vallecano-Atl. Madrid",
+    "homeTeam": "Rayo Vallecano",
+    "awayTeam": "Atl. Madrid",
+    "saat": "18:15",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-20-S. Wednesday-Millwall",
-    "homeTeam": "S. Wednesday",
-    "awayTeam": "Millwall",
-    "saat": "18:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-21-Heracles-NAC Breda",
-    "homeTeam": "Heracles",
-    "awayTeam": "NAC Breda",
+    "id": "htg-19-Basel-Lugano",
+    "homeTeam": "Basel",
+    "awayTeam": "Lugano",
     "saat": "18:30",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-22-Vitesse-VVV Venlo",
-    "homeTeam": "Vitesse",
-    "awayTeam": "VVV Venlo",
+    "id": "htg-20-Lausanne-Servette",
+    "homeTeam": "Lausanne",
+    "awayTeam": "Servette",
     "saat": "18:30",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-23-Simba-Stade Malien",
-    "homeTeam": "Simba",
-    "awayTeam": "Stade Malien",
+    "id": "htg-21-Nacional-Porto",
+    "homeTeam": "Nacional",
+    "awayTeam": "Porto",
+    "saat": "18:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
+  },
+  {
+    "id": "htg-22-S. Rotterdam-NEC Nijmegen",
+    "homeTeam": "S. Rotterdam",
+    "awayTeam": "NEC Nijmegen",
+    "saat": "18:45",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
+  },
+  {
+    "id": "htg-23-Young Africans-JS Kabylie",
+    "homeTeam": "Young Africans",
+    "awayTeam": "JS Kabylie",
     "saat": "19:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-24-Catanzaro-Mantova",
-    "homeTeam": "Catanzaro",
-    "awayTeam": "Mantova",
-    "saat": "19:15",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-24-Leipzig-Wolfsburg",
+    "homeTeam": "Leipzig",
+    "awayTeam": "Wolfsburg",
+    "saat": "19:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-25-St. Gallen-Grasshoppers",
-    "homeTeam": "St. Gallen",
-    "awayTeam": "Grasshoppers",
+    "id": "htg-25-Roma (K)-Napoli (K)",
+    "homeTeam": "Roma (K)",
+    "awayTeam": "Napoli (K)",
     "saat": "20:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-26-Trabzonspor-Fenerbahçe",
-    "homeTeam": "Trabzonspor",
-    "awayTeam": "Fenerbahçe",
-    "saat": "20:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-27-Stuttgart-Köln",
-    "homeTeam": "Stuttgart",
-    "awayTeam": "Köln",
+    "id": "htg-26-Anderlecht-La Louviere",
+    "homeTeam": "Anderlecht",
+    "awayTeam": "La Louviere",
     "saat": "20:30",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-28-Excelsior-AZ Alkmaar",
-    "homeTeam": "Excelsior",
-    "awayTeam": "AZ Alkmaar",
-    "saat": "20:45",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-27-Hoffenheim (K)-Hamburger SV (K)",
+    "homeTeam": "Hoffenheim (K)",
+    "awayTeam": "Hamburger SV (K)",
+    "saat": "20:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-29-Lille-Brest",
-    "homeTeam": "Lille",
-    "awayTeam": "Brest",
+    "id": "htg-28-AVS-Estoril",
+    "homeTeam": "AVS",
+    "awayTeam": "Estoril",
     "saat": "21:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-30-Ajax-F. Sittard",
-    "homeTeam": "Ajax",
-    "awayTeam": "F. Sittard",
-    "saat": "22:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-29-St. Truidense-Zulte Waregem",
+    "homeTeam": "St. Truidense",
+    "awayTeam": "Zulte Waregem",
+    "saat": "21:15",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-31-Pyramids-Power Dynamos",
-    "homeTeam": "Pyramids",
-    "awayTeam": "Power Dynamos",
-    "saat": "22:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-30-Lyon-Nice",
+    "homeTeam": "Lyon",
+    "awayTeam": "Nice",
+    "saat": "22:45",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   },
   {
-    "id": "htg-32-RSB Berkane-Rivers Utd",
-    "homeTeam": "RSB Berkane",
-    "awayTeam": "Rivers Utd",
-    "saat": "22:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-33-Young Boys-Winterthur",
-    "homeTeam": "Young Boys",
-    "awayTeam": "Winterthur",
-    "saat": "22:30",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-34-Groningen-Utrecht",
-    "homeTeam": "Groningen",
-    "awayTeam": "Utrecht",
-    "saat": "23:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-35-Real Madrid-R. Sociedad",
-    "homeTeam": "Real Madrid",
-    "awayTeam": "R. Sociedad",
-    "saat": "23:00",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
-  },
-  {
-    "id": "htg-36-Paris FC-Lens",
-    "homeTeam": "Paris FC",
-    "awayTeam": "Lens",
-    "saat": "23:05",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00"
+    "id": "htg-31-Sporting CP-Famalicao",
+    "homeTeam": "Sporting CP",
+    "awayTeam": "Famalicao",
+    "saat": "23:30",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00"
   }
 ]

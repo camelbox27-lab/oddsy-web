@@ -1,200 +1,182 @@
 [
   {
-    "id": "ds-0-S. Wednesday-Millwall",
-    "homeTeam": "S. Wednesday",
-    "awayTeam": "Millwall",
-    "saat": "18:00",
+    "id": "ds-0-Kilmarnock-Celtic",
+    "homeTeam": "Kilmarnock",
+    "awayTeam": "Celtic",
+    "saat": "17:00",
     "kategori": "MS 5.5 Ust",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "ms_5_5_ust": 5.7
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "ms_5_5_ust": 3.57
   },
   {
-    "id": "ds-1-Stuttgart-Köln",
-    "homeTeam": "Stuttgart",
-    "awayTeam": "Köln",
-    "saat": "20:30",
+    "id": "ds-1-Nacional-Porto",
+    "homeTeam": "Nacional",
+    "awayTeam": "Porto",
+    "saat": "18:30",
     "kategori": "MS 5.5 Ust",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "ms_5_5_ust": 3.09
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "ms_5_5_ust": 5.06
   },
   {
-    "id": "ds-2-Ajax-F. Sittard",
-    "homeTeam": "Ajax",
-    "awayTeam": "F. Sittard",
-    "saat": "22:00",
+    "id": "ds-2-Leipzig-Wolfsburg",
+    "homeTeam": "Leipzig",
+    "awayTeam": "Wolfsburg",
+    "saat": "19:30",
     "kategori": "MS 5.5 Ust",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "ms_5_5_ust": 3.52
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "ms_5_5_ust": 2.96
   },
   {
-    "id": "ds-3-RSB Berkane-Rivers Utd",
-    "homeTeam": "RSB Berkane",
-    "awayTeam": "Rivers Utd",
-    "saat": "22:00",
+    "id": "ds-3-Sporting CP-Famalicao",
+    "homeTeam": "Sporting CP",
+    "awayTeam": "Famalicao",
+    "saat": "23:30",
     "kategori": "MS 5.5 Ust",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "ms_5_5_ust": 5.17
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "ms_5_5_ust": 4.28
   },
   {
-    "id": "ds-4-Real Madrid-R. Sociedad",
-    "homeTeam": "Real Madrid",
-    "awayTeam": "R. Sociedad",
-    "saat": "23:00",
-    "kategori": "MS 5.5 Ust",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "ms_5_5_ust": 3.25
-  },
-  {
-    "id": "ds-5-Freiburg (K)-Union Berlin (K)",
-    "homeTeam": "Freiburg (K)",
-    "awayTeam": "Union Berlin (K)",
-    "saat": "14:00",
+    "id": "ds-4-Cercle Brugge-Club Brugge",
+    "homeTeam": "Cercle Brugge",
+    "awayTeam": "Club Brugge",
+    "saat": "15:30",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 3.23
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.46
   },
   {
-    "id": "ds-6-Braunschweig-Darmstadt 98",
-    "homeTeam": "Braunschweig",
-    "awayTeam": "Darmstadt 98",
-    "saat": "15:00",
+    "id": "ds-5-Thun-Sion",
+    "homeTeam": "Thun",
+    "awayTeam": "Sion",
+    "saat": "16:00",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 3.66
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.53
   },
   {
-    "id": "ds-7-Hertha Berlin-Hannover 96",
-    "homeTeam": "Hertha Berlin",
-    "awayTeam": "Hannover 96",
-    "saat": "15:00",
+    "id": "ds-6-Grazer AK-Salzburg",
+    "homeTeam": "Grazer AK",
+    "awayTeam": "Salzburg",
+    "saat": "16:30",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 3.48
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 4.12
   },
   {
-    "id": "ds-8-Modena-Carrarese",
-    "homeTeam": "Modena",
-    "awayTeam": "Carrarese",
+    "id": "ds-7-Göztepe-Kayserispor",
+    "homeTeam": "Göztepe",
+    "awayTeam": "Kayserispor",
     "saat": "17:00",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 4.61
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 4.88
   },
   {
-    "id": "ds-9-Viseu-UD Oliveirense",
-    "homeTeam": "Viseu",
-    "awayTeam": "UD Oliveirense",
+    "id": "ds-8-Monza-Juve Stabia",
+    "homeTeam": "Monza",
+    "awayTeam": "Juve Stabia",
     "saat": "17:00",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 4.31
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 5.71
   },
   {
-    "id": "ds-10-Falkirk-Dundee Utd.",
-    "homeTeam": "Falkirk",
-    "awayTeam": "Dundee Utd.",
-    "saat": "18:00",
+    "id": "ds-9-Augsburg-Heidenheim",
+    "homeTeam": "Augsburg",
+    "awayTeam": "Heidenheim",
+    "saat": "17:30",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 3.98
-  },
-  {
-    "id": "ds-11-Hibernian-St. Mirren",
-    "homeTeam": "Hibernian",
-    "awayTeam": "St. Mirren",
-    "saat": "18:00",
-    "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 4.21
-  },
-  {
-    "id": "ds-12-Portsmouth-Sheffield Utd",
-    "homeTeam": "Portsmouth",
-    "awayTeam": "Sheffield Utd",
-    "saat": "18:00",
-    "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 4.27
-  },
-  {
-    "id": "ds-13-Ross County-Queen's Park",
-    "homeTeam": "Ross County",
-    "awayTeam": "Queen's Park",
-    "saat": "18:00",
-    "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 4.0
-  },
-  {
-    "id": "ds-14-Heracles-NAC Breda",
-    "homeTeam": "Heracles",
-    "awayTeam": "NAC Breda",
-    "saat": "18:30",
-    "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 3.88
-  },
-  {
-    "id": "ds-15-Vitesse-VVV Venlo",
-    "homeTeam": "Vitesse",
-    "awayTeam": "VVV Venlo",
-    "saat": "18:30",
-    "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 3.13
-  },
-  {
-    "id": "ds-16-Simba-Stade Malien",
-    "homeTeam": "Simba",
-    "awayTeam": "Stade Malien",
-    "saat": "19:00",
-    "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 4.51
-  },
-  {
-    "id": "ds-17-Catanzaro-Mantova",
-    "homeTeam": "Catanzaro",
-    "awayTeam": "Mantova",
-    "saat": "19:15",
-    "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
     "iy_kg_var": 3.8
   },
   {
-    "id": "ds-18-Trabzonspor-Fenerbahçe",
-    "homeTeam": "Trabzonspor",
-    "awayTeam": "Fenerbahçe",
-    "saat": "20:00",
+    "id": "ds-10-Antwerp-Westerlo",
+    "homeTeam": "Antwerp",
+    "awayTeam": "Westerlo",
+    "saat": "18:00",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 3.6
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.76
   },
   {
-    "id": "ds-19-Pyramids-Power Dynamos",
-    "homeTeam": "Pyramids",
-    "awayTeam": "Power Dynamos",
-    "saat": "22:00",
+    "id": "ds-11-Francs Borains-W. Beveren",
+    "homeTeam": "Francs Borains",
+    "awayTeam": "W. Beveren",
+    "saat": "18:00",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 4.96
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.93
   },
   {
-    "id": "ds-20-Groningen-Utrecht",
-    "homeTeam": "Groningen",
-    "awayTeam": "Utrecht",
-    "saat": "23:00",
+    "id": "ds-12-Rayo Vallecano-Atl. Madrid",
+    "homeTeam": "Rayo Vallecano",
+    "awayTeam": "Atl. Madrid",
+    "saat": "18:15",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 4.34
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 4.6
   },
   {
-    "id": "ds-21-Paris FC-Lens",
-    "homeTeam": "Paris FC",
-    "awayTeam": "Lens",
-    "saat": "23:05",
+    "id": "ds-13-Basel-Lugano",
+    "homeTeam": "Basel",
+    "awayTeam": "Lugano",
+    "saat": "18:30",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-14T02:08:08.009784+03:00",
-    "iy_kg_var": 4.04
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.41
+  },
+  {
+    "id": "ds-14-Lausanne-Servette",
+    "homeTeam": "Lausanne",
+    "awayTeam": "Servette",
+    "saat": "18:30",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.86
+  },
+  {
+    "id": "ds-15-S. Rotterdam-NEC Nijmegen",
+    "homeTeam": "S. Rotterdam",
+    "awayTeam": "NEC Nijmegen",
+    "saat": "18:45",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.18
+  },
+  {
+    "id": "ds-16-Anderlecht-La Louviere",
+    "homeTeam": "Anderlecht",
+    "awayTeam": "La Louviere",
+    "saat": "20:30",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 4.82
+  },
+  {
+    "id": "ds-17-AVS-Estoril",
+    "homeTeam": "AVS",
+    "awayTeam": "Estoril",
+    "saat": "21:00",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.9
+  },
+  {
+    "id": "ds-18-St. Truidense-Zulte Waregem",
+    "homeTeam": "St. Truidense",
+    "awayTeam": "Zulte Waregem",
+    "saat": "21:15",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.86
+  },
+  {
+    "id": "ds-19-Lyon-Nice",
+    "homeTeam": "Lyon",
+    "awayTeam": "Nice",
+    "saat": "22:45",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-15T09:00:20.951426+03:00",
+    "iy_kg_var": 3.9
   }
 ]
