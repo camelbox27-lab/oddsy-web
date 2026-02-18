@@ -42,6 +42,7 @@ import { debounce, throttle, listenerRegistry, connectionMonitor } from './utils
 import { dataCache } from './utils/cache';
 
 const VIP_TRIAL_DAYS = 7;
+const VIP_ADMIN_DAYS = 30;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const parseDateSafe = (value) => {
@@ -2106,7 +2107,7 @@ function AdminDashboard({ onBack, userData }) {
         try {
             const isVip = newTier !== 'none';
             const now = new Date();
-            const nextWeek = new Date(now.getTime() + VIP_TRIAL_DAYS * ONE_DAY_MS);
+            const nextVipEnd = new Date(now.getTime() + VIP_ADMIN_DAYS * ONE_DAY_MS);
 
             const targetUser = users.find(u => u.id === userId);
             const existingStart = parseDateSafe(targetUser?.vipStartAt);
@@ -2121,7 +2122,7 @@ function AdminDashboard({ onBack, userData }) {
 
             if (isVip) {
                 payload.vipStartAt = (existingStart || now).toISOString();
-                payload.vipEndAt = (existingEnd && existingEnd > now ? existingEnd : nextWeek).toISOString();
+                payload.vipEndAt = (existingEnd && existingEnd > now ? existingEnd : nextVipEnd).toISOString();
             } else {
                 payload.vipEndAt = now.toISOString();
             }
