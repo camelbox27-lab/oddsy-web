@@ -2994,10 +2994,14 @@ function ModeratorScreen({ onBack, showAlert }) {
     const [loading, setLoading] = useState(false);
     const [listLoading, setListLoading] = useState(true);
     const [matches, setMatches] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState(7);
     const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 7, status: 'pending', analysis: '' });
 
+    const categoryTitle = selectedCategory === 7 ? 'İY/MS Tahminleri' : 'Günün Sürprizleri';
+
     useEffect(() => {
-        const q = query(collection(db, 'predictions'), where('categoryKey', '==', 7));
+        setListLoading(true);
+        const q = query(collection(db, 'predictions'), where('categoryKey', '==', selectedCategory));
         const unsub = onSnapshot(q, (snap) => {
             const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
@@ -3007,7 +3011,7 @@ function ModeratorScreen({ onBack, showAlert }) {
 
         listenerRegistry.register('moderator-iymst', unsub);
         return () => listenerRegistry.unregister('moderator-iymst');
-    }, []);
+    }, [selectedCategory]);
 
     const handleAdd = async (e) => {
         e.preventDefault();
@@ -3018,15 +3022,15 @@ function ModeratorScreen({ onBack, showAlert }) {
 
             await addDoc(collection(db, 'predictions'), {
                 ...matchData,
-                categoryKey: 7,
+                categoryKey: selectedCategory,
                 authorId: u.uid,
                 authorEmail: u.email,
                 createdAt: serverTimestamp(),
                 status: 'pending'
             });
 
-            showAlert('İY/MS tahmini eklendi!', 'success');
-            setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 7, status: 'pending', analysis: '' });
+            showAlert(`${categoryTitle} için tahmin eklendi!`, 'success');
+            setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: selectedCategory, status: 'pending', analysis: '' });
         } catch (err) {
             showAlert('Hata: ' + err.message, 'error');
         } finally {
@@ -3047,7 +3051,12 @@ function ModeratorScreen({ onBack, showAlert }) {
     return (
         <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
             <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
-            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 20 }}>Moderatör Paneli - İY/MS Tahminleri</h1>
+            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 20 }}>Moderatör Paneli - {categoryTitle}</h1>
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                <button className={`hero-btn secondary ${selectedCategory === 7 ? 'active' : ''}`} onClick={() => { setSelectedCategory(7); setMatchData(prev => ({ ...prev, categoryKey: 7 })); }} style={{ fontSize: 12, padding: '8px 12px' }}>İY/MS</button>
+                <button className={`hero-btn secondary ${selectedCategory === 6 ? 'active' : ''}`} onClick={() => { setSelectedCategory(6); setMatchData(prev => ({ ...prev, categoryKey: 6 })); }} style={{ fontSize: 12, padding: '8px 12px' }}>Günün Sürprizleri</button>
+            </div>
 
             <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, marginBottom: 20 }}>
                 <form onSubmit={handleAdd}>
@@ -3065,7 +3074,7 @@ function ModeratorScreen({ onBack, showAlert }) {
             </div>
 
             <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
-                <h3 style={{ color: 'var(--gold)', marginBottom: 12 }}>İY/MS Tahmin Listesi</h3>
+                <h3 style={{ color: 'var(--gold)', marginBottom: 12 }}>{categoryTitle} Liste</h3>
                 {listLoading ? <div className="loading"><div className="spinner" /></div> : (
                     <div style={{ display: 'grid', gap: 10 }}>
                         {matches.map(m => (

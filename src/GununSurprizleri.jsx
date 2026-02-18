@@ -1,17 +1,34 @@
-import { collection, deleteDoc, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
-import { db } from './firebaseConfig';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
+import { useEffect, useMemo, useState } from 'react';
+import { auth, db } from './firebaseConfig';
 import { getTeamLogo, handleLogoError } from './helper';
 
 function GununSurprizleri({ userData }) {
     const isAdmin = userData?.role === 'admin';
     const [jsonMatches, setJsonMatches] = useState([]);
     const [firestoreMatches, setFirestoreMatches] = useState([]);
+    const [hiddenKeys, setHiddenKeys] = useState(new Set());
     const [jsonLoading, setJsonLoading] = useState(true);
     const [fsLoading, setFsLoading] = useState(true);
 
     const loading = jsonLoading || fsLoading;
-    const matches = [...firestoreMatches, ...jsonMatches];
+    const buildMatchKey = (match) => {
+        const homeTeam = (match.homeTeam || match.home_team || '').toLowerCase().trim();
+        const awayTeam = (match.awayTeam || match.away_team || '').toLowerCase().trim();
+        const prediction = (match.prediction || match.kategori || '').toLowerCase().trim();
+        const odds = (match.odds || match['2_5_ust'] || match['3_5_ust'] || match['ms_5_5_ust'] || match['iy_kg_var'] || '').toString().toLowerCase().trim();
+        return `${homeTeam}|${awayTeam}|${prediction}|${odds}`;
+    };
+
+    const firestoreKeySet = useMemo(() => new Set(firestoreMatches.map(m => m.matchKey || buildMatchKey(m))), [firestoreMatches]);
+    const filteredJsonMatches = useMemo(
+        () => jsonMatches.filter(m => {
+            const key = buildMatchKey(m);
+            return !hiddenKeys.has(key) && !firestoreKeySet.has(key);
+        }),
+        [jsonMatches, hiddenKeys, firestoreKeySet]
+    );
+    const matches = [...firestoreMatches, ...filteredJsonMatches];
 
     // JSON verilerini çek (bot tahminleri)
     useEffect(() => {
@@ -43,6 +60,47 @@ function GununSurprizleri({ userData }) {
         });
         return () => unsub();
     }, []);
+
+    useEffect(() => {
+        const q = query(collection(db, 'hiddenMenuItems'), where('categoryKey', '==', 6));
+        const unsub = onSnapshot(q, (snap) => {
+            const keys = new Set(snap.docs.map(d => d.data()?.matchKey).filter(Boolean));
+            setHiddenKeys(keys);
+        });
+        return () => unsub();
+    }, []);
+
+    const upsertFromJsonToPredictions = async (match, status) => {
+        const homeTeam = match.homeTeam || match.home_team || 'Ev Sahibi';
+        const awayTeam = match.awayTeam || match.away_team || 'Deplasman';
+        const prediction = match.prediction || match.kategori || '2.5 Üst';
+        const odds = match.odds || match['2_5_ust'] || match['3_5_ust'] || match['ms_5_5_ust'] || match['iy_kg_var'] || '-';
+        const matchKey = buildMatchKey(match);
+
+        await addDoc(collection(db, 'predictions'), {
+            homeTeam,
+            awayTeam,
+            league: match.league || 'Diğer',
+            time: match.time || match.saat || '20:00',
+            prediction,
+            odds,
+            categoryKey: 6,
+            status,
+            matchKey,
+            importedFrom: 'bot-json',
+            authorId: auth.currentUser?.uid || null,
+            createdAt: serverTimestamp()
+        });
+    };
+
+    const hideJsonItem = async (match) => {
+        await addDoc(collection(db, 'hiddenMenuItems'), {
+            categoryKey: 6,
+            matchKey: buildMatchKey(match),
+            hiddenBy: auth.currentUser?.uid || null,
+            createdAt: serverTimestamp()
+        });
+    };
 
     if (loading) {
         return (
@@ -188,11 +246,11 @@ function GununSurprizleri({ userData }) {
                                 )}
 
                                 {/* Admin: Kazandı/Kaybetti/Sil */}
-                                {isAdmin && match.source === 'admin' && (
+                                {isAdmin && (
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px' }}>
-                                        <button className="admin-btn delete" onClick={async () => { if (window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) await deleteDoc(doc(db, 'predictions', match.id)); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
-                                        <button className="admin-btn won" onClick={async () => await setDoc(doc(db, 'predictions', match.id), { status: 'won' }, { merge: true })} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAZANDI</button>
-                                        <button className="admin-btn lost" onClick={async () => await setDoc(doc(db, 'predictions', match.id), { status: 'lost' }, { merge: true })} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAYBETTİ</button>
+                                        <button className="admin-btn delete" onClick={async () => { if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return; if (match.source === 'admin') await deleteDoc(doc(db, 'predictions', match.id)); else await hideJsonItem(match); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
+                                        <button className="admin-btn won" onClick={async () => { if (match.source === 'admin') await setDoc(doc(db, 'predictions', match.id), { status: 'won' }, { merge: true }); else await upsertFromJsonToPredictions(match, 'won'); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAZANDI</button>
+                                        <button className="admin-btn lost" onClick={async () => { if (match.source === 'admin') await setDoc(doc(db, 'predictions', match.id), { status: 'lost' }, { merge: true }); else await upsertFromJsonToPredictions(match, 'lost'); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAYBETTİ</button>
                                     </div>
                                 )}
                             </div>

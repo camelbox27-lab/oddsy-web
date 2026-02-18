@@ -27,13 +27,8 @@ service cloud.firestore {
       return isSignedIn() && (isAdmin() || isEditor() || isModerator());
     }
 
-    function moderatorCanWritePrediction() {
-      return isModerator()
-        && request.resource.data.categoryKey == 7
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'homeTeam', 'awayTeam', 'league', 'time', 'prediction', 'odds',
-          'analysis', 'status', 'categoryKey', 'authorId', 'authorEmail', 'createdAt'
-        ]);
+    function isModeratorCategory(categoryKey) {
+      return categoryKey == 7 || categoryKey == 6;
     }
 
     function isValidSize() {
@@ -70,10 +65,10 @@ service cloud.firestore {
     match /predictions/{predictionId} {
       allow read: if true;
       allow create: if (isAdmin() || isEditor()) && isValidSize()
-                    || (isModerator() && request.resource.data.categoryKey == 7 && isValidSize());
+                    || (isModerator() && isModeratorCategory(request.resource.data.categoryKey) && isValidSize());
       allow update: if (isAdmin() || isEditor()) && isValidSize()
-                    || (isModerator() && resource.data.categoryKey == 7 && request.resource.data.categoryKey == 7 && isValidSize());
-      allow delete: if isAdmin() || (isModerator() && resource.data.categoryKey == 7);
+                    || (isModerator() && isModeratorCategory(resource.data.categoryKey) && isModeratorCategory(request.resource.data.categoryKey) && isValidSize());
+      allow delete: if isAdmin() || (isModerator() && isModeratorCategory(resource.data.categoryKey));
     }
 
     // ===== MATCHES (HERKES GÖREBİLİR) =====
@@ -127,6 +122,11 @@ service cloud.firestore {
       allow read: if false;
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
       allow update, delete: if isAdmin();
+    }
+
+    match /hiddenMenuItems/{id} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
 
     // ===== NOTIFICATIONS =====
