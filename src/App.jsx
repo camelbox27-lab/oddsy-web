@@ -41,6 +41,54 @@ import { getNextUserId, ensureUserDisplayId } from './utils/userId';
 import { debounce, throttle, listenerRegistry, connectionMonitor } from './utils/performanceUtils';
 import { dataCache } from './utils/cache';
 
+const VIP_TRIAL_DAYS = 7;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+const parseDateSafe = (value) => {
+    if (!value) return null;
+    if (typeof value?.toDate === 'function') return value.toDate();
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const formatDateTR = (value) => {
+    const d = parseDateSafe(value);
+    return d ? d.toLocaleDateString('tr-TR') : '-';
+};
+
+const getVipMeta = (userData) => {
+    const start = parseDateSafe(userData?.vipStartAt);
+    const end = parseDateSafe(userData?.vipEndAt);
+    const now = new Date();
+    const expired = !!end && now > end;
+    const remainingDays = end ? Math.max(0, Math.ceil((end.getTime() - now.getTime()) / ONE_DAY_MS)) : null;
+    const isVipActive = !!userData?.isVip && !expired;
+
+    return {
+        start,
+        end,
+        expired,
+        remainingDays,
+        isVipActive,
+        startText: formatDateTR(userData?.vipStartAt),
+        endText: formatDateTR(userData?.vipEndAt)
+    };
+};
+
+const buildTrialVipFields = () => {
+    const start = new Date();
+    const end = new Date(start.getTime() + VIP_TRIAL_DAYS * ONE_DAY_MS);
+    return {
+        isVip: true,
+        vipTier: 'gold',
+        vipSource: 'trial',
+        vipTrialUsed: true,
+        vipStartAt: start.toISOString(),
+        vipEndAt: end.toISOString(),
+        vipUpdatedAt: start.toISOString()
+    };
+};
+
 
 // STYLES
 const styles = `
@@ -1677,6 +1725,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 }
 
                 try {
+                    const trialVip = buildTrialVipFields();
                     await setDoc(doc(db, "users", newUser.uid), {
                         email: newUser.email,
                         username: username.trim(),
@@ -1685,8 +1734,8 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                         createdAt: serverTimestamp(),
                         isAdmin: false,
                         isPremium: false,
-                        isVip: false,
-                        role: 'user'
+                        role: 'user',
+                        ...trialVip
                     });
                 } catch (firestoreErr) {
                     console.error('Firestore user doc oluşturulamadı:', firestoreErr);
@@ -1906,6 +1955,8 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
 
     if (!user) return <div className="loading">Lütfen giriş yapın.</div>;
 
+    const vipMeta = getVipMeta(userData);
+
     return (
         <div className="profile-container">
             <button className="back-btn" onClick={() => onBack('home')}>{Icons.back} Geri</button>
@@ -1933,10 +1984,14 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
                 </button>
             )}
 
-            <div className="profile-row"><span>Üyelik</span><span style={{ color: userData?.isVip ? (userData?.vipTier === 'platinum' ? '#B0C4DE' : userData?.vipTier === 'silver' ? '#C0C0C0' : 'var(--gold)') : '#aaa', fontWeight: userData?.isVip ? 'bold' : 'normal' }}>{userData?.isVip ? (userData?.vipTier === 'platinum' ? '💎 Platin VIP' : userData?.vipTier === 'silver' ? '🥈 Gümüş VIP' : '👑 Altın VIP') : 'Standart'}</span></div>
+            <div className="profile-row"><span>Üyelik</span><span style={{ color: vipMeta.isVipActive ? (userData?.vipTier === 'platinum' ? '#B0C4DE' : userData?.vipTier === 'silver' ? '#C0C0C0' : 'var(--gold)') : '#aaa', fontWeight: vipMeta.isVipActive ? 'bold' : 'normal' }}>{vipMeta.isVipActive ? (userData?.vipTier === 'platinum' ? '💎 Platin VIP' : userData?.vipTier === 'silver' ? '🥈 Gümüş VIP' : '👑 Altın VIP') : 'Standart'}</span></div>
+            <div className="profile-row"><span>VIP Başlangıç</span><span>{vipMeta.startText}</span></div>
+            <div className="profile-row"><span>VIP Bitiş</span><span>{vipMeta.endText}</span></div>
+            <div className="profile-row"><span>Kalan Gün</span><span>{vipMeta.remainingDays === null ? '-' : `${vipMeta.remainingDays} gün`}</span></div>
+            <div className="profile-row"><span>VIP Durumu</span><span style={{ color: vipMeta.isVipActive ? 'var(--success)' : '#aaa', fontWeight: 'bold' }}>{vipMeta.isVipActive ? 'Aktif' : (vipMeta.expired ? 'Süresi Doldu' : 'Pasif')}</span></div>
             <div className="profile-row"><span>Rol</span><span>{userData?.role === 'admin' ? 'Admin' : userData?.role === 'editor' ? 'Editör' : 'Üye'}</span></div>
 
-            {!userData?.isVip && (
+            {!vipMeta.isVipActive && (
                 <button className="submit-btn" style={{ marginTop: 20, background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', fontWeight: 'bold' }} onClick={() => onBack('abonelik')}>👑 VIP Üye Ol</button>
             )}
             {userData?.role === 'admin' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('admin')}>Admin Paneli</button>}
@@ -2050,15 +2105,34 @@ function AdminDashboard({ onBack, userData }) {
     const handleVipTierChange = async (userId, newTier) => {
         try {
             const isVip = newTier !== 'none';
-            await updateDoc(doc(db, 'users', userId), {
+            const now = new Date();
+            const nextWeek = new Date(now.getTime() + VIP_TRIAL_DAYS * ONE_DAY_MS);
+
+            const targetUser = users.find(u => u.id === userId);
+            const existingStart = parseDateSafe(targetUser?.vipStartAt);
+            const existingEnd = parseDateSafe(targetUser?.vipEndAt);
+
+            const payload = {
                 isVip: isVip,
                 vipTier: isVip ? newTier : null,
-                vipUpdatedAt: new Date()
+                vipUpdatedAt: now.toISOString(),
+                vipSource: isVip ? 'manual' : null
+            };
+
+            if (isVip) {
+                payload.vipStartAt = (existingStart || now).toISOString();
+                payload.vipEndAt = (existingEnd && existingEnd > now ? existingEnd : nextWeek).toISOString();
+            } else {
+                payload.vipEndAt = now.toISOString();
+            }
+
+            await updateDoc(doc(db, 'users', userId), {
+                ...payload
             });
 
             setUsers(users.map(u =>
                 u.id === userId
-                    ? { ...u, isVip: isVip, vipTier: isVip ? newTier : null }
+                    ? { ...u, ...payload }
                     : u
             ));
             const tierNames = { silver: 'Gümüş VIP', gold: 'Altın VIP', platinum: 'Platin VIP', none: 'Standart' };
@@ -2303,6 +2377,30 @@ function AdminDashboard({ onBack, userData }) {
                                 }}>
                                     VIP Tier
                                 </th>
+                                <th className="admin-col-hide-mobile" style={{
+                                    padding: 10,
+                                    textAlign: 'left',
+                                    fontSize: 12,
+                                    color: '#aaa'
+                                }}>
+                                    VIP Başlangıç
+                                </th>
+                                <th className="admin-col-hide-mobile" style={{
+                                    padding: 10,
+                                    textAlign: 'left',
+                                    fontSize: 12,
+                                    color: '#aaa'
+                                }}>
+                                    VIP Bitiş
+                                </th>
+                                <th style={{
+                                    padding: 10,
+                                    textAlign: 'left',
+                                    fontSize: 12,
+                                    color: '#aaa'
+                                }}>
+                                    Kalan
+                                </th>
                                 <th style={{
                                     padding: 10,
                                     textAlign: 'left',
@@ -2314,7 +2412,9 @@ function AdminDashboard({ onBack, userData }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map(u => (
+                            {users.map(u => {
+                                const vipMeta = getVipMeta(u);
+                                return (
                                 <tr
                                     key={u.id}
                                     style={{ borderBottom: '1px solid #333' }}
@@ -2352,6 +2452,15 @@ function AdminDashboard({ onBack, userData }) {
                                             <option value="platinum">💎 Platin VIP</option>
                                         </select>
                                     </td>
+                                    <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
+                                        {vipMeta.startText}
+                                    </td>
+                                    <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
+                                        {vipMeta.endText}
+                                    </td>
+                                    <td style={{ padding: 10, fontSize: 12, color: vipMeta.isVipActive ? 'var(--success)' : '#aaa', fontWeight: 'bold' }}>
+                                        {vipMeta.remainingDays === null ? '-' : `${vipMeta.remainingDays}g`}
+                                    </td>
                                     <td style={{ padding: 10, fontSize: 12 }}>
                                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                                             <select
@@ -2387,7 +2496,8 @@ function AdminDashboard({ onBack, userData }) {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -3573,6 +3683,21 @@ export default function App() {
                         if (d.exists()) {
                             let data = d.data();
 
+                            const vipMeta = getVipMeta(data);
+                            if (data.isVip && vipMeta.expired) {
+                                try {
+                                    await setDoc(doc(db, 'users', u.uid), {
+                                        isVip: false,
+                                        vipTier: null,
+                                        vipExpiredAt: serverTimestamp(),
+                                        vipUpdatedAt: serverTimestamp()
+                                    }, { merge: true });
+                                } catch (vipErr) {
+                                    console.error('VIP expiry update failed:', vipErr);
+                                }
+                                data = { ...data, isVip: false, vipTier: null };
+                            }
+
                             // Sequential ID Assignment if missing
                             if (!data.displayId) {
                                 try {
@@ -3599,7 +3724,7 @@ export default function App() {
                             // User doc yok - oluştur
                             let nextDisplayId = null;
                             try { nextDisplayId = await getNextUserId(); } catch (idErr) { console.error('DisplayId oluşturulamadı:', idErr); nextDisplayId = Math.floor(20260000 + Math.random() * 9999); }
-                            const initData = { uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], displayId: nextDisplayId, isAdmin: false, isPremium: false, isVip: false, role: 'user', createdAt: serverTimestamp() };
+                            const initData = { uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], displayId: nextDisplayId, isAdmin: false, isPremium: false, role: 'user', createdAt: serverTimestamp(), ...buildTrialVipFields() };
                             try { await setDoc(doc(db, 'users', u.uid), initData); } catch (setErr) { console.error('User doc oluşturulamadı:', setErr); }
                             setUserData(initData);
                         }
