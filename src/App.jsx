@@ -1,5 +1,6 @@
 import {
     createUserWithEmailAndPassword,
+    deleteUser,
     getIdTokenResult,
     onAuthStateChanged,
     sendEmailVerification,
@@ -44,6 +45,32 @@ import { dataCache } from './utils/cache';
 const VIP_TRIAL_DAYS = 7;
 const VIP_ADMIN_DAYS = 30;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const IP_API_URL = 'https://api64.ipify.org?format=json';
+
+const sanitizeIpForDocId = (ip = '') => ip.replace(/[^0-9a-zA-Z]/g, '_');
+
+const getPublicIpAddress = async () => {
+    const response = await fetch(IP_API_URL, { cache: 'no-store' });
+    if (!response.ok) throw new Error('IP bilgisi alınamadı.');
+    const payload = await response.json();
+    if (!payload?.ip) throw new Error('Geçersiz IP cevabı.');
+    return payload.ip;
+};
+
+const reserveIpForUser = async (uid, providedIp = null) => {
+    const ip = providedIp || await getPublicIpAddress();
+    const ipDocId = sanitizeIpForDocId(ip);
+    const ipRef = doc(db, 'ipRegistrations', ipDocId);
+    const existing = await getDoc(ipRef);
+    if (existing.exists() && existing.data()?.uid !== uid) {
+        throw new Error('Bu IP adresi ile zaten bir üyelik açılmış. Aynı IP ile ikinci hesap oluşturulamaz.');
+    }
+    await setDoc(ipRef, {
+        uid,
+        ip,
+        createdAt: serverTimestamp()
+    }, { merge: false });
+};
 
 const parseDateSafe = (value) => {
     if (!value) return null;
@@ -1555,6 +1582,12 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
                             <span className="sidebar-item-text">Editör Paneli</span>
                         </div>
                     )}
+                    {userData?.role === 'moderator' && (
+                        <div className={`sidebar-item ${currentRoute === 'moderator' ? 'active' : ''}`} onClick={() => { onNavigate('moderator'); onClose(); }}>
+                            <span className="sidebar-item-icon">🛡️</span>
+                            <span className="sidebar-item-text">Moderatör Paneli</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
@@ -1591,7 +1624,10 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
             <div className="analysis-section" style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingBottom: '100px' }}>
                 <div style={{ textAlign: 'center' }}>
                     <h2 className="analysis-title">Oddsy Günün Analizi</h2>
-                    <button className="analysis-btn" onClick={() => onNavigate('category', MENU_ITEMS?.find(m => m.key === 8))}>Özel Analizleri Görüntüle</button>
+                    <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button className="analysis-btn" onClick={() => onNavigate('category', MENU_ITEMS?.find(m => m.key === 8))}>Özel Analizleri Görüntüle</button>
+                        <button className="analysis-btn" onClick={() => onNavigate('performance-summary')} style={{ background: 'linear-gradient(135deg, #4ade80, #10B981)', color: '#000' }}>Başarı İstatistikleri</button>
+                    </div>
                 </div>
             </div>
 
@@ -1709,6 +1745,15 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 // Kayıt İşlemi
                 const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
                 const newUser = userCredential.user;
+                const registerIp = await getPublicIpAddress();
+
+                try {
+                    await reserveIpForUser(newUser.uid, registerIp);
+                } catch (ipErr) {
+                    try { await deleteUser(newUser); } catch (delErr) { console.error('IP engeli sonrası kullanıcı silinemedi:', delErr); }
+                    try { await signOut(auth); } catch (outErr) { console.error('IP engeli sonrası çıkış yapılamadı:', outErr); }
+                    throw ipErr;
+                }
 
                 // Profil güncelleme
                 try { await updateProfile(newUser, { displayName: username.trim() }); } catch (e) { console.error('Profile update failed:', e); }
@@ -1729,6 +1774,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                     const trialVip = buildTrialVipFields();
                     await setDoc(doc(db, "users", newUser.uid), {
                         email: newUser.email,
+                        registerIp,
                         username: username.trim(),
                         uid: newUser.uid,
                         displayId: nextDisplayId,
@@ -1990,13 +2036,14 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
             <div className="profile-row"><span>VIP Bitiş</span><span>{vipMeta.endText}</span></div>
             <div className="profile-row"><span>Kalan Gün</span><span>{vipMeta.remainingDays === null ? '-' : `${vipMeta.remainingDays} gün`}</span></div>
             <div className="profile-row"><span>VIP Durumu</span><span style={{ color: vipMeta.isVipActive ? 'var(--success)' : '#aaa', fontWeight: 'bold' }}>{vipMeta.isVipActive ? 'Aktif' : (vipMeta.expired ? 'Süresi Doldu' : 'Pasif')}</span></div>
-            <div className="profile-row"><span>Rol</span><span>{userData?.role === 'admin' ? 'Admin' : userData?.role === 'editor' ? 'Editör' : 'Üye'}</span></div>
+            <div className="profile-row"><span>Rol</span><span>{userData?.role === 'admin' ? 'Admin' : userData?.role === 'editor' ? 'Editör' : userData?.role === 'moderator' ? 'Moderatör' : 'Üye'}</span></div>
 
             {!vipMeta.isVipActive && (
                 <button className="submit-btn" style={{ marginTop: 20, background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', fontWeight: 'bold' }} onClick={() => onBack('abonelik')}>👑 VIP Üye Ol</button>
             )}
             {userData?.role === 'admin' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('admin')}>Admin Paneli</button>}
             {userData?.role === 'editor' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('editor')}>Editör Paneli</button>}
+            {userData?.role === 'moderator' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('moderator')}>Moderatör Paneli</button>}
 
             <button className="logout-btn" onClick={handleLogout}>Çıkış Yap</button>
         </div>
@@ -2477,6 +2524,7 @@ function AdminDashboard({ onBack, userData }) {
                                                 onChange={(e) => handleRoleChange(u.id, e.target.value)}
                                             >
                                                 <option value="user">Üye</option>
+                                                <option value="moderator">Moderatör</option>
                                                 <option value="editor">Editör</option>
                                                 <option value="admin">Admin</option>
                                             </select>
@@ -2823,6 +2871,212 @@ function EditorScreen({ onBack, showAlert, userData }) {
                     </div>
                     <button className="submit-btn" disabled={loading} style={{ marginTop: 15, padding: 10, fontSize: 13 }}>Kaydet</button>
                 </form>
+            </div>
+        </div>
+    );
+}
+
+
+function PerformanceSummaryScreen({ onBack }) {
+    const [loading, setLoading] = useState(true);
+    const [predictionSummary, setPredictionSummary] = useState([]);
+    const [couponSummary, setCouponSummary] = useState([]);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            setLoading(true);
+            try {
+                const [predSnap, couponSnap] = await Promise.all([
+                    getDocs(collection(db, 'predictions')),
+                    getDocs(collection(db, 'coupons'))
+                ]);
+
+                const menuDefs = [
+                    { key: 0, label: 'İlk Yarı Gol Listesi' },
+                    { key: 4, label: 'Günün Tercihleri' },
+                    { key: 6, label: 'Günün Sürprizleri' },
+                    { key: 7, label: 'İY/MS Tahminleri' },
+                    { key: 8, label: 'Editörün Seçimi' },
+                    { key: 2, label: 'Tahminciler' }
+                ];
+
+                const predictions = predSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const predStats = menuDefs.map(menu => {
+                    const list = predictions.filter(p => {
+                        const ck = typeof p.categoryKey === 'string' ? parseInt(p.categoryKey) : p.categoryKey;
+                        return ck === menu.key;
+                    });
+                    const decided = list.filter(p => p.status === 'won' || p.status === 'lost');
+                    const won = decided.filter(p => p.status === 'won').length;
+                    const total = decided.length;
+                    const rate = total > 0 ? Math.round((won / total) * 100) : 0;
+                    return {
+                        ...menu,
+                        total,
+                        text: total > 0
+                            ? `${menu.label} ${total} maçta ${won} kazanan, %${rate} başarı.`
+                            : `${menu.label} için henüz sonuçlandırılmış veri yok.`
+                    };
+                }).filter(x => x.total > 0);
+
+                const coupons = couponSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const grouped = {};
+                coupons.forEach(c => {
+                    const type = c.type || 'Kupon';
+                    if (!grouped[type]) grouped[type] = [];
+                    grouped[type].push(c);
+                });
+
+                const cpStats = Object.entries(grouped).map(([type, items]) => {
+                    const decided = items.filter(c => c.status === 'won' || c.status === 'lost');
+                    const won = decided.filter(c => c.status === 'won').length;
+                    const total = decided.length;
+                    const rate = total > 0 ? Math.round((won / total) * 100) : 0;
+                    const oddsList = items
+                        .map(c => parseFloat((c.totalOdds || '').toString().replace(',', '.')))
+                        .filter(v => !Number.isNaN(v));
+                    const avgOdds = oddsList.length ? (oddsList.reduce((a, b) => a + b, 0) / oddsList.length).toFixed(2) : null;
+
+                    return {
+                        type,
+                        total,
+                        text: total > 0
+                            ? `${type} ${total} kuponda ${won} kazanan, %${rate} başarı${avgOdds ? ` (Ort. Oran ${avgOdds})` : ''}.`
+                            : `${type} için henüz sonuçlandırılmış kupon yok.`
+                    };
+                }).filter(x => x.total > 0);
+
+                setPredictionSummary(predStats);
+                setCouponSummary(cpStats);
+            } catch (err) {
+                console.error('PerformanceSummaryScreen error:', err);
+                setPredictionSummary([]);
+                setCouponSummary([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
+    return (
+        <div className="category-page" style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
+            <div className="category-header">
+                <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
+                <h1 className="category-title">Başarı İstatistikleri</h1>
+            </div>
+            {loading ? (
+                <div className="loading"><div className="spinner" /></div>
+            ) : (
+                <div style={{ display: 'grid', gap: 12 }}>
+                    {predictionSummary.map(item => (
+                        <div key={`pred-${item.key}`} style={{ background: 'var(--bg-card)', border: '1px solid #2f3a33', borderRadius: 12, padding: 14, color: '#ddd' }}>
+                            {item.text}
+                        </div>
+                    ))}
+                    {couponSummary.map((item, idx) => (
+                        <div key={`coupon-${idx}`} style={{ background: 'var(--bg-card)', border: '1px solid #3f3220', borderRadius: 12, padding: 14, color: '#ddd' }}>
+                            {item.text}
+                        </div>
+                    ))}
+                    {predictionSummary.length === 0 && couponSummary.length === 0 && (
+                        <div style={{ color: '#aaa', textAlign: 'center', padding: 20 }}>Henüz sonuçlandırılmış veri bulunmuyor.</div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+
+function ModeratorScreen({ onBack, showAlert }) {
+    const [loading, setLoading] = useState(false);
+    const [listLoading, setListLoading] = useState(true);
+    const [matches, setMatches] = useState([]);
+    const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 7, status: 'pending', analysis: '' });
+
+    useEffect(() => {
+        const q = query(collection(db, 'predictions'), where('categoryKey', '==', 7));
+        const unsub = onSnapshot(q, (snap) => {
+            const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            setMatches(list);
+            setListLoading(false);
+        }, () => setListLoading(false));
+
+        listenerRegistry.register('moderator-iymst', unsub);
+        return () => listenerRegistry.unregister('moderator-iymst');
+    }, []);
+
+    const handleAdd = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const u = auth.currentUser;
+            if (!u) throw new Error('Oturum kapalı');
+
+            await addDoc(collection(db, 'predictions'), {
+                ...matchData,
+                categoryKey: 7,
+                authorId: u.uid,
+                authorEmail: u.email,
+                createdAt: serverTimestamp(),
+                status: 'pending'
+            });
+
+            showAlert('İY/MS tahmini eklendi!', 'success');
+            setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 7, status: 'pending', analysis: '' });
+        } catch (err) {
+            showAlert('Hata: ' + err.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return;
+        try {
+            await deleteDoc(doc(db, 'predictions', id));
+            showAlert('Tahmin silindi.', 'success');
+        } catch (err) {
+            showAlert('Silme başarısız: ' + err.message, 'error');
+        }
+    };
+
+    return (
+        <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
+            <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
+            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 20 }}>Moderatör Paneli - İY/MS Tahminleri</h1>
+
+            <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, marginBottom: 20 }}>
+                <form onSubmit={handleAdd}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Ev Sahibi</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.homeTeam} onChange={e => setMatchData({ ...matchData, homeTeam: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Deplasman</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.awayTeam} onChange={e => setMatchData({ ...matchData, awayTeam: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Lig</label><select className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.league} onChange={e => setMatchData({ ...matchData, league: e.target.value })}>{LEAGUES.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}</select></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Saat</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} placeholder="20:45" value={matchData.time} onChange={e => setMatchData({ ...matchData, time: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Tahmin</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.prediction} onChange={e => setMatchData({ ...matchData, prediction: e.target.value })} /></div>
+                        <div className="form-group" style={{ marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Oran</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={matchData.odds} onChange={e => setMatchData({ ...matchData, odds: e.target.value })} /></div>
+                        <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Maç Analizi</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="2" value={matchData.analysis} onChange={e => setMatchData({ ...matchData, analysis: e.target.value })} placeholder="Bu maç için analizini buraya yaz..." /></div>
+                    </div>
+                    <button className="submit-btn" disabled={loading} style={{ marginTop: 15, padding: 10, fontSize: 13 }}>Kaydet</button>
+                </form>
+            </div>
+
+            <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
+                <h3 style={{ color: 'var(--gold)', marginBottom: 12 }}>İY/MS Tahmin Listesi</h3>
+                {listLoading ? <div className="loading"><div className="spinner" /></div> : (
+                    <div style={{ display: 'grid', gap: 10 }}>
+                        {matches.map(m => (
+                            <div key={m.id} style={{ border: '1px solid #3a3a3a', borderRadius: 8, padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                                <div style={{ fontSize: 13, color: '#fff' }}><strong>{m.homeTeam}</strong> - <strong>{m.awayTeam}</strong> | {m.prediction || '-'} | {m.odds || '-'}</div>
+                                <button className="admin-btn delete" onClick={() => handleDelete(m.id)} style={{ padding: '8px 10px', borderRadius: 6 }}>SİL</button>
+                            </div>
+                        ))}
+                        {matches.length === 0 && <div style={{ color: '#aaa' }}>Henüz tahmin yok.</div>}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -3832,6 +4086,10 @@ export default function App() {
             case 'editor':
                 if (userData?.role === 'editor') return <EditorScreen onBack={navigate} showAlert={showAlert} userData={userData} />;
                 return <div className="loading">Yetkisiz erişim</div>;
+            case 'moderator':
+                if (userData?.role === 'moderator') return <ModeratorScreen onBack={navigate} showAlert={showAlert} />;
+                return <div className="loading">Yetkisiz erişim</div>;
+            case 'performance-summary': return <PerformanceSummaryScreen onBack={() => navigate('home')} />;
             case 'abonelik': return <AbonelikScreen onBack={() => navigate('home')} userData={userData} user={user} onNavigate={navigate} />;
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} userData={userData} onNavigate={navigate} />;
             case 'coupons': return (
