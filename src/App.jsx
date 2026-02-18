@@ -2913,6 +2913,9 @@ function PerformanceSummaryScreen({ onBack }) {
                     return {
                         ...menu,
                         total,
+                        won,
+                        lost: total - won,
+                        rate,
                         text: total > 0
                             ? `${menu.label} ${total} maçta ${won} kazanan, %${rate} başarı.`
                             : `${menu.label} için henüz sonuçlandırılmış veri yok.`
@@ -2940,6 +2943,10 @@ function PerformanceSummaryScreen({ onBack }) {
                     return {
                         type,
                         total,
+                        won,
+                        lost: total - won,
+                        rate,
+                        avgOdds,
                         text: total > 0
                             ? `${type} ${total} kuponda ${won} kazanan, %${rate} başarı${avgOdds ? ` (Ort. Oran ${avgOdds})` : ''}.`
                             : `${type} için henüz sonuçlandırılmış kupon yok.`
@@ -2969,15 +2976,73 @@ function PerformanceSummaryScreen({ onBack }) {
             {loading ? (
                 <div className="loading"><div className="spinner" /></div>
             ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
+                <div style={{ display: 'grid', gap: 16 }}>
+                    {predictionSummary.length > 0 && (
+                        <h3 style={{ color: 'var(--gold)', margin: 0, fontSize: 16, letterSpacing: 0.5 }}>Menü Başarı Kartları</h3>
+                    )}
                     {predictionSummary.map(item => (
-                        <div key={`pred-${item.key}`} style={{ background: 'var(--bg-card)', border: '1px solid #2f3a33', borderRadius: 12, padding: 14, color: '#ddd' }}>
-                            {item.text}
+                        <div key={`pred-${item.key}`} className="prediction-card" style={{ border: '2px solid rgba(74, 222, 128, 0.35)', borderRadius: 16, padding: 16 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                <div style={{ fontWeight: 800, color: '#fff' }}>{item.label}</div>
+                                <div style={{ fontWeight: 900, color: '#4ade80' }}>%{item.rate}</div>
+                            </div>
+
+                            <div style={{
+                                width: '100%',
+                                height: 10,
+                                background: 'rgba(255,255,255,0.08)',
+                                borderRadius: 999,
+                                overflow: 'hidden',
+                                marginBottom: 12
+                            }}>
+                                <div style={{
+                                    width: `${item.rate}%`,
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, #22c55e, #10b981)',
+                                    boxShadow: '0 0 12px rgba(16,185,129,0.5)'
+                                }} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                                <div style={{ background: 'rgba(255,255,255,0.04)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: '#aaa', fontSize: 11 }}>Toplam</div><div style={{ color: '#fff', fontWeight: 800 }}>{item.total}</div></div>
+                                <div style={{ background: 'rgba(74,222,128,0.08)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: '#86efac', fontSize: 11 }}>Kazandı</div><div style={{ color: '#4ade80', fontWeight: 800 }}>{item.won}</div></div>
+                                <div style={{ background: 'rgba(248,113,113,0.08)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: '#fca5a5', fontSize: 11 }}>Kaybetti</div><div style={{ color: '#f87171', fontWeight: 800 }}>{item.lost}</div></div>
+                            </div>
                         </div>
                     ))}
+
+                    {couponSummary.length > 0 && (
+                        <h3 style={{ color: 'var(--gold)', margin: '6px 0 0', fontSize: 16, letterSpacing: 0.5 }}>Kupon Başarı Kartları</h3>
+                    )}
                     {couponSummary.map((item, idx) => (
-                        <div key={`coupon-${idx}`} style={{ background: 'var(--bg-card)', border: '1px solid #3f3220', borderRadius: 12, padding: 14, color: '#ddd' }}>
-                            {item.text}
+                        <div key={`coupon-${idx}`} className="prediction-card" style={{ border: '2px solid rgba(253, 185, 19, 0.35)', borderRadius: 16, padding: 16 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                <div style={{ fontWeight: 800, color: '#fff' }}>{item.type}</div>
+                                <div style={{ fontWeight: 900, color: 'var(--gold)' }}>%{item.rate}</div>
+                            </div>
+
+                            <div style={{
+                                width: '100%',
+                                height: 10,
+                                background: 'rgba(255,255,255,0.08)',
+                                borderRadius: 999,
+                                overflow: 'hidden',
+                                marginBottom: 12
+                            }}>
+                                <div style={{
+                                    width: `${item.rate}%`,
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, #facc15, #f59e0b)',
+                                    boxShadow: '0 0 12px rgba(245,158,11,0.45)'
+                                }} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: item.avgOdds ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: 8 }}>
+                                <div style={{ background: 'rgba(255,255,255,0.04)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: '#aaa', fontSize: 11 }}>Toplam</div><div style={{ color: '#fff', fontWeight: 800 }}>{item.total}</div></div>
+                                <div style={{ background: 'rgba(74,222,128,0.08)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: '#86efac', fontSize: 11 }}>Kazandı</div><div style={{ color: '#4ade80', fontWeight: 800 }}>{item.won}</div></div>
+                                <div style={{ background: 'rgba(248,113,113,0.08)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: '#fca5a5', fontSize: 11 }}>Kaybetti</div><div style={{ color: '#f87171', fontWeight: 800 }}>{item.lost}</div></div>
+                                {item.avgOdds && <div style={{ background: 'rgba(253,185,19,0.08)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: 'var(--gold)', fontSize: 11 }}>Ort. Oran</div><div style={{ color: 'var(--gold)', fontWeight: 800 }}>{item.avgOdds}</div></div>}
+                            </div>
                         </div>
                     ))}
                     {predictionSummary.length === 0 && couponSummary.length === 0 && (
