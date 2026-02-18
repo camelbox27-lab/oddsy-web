@@ -5,25 +5,16 @@
     "awayTeam": "Newcastle",
     "saat": "20:45",
     "kategori": "MS 5.5 Ust",
-    "createdAt": "2026-02-18T09:23:02.976490+03:00",
-    "ms_5_5_ust": 3.75
+    "createdAt": "2026-02-18T09:32:56.546664+03:00",
+    "ms_5_5_ust": 7.3
   },
   {
-    "id": "ds-1-Wolverhampton-Arsenal",
-    "homeTeam": "Wolverhampton",
-    "awayTeam": "Arsenal",
-    "saat": "23:00",
-    "kategori": "MS 5.5 Ust",
-    "createdAt": "2026-02-18T09:23:02.976490+03:00",
-    "ms_5_5_ust": 4.53
-  },
-  {
-    "id": "ds-2-Club Brugge-Atl. Madrid",
+    "id": "ds-1-Club Brugge-Atl. Madrid",
     "homeTeam": "Club Brugge",
     "awayTeam": "Atl. Madrid",
     "saat": "23:00",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-18T09:23:02.976490+03:00",
+    "createdAt": "2026-02-18T09:32:56.546664+03:00",
     "iy_kg_var": 3.77
   }
 ]
