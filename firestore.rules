@@ -68,7 +68,7 @@ service cloud.firestore {
                     || (isModerator() && isModeratorCategory(request.resource.data.categoryKey) && isValidSize());
       allow update: if (isAdmin() || isEditor()) && isValidSize()
                     || (isModerator() && isModeratorCategory(resource.data.categoryKey) && isModeratorCategory(request.resource.data.categoryKey) && isValidSize());
-      allow delete: if isAdmin() || (isModerator() && isModeratorCategory(resource.data.categoryKey));
+      allow delete: if isAdmin() || isEditor() || (isModerator() && isModeratorCategory(resource.data.categoryKey));
     }
 
     // ===== MATCHES (HERKES GÖREBİLİR) =====
