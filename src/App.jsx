@@ -42,7 +42,7 @@ import { getNextUserId, ensureUserDisplayId } from './utils/userId';
 import { debounce, throttle, listenerRegistry, connectionMonitor } from './utils/performanceUtils';
 import { dataCache } from './utils/cache';
 
-const VIP_TRIAL_DAYS = 7;
+const VIP_TRIAL_DAYS = 0;
 const VIP_ADMIN_DAYS = 30;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const IP_API_URL = 'https://api64.ipify.org?format=json';
@@ -104,6 +104,17 @@ const getVipMeta = (userData) => {
 };
 
 const buildTrialVipFields = () => {
+    if (VIP_TRIAL_DAYS <= 0) {
+        return {
+            isVip: false,
+            vipTier: null,
+            vipSource: null,
+            vipTrialUsed: false,
+            vipStartAt: null,
+            vipEndAt: null,
+            vipUpdatedAt: null
+        };
+    }
     const start = new Date();
     const end = new Date(start.getTime() + VIP_TRIAL_DAYS * ONE_DAY_MS);
     return {
@@ -1626,7 +1637,7 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
                     <h2 className="analysis-title">Oddsy Günün Analizi</h2>
                     <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                         <button className="analysis-btn" onClick={() => onNavigate('category', MENU_ITEMS?.find(m => m.key === 8))}>Özel Analizleri Görüntüle</button>
-                        <button className="analysis-btn" onClick={() => onNavigate('performance-summary')} style={{ background: 'linear-gradient(135deg, #4ade80, #10B981)', color: '#000' }}>Başarı İstatistikleri</button>
+                        <button className="analysis-btn" onClick={() => onNavigate('performance-summary')} style={{ background: 'linear-gradient(135deg, #4ade80, #10B981)', color: '#000' }}>Tahmin Sonuçları</button>
                     </div>
                 </div>
             </div>
@@ -2971,7 +2982,7 @@ function PerformanceSummaryScreen({ onBack }) {
         <div className="category-page" style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
             <div className="category-header">
                 <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
-                <h1 className="category-title">Başarı İstatistikleri</h1>
+                <h1 className="category-title">Tahmin Sonuçları</h1>
             </div>
             {loading ? (
                 <div className="loading"><div className="spinner" /></div>
@@ -2981,10 +2992,10 @@ function PerformanceSummaryScreen({ onBack }) {
                         <h3 style={{ color: 'var(--gold)', margin: 0, fontSize: 16, letterSpacing: 0.5 }}>Menü Başarı Kartları</h3>
                     )}
                     {predictionSummary.map(item => (
-                        <div key={`pred-${item.key}`} className="prediction-card" style={{ border: '2px solid rgba(74, 222, 128, 0.35)', borderRadius: 16, padding: 16 }}>
+                        <div key={`pred-${item.key}`} className="prediction-card" style={{ border: '2px solid #FDB913', borderRadius: 16, padding: 16, transition: 'all 0.3s ease', cursor: 'pointer', ':hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 25px rgba(253,185,19,0.35)', borderColor: '#ffd700' }, background: 'linear-gradient(145deg, rgba(30,30,30,0.9), rgba(20,20,20,0.95))', boxShadow: '0 4px 15px rgba(253,185,19,0.15)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                                 <div style={{ fontWeight: 800, color: '#fff' }}>{item.label}</div>
-                                <div style={{ fontWeight: 900, color: '#4ade80' }}>%{item.rate}</div>
+                                <div style={{ fontWeight: 900, color: '#FDB913', textShadow: '0 0 10px rgba(253,185,19,0.5)' }}>%{item.rate}</div>
                             </div>
 
                             <div style={{
@@ -3015,10 +3026,10 @@ function PerformanceSummaryScreen({ onBack }) {
                         <h3 style={{ color: 'var(--gold)', margin: '6px 0 0', fontSize: 16, letterSpacing: 0.5 }}>Kupon Başarı Kartları</h3>
                     )}
                     {couponSummary.map((item, idx) => (
-                        <div key={`coupon-${idx}`} className="prediction-card" style={{ border: '2px solid rgba(253, 185, 19, 0.35)', borderRadius: 16, padding: 16 }}>
+                        <div key={`coupon-${idx}`} className="prediction-card" style={{ border: '2px solid #FDB913', borderRadius: 16, padding: 16, transition: 'all 0.3s ease', cursor: 'pointer', background: 'linear-gradient(145deg, rgba(30,30,30,0.9), rgba(20,20,20,0.95))', boxShadow: '0 4px 15px rgba(253,185,19,0.15)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                                 <div style={{ fontWeight: 800, color: '#fff' }}>{item.type}</div>
-                                <div style={{ fontWeight: 900, color: 'var(--gold)' }}>%{item.rate}</div>
+                                <div style={{ fontWeight: 900, color: '#FDB913', textShadow: '0 0 10px rgba(253,185,19,0.5)' }}>%{item.rate}</div>
                             </div>
 
                             <div style={{
@@ -3107,6 +3118,7 @@ function ModeratorScreen({ onBack, showAlert }) {
         if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return;
         try {
             await deleteDoc(doc(db, 'predictions', id));
+            setMatches(prev => prev.filter(m => m.id !== id));
             showAlert('Tahmin silindi.', 'success');
         } catch (err) {
             showAlert('Silme başarısız: ' + err.message, 'error');
@@ -3293,10 +3305,7 @@ function AdminScreen({ onBack, showAlert, userData }) {
                     <h3 style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 15, textAlign: 'center' }}>INPUT</h3>
                     <div className="admin-sidebar-buttons" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <button className={`hero-btn secondary ${view === 'addMatch' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addMatch')}>Tahmin Ekle</button>
-                        <button className={`hero-btn secondary ${view === 'addCard' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => { setView('addCard'); setMatchData({ ...matchData, categoryKey: 3 }); }}>Kart Ekle</button>
-                        <button className={`hero-btn secondary ${view === 'addCorner' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => { setView('addCorner'); setMatchData({ ...matchData, categoryKey: 3 }); }}>Korner Ekle</button>
                         <button className={`hero-btn secondary ${view === 'addCoupon' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addCoupon')}>Kupon Ekle</button>
-                        <button className={`hero-btn secondary ${view === 'notif' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('notif')}>Bildirim Gönder</button>
                     </div>
                 </div>
 

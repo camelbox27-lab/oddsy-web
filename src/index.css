@@ -58,3 +58,24 @@
     opacity: 0.5;
   }
 }
+
+/* Gold Frame Hover Effect for Prediction Cards */
+.prediction-card {
+  transition: all 0.3s ease;
+}
+
+.prediction-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(253, 185, 19, 0.35);
+  border-color: #ffd700 !important;
+}
+
+/* Button hover effects */
+.admin-btn {
+  transition: all 0.2s ease;
+}
+
+.admin-btn:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
+}

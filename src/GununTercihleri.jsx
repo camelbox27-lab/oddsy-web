@@ -10,6 +10,7 @@ function GununTercihleri({ userData }) {
     const [hiddenKeys, setHiddenKeys] = useState(new Set());
     const [jsonLoading, setJsonLoading] = useState(true);
     const [fsLoading, setFsLoading] = useState(true);
+    const [showAnalysis, setShowAnalysis] = useState(null);
 
     const loading = jsonLoading || fsLoading;
 
@@ -245,9 +246,24 @@ function GununTercihleri({ userData }) {
                                 {/* Admin: Kazandı/Kaybetti/Sil */}
                                 {isAdmin && (
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px' }}>
-                                        <button className="admin-btn delete" onClick={async () => { if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return; if (match.source === 'admin') await deleteDoc(doc(db, 'predictions', match.id)); else await hideJsonItem(match); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
+                                        <button className="admin-btn delete" onClick={async () => { if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return; try { if (match.source === 'admin') { await deleteDoc(doc(db, 'predictions', match.id)); setFirestoreMatches(prev => prev.filter(m => m.id !== match.id)); } else { await hideJsonItem(match); setHiddenKeys(prev => new Set([...prev, buildMatchKey(match)])); } window.alert('Tahmin başarıyla silindi.'); } catch (err) { console.error('Silme hatası:', err); window.alert('Silme hatası: ' + err.message); } }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
+                                        {match.analysis && (
+                                            <button className="admin-btn" onClick={() => setShowAnalysis(showAnalysis === match.id ? null : match.id)} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px', background: showAnalysis === match.id ? '#FDB913' : '#6366f1', color: '#fff' }}>YORUM {showAnalysis === match.id ? 'KAPAT' : 'GÖSTER'}</button>
+                                        )}
                                         <button className="admin-btn won" onClick={async () => { if (match.source === 'admin') await setDoc(doc(db, 'predictions', match.id), { status: 'won' }, { merge: true }); else await upsertFromJsonToPredictions(match, 'won'); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAZANDI</button>
                                         <button className="admin-btn lost" onClick={async () => { if (match.source === 'admin') await setDoc(doc(db, 'predictions', match.id), { status: 'lost' }, { merge: true }); else await upsertFromJsonToPredictions(match, 'lost'); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAYBETTİ</button>
+                                    </div>
+                                )}
+                                {/* Show analysis for non-admin users */}
+                                {!isAdmin && match.analysis && (
+                                    <button onClick={() => setShowAnalysis(showAnalysis === match.id ? null : match.id)} style={{ marginTop: '12px', padding: '10px', width: '100%', background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.5)', borderRadius: '8px', color: '#a5b4fc', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>
+                                        {showAnalysis === match.id ? 'Yorumu Kapat' : 'Maç Yorumunu Görüntüle'}
+                                    </button>
+                                )}
+                                {/* Analysis Display */}
+                                {showAnalysis === match.id && match.analysis && (
+                                    <div style={{ marginTop: '12px', padding: '15px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '10px' }}>
+                                        <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#e0e0e0', margin: 0 }}>{match.analysis}</p>
                                     </div>
                                 )}
                             </div>
