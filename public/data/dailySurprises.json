@@ -1,20 +1,65 @@
 [
   {
-    "id": "ds-0-Karabağ-Newcastle",
-    "homeTeam": "Karabağ",
-    "awayTeam": "Newcastle",
-    "saat": "20:45",
-    "kategori": "MS 5.5 Ust",
-    "createdAt": "2026-02-18T09:41:01.078828+03:00",
-    "ms_5_5_ust": 7.3
+    "id": "ds-0-Macarthur-Bangkok Utd",
+    "homeTeam": "Macarthur",
+    "awayTeam": "Bangkok Utd",
+    "saat": "10:45",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-19T08:55:02.739679+03:00",
+    "iy_kg_var": 3.71
   },
   {
-    "id": "ds-1-Club Brugge-Atl. Madrid",
-    "homeTeam": "Club Brugge",
-    "awayTeam": "Atl. Madrid",
+    "id": "ds-1-Gamba Osaka-Pohang S.",
+    "homeTeam": "Gamba Osaka",
+    "awayTeam": "Pohang S.",
+    "saat": "13:00",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-19T08:55:02.739679+03:00",
+    "iy_kg_var": 4.37
+  },
+  {
+    "id": "ds-2-Juventus (K)-Wolfsburg (K)",
+    "homeTeam": "Juventus (K)",
+    "awayTeam": "Wolfsburg (K)",
+    "saat": "20:45",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-19T08:55:02.739679+03:00",
+    "iy_kg_var": 3.25
+  },
+  {
+    "id": "ds-3-Noah-AZ Alkmaar",
+    "homeTeam": "Noah",
+    "awayTeam": "AZ Alkmaar",
+    "saat": "20:45",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-19T08:55:02.739679+03:00",
+    "iy_kg_var": 3.44
+  },
+  {
+    "id": "ds-4-Celtic-Stuttgart",
+    "homeTeam": "Celtic",
+    "awayTeam": "Stuttgart",
     "saat": "23:00",
     "kategori": "IY KG Var",
-    "createdAt": "2026-02-18T09:41:01.078828+03:00",
-    "iy_kg_var": 3.77
+    "createdAt": "2026-02-19T08:55:02.739679+03:00",
+    "iy_kg_var": 3.45
+  },
+  {
+    "id": "ds-5-Drita-NK Celje",
+    "homeTeam": "Drita",
+    "awayTeam": "NK Celje",
+    "saat": "23:00",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-19T08:55:02.739679+03:00",
+    "iy_kg_var": 4.49
+  },
+  {
+    "id": "ds-6-FK Shkendija-Samsunspor",
+    "homeTeam": "FK Shkendija",
+    "awayTeam": "Samsunspor",
+    "saat": "23:00",
+    "kategori": "IY KG Var",
+    "createdAt": "2026-02-19T08:55:02.739679+03:00",
+    "iy_kg_var": 4.57
   }
 ]
