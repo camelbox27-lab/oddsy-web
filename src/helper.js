@@ -1386,7 +1386,10 @@ export const getTeamLogo = (teamName) => {
         console.error('Logo matching error:', e);
     }
 
-    return '/logos/default-team-logo.png';
+    // Eşleşme bulunamadı - onError tetiklensin ki TheSportsDB API deneyebilsin
+    // Normalize edilmiş isimle sahte path döndür, bu yüklenemeyecek ve handleLogoError'ı tetikleyecek
+    const safeNorm = normalizeTeamName(teamName) || 'unknown';
+    return `/logos/nofound_${safeNorm}.png`;
 };
 
 const _showLogoInitials = (img, teamName) => {
@@ -1418,6 +1421,9 @@ const _showLogoInitials = (img, teamName) => {
     img.parentNode.replaceChild(fallback, img);
 };
 
+// Sayfa genelinde cache - aynı takım için API'yi tekrar çağırmaz
+const _logoCache = {};
+
 export const handleLogoError = async (e) => {
     const img = e.target;
     const teamName = img.alt || 'Team';
@@ -1428,6 +1434,16 @@ export const handleLogoError = async (e) => {
         return;
     }
     img.dataset.logoHandled = 'true';
+
+    // Cache'de varsa direkt kullan
+    if (_logoCache[teamName] === null) {
+        _showLogoInitials(img, teamName);
+        return;
+    }
+    if (_logoCache[teamName]) {
+        if (img.parentNode) img.src = _logoCache[teamName];
+        return;
+    }
 
     // TheSportsDB ücretsiz API'den logo çekmeyi dene
     try {
@@ -1441,14 +1457,15 @@ export const handleLogoError = async (e) => {
         if (resp.ok) {
             const data = await resp.json();
             if (data.teams && data.teams[0] && data.teams[0].strBadge) {
-                if (img.parentNode) {
-                    img.src = data.teams[0].strBadge + '/preview';
-                }
+                const logoUrl = data.teams[0].strBadge + '/preview';
+                _logoCache[teamName] = logoUrl;
+                if (img.parentNode) img.src = logoUrl;
                 return;
             }
         }
     } catch (_) { /* API erişilemedi veya timeout - initials'a düş */ }
 
+    _logoCache[teamName] = null; // "bulunamadı" olarak işaretle
     _showLogoInitials(img, teamName);
 };
 
