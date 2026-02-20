@@ -1741,6 +1741,9 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 const resolvedEmail = await resolveEmail(loginIdentifier);
                 const userCredential = await signInWithEmailAndPassword(auth, resolvedEmail, password);
 
+                // Sunucudan taze emailVerified state'i çek (verification başka tab/cihazda yapıldıysa stale olabilir)
+                try { await userCredential.user.reload(); } catch (_) {}
+
                 if (!userCredential.user.emailVerified) {
                     await sendEmailVerification(userCredential.user);
                     await signOut(auth);
@@ -4067,6 +4070,8 @@ export default function App() {
         const unsub = onAuthStateChanged(auth, async (u) => {
             try {
                 if (u) {
+                    // Sunucudan taze emailVerified state'i çek (stale local cache'i önlemek için)
+                    try { await u.reload(); } catch (_) {}
                     // KRİTİK: Email doğrulanmadıysa kullanıcıyı session'a alma
                     if (!u.emailVerified) {
                         setUser(null);

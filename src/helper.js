@@ -1389,25 +1389,13 @@ export const getTeamLogo = (teamName) => {
     return '/logos/default-team-logo.png';
 };
 
-export const handleLogoError = (e) => {
-    const img = e.target;
-    const teamName = img.alt || 'Team';
-
-    // Baş harfleri al
+const _showLogoInitials = (img, teamName) => {
+    if (!img.parentNode) return;
     const words = teamName.trim().split(/\s+/);
     const initials = words.length === 1
         ? words[0].substring(0, 2).toUpperCase()
         : words.slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
-    // Takım adından tutarlı renk üret
-    let hash = 0;
-    for (let i = 0; i < teamName.length; i++) {
-        hash = teamName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#a855f7', '#d946ef'];
-    const bgColor = colors[Math.abs(hash) % colors.length];
-
-    // Fallback div oluştur
     const fallback = document.createElement('div');
     fallback.textContent = initials;
     fallback.title = teamName;
@@ -1427,8 +1415,41 @@ export const handleLogoError = (e) => {
         border: 2px solid #FDB913;
         letter-spacing: 1px;
     `;
-
     img.parentNode.replaceChild(fallback, img);
+};
+
+export const handleLogoError = async (e) => {
+    const img = e.target;
+    const teamName = img.alt || 'Team';
+
+    // İkinci kez hata verirse (external logo da yüklenemediyse) → initials göster
+    if (img.dataset.logoHandled) {
+        _showLogoInitials(img, teamName);
+        return;
+    }
+    img.dataset.logoHandled = 'true';
+
+    // TheSportsDB ücretsiz API'den logo çekmeyi dene
+    try {
+        const ctrl = new AbortController();
+        const timeoutId = setTimeout(() => ctrl.abort(), 4000);
+        const resp = await fetch(
+            `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`,
+            { signal: ctrl.signal }
+        );
+        clearTimeout(timeoutId);
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.teams && data.teams[0] && data.teams[0].strBadge) {
+                if (img.parentNode) {
+                    img.src = data.teams[0].strBadge + '/preview';
+                }
+                return;
+            }
+        }
+    } catch (_) { /* API erişilemedi veya timeout - initials'a düş */ }
+
+    _showLogoInitials(img, teamName);
 };
 
 export const LEAGUE_LOGOS = {
