@@ -147,7 +147,30 @@ function IlkYariGolListesi({ userData }) {
                             <div
                                 key={match.id}
                                 className="prediction-card"
+                                style={{ position: 'relative' }}
                             >
+                                {/* Kazandı / Kaybetti Icon Top Left */}
+                                {match.status && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '10px',
+                                        left: '10px',
+                                        background: match.status === 'won' ? '#22c55e' : '#ef4444',
+                                        color: 'white',
+                                        width: '24px',
+                                        height: '24px',
+                                        borderRadius: '50%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '14px',
+                                        fontWeight: 'bold',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                        zIndex: 10
+                                    }}>
+                                        {match.status === 'won' ? '✓' : '✗'}
+                                    </div>
+                                )}
                                 {/* Saat */}
                                 {match.saat && (
                                     <div style={{
@@ -185,19 +208,12 @@ function IlkYariGolListesi({ userData }) {
                                     </div>
                                 </div>
 
-                                {/* Durum Badge */}
-                                {match.status && (
-                                    <div style={{ textAlign: 'center', marginTop: '12px' }}>
-                                        <span className={`status-badge ${match.status}`}>
-                                            {match.status === 'won' ? 'KAZANDI' : match.status === 'lost' ? 'KAYBETTİ' : ''}
-                                        </span>
-                                    </div>
-                                )}
+
 
                                 {/* Admin: Kazandı/Kaybetti/Sil */}
                                 {isAdmin && (
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px' }}>
-                                        <button className="admin-btn delete" onClick={async () => { if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return; try { if (match.source === 'admin') { await deleteDoc(doc(db, 'predictions', match.id)); setFirestoreMatches(prev => prev.filter(m => m.id !== match.id)); } else { await hideJsonItem(match); setHiddenKeys(prev => new Set([...prev, buildMatchKey(match)])); } window.alert('Tahmin başarıyla silindi.'); } catch (err) { console.error('Silme hatası:', err); window.alert('Silme hatası: ' + err.message); } }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
+                                        <button className="admin-btn delete" onClick={async () => { if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return; try { await hideJsonItem(match); setHiddenKeys(prev => new Set([...prev, buildMatchKey(match)])); if (match.source === 'admin') { await deleteDoc(doc(db, 'predictions', match.id)); setFirestoreMatches(prev => prev.filter(m => m.id !== match.id)); } window.alert('Tahmin başarıyla silindi.'); } catch (err) { console.error('Silme hatası:', err); window.alert('Silme hatası: ' + err.message); } }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
                                         {match.analysis && (
                                             <button className="admin-btn" onClick={() => setShowAnalysis(showAnalysis === match.id ? null : match.id)} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px', background: showAnalysis === match.id ? '#FDB913' : '#6366f1', color: '#fff' }}>YORUM {showAnalysis === match.id ? 'KAPAT' : 'GÖSTER'}</button>
                                         )}

@@ -2474,88 +2474,88 @@ function AdminDashboard({ onBack, userData }) {
                             {users.map(u => {
                                 const vipMeta = getVipMeta(u);
                                 return (
-                                <tr
-                                    key={u.id}
-                                    style={{ borderBottom: '1px solid #333' }}
-                                >
-                                    <td style={{ padding: 10, fontSize: 13, color: 'var(--gold)', fontWeight: '700' }}>
-                                        {u.displayId || '-'}
-                                    </td>
-                                    <td style={{ padding: 10, fontSize: 12 }}>
-                                        {u.email}
-                                    </td>
-                                    <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
-                                        {u.username || '-'}
-                                    </td>
-                                    <td style={{ padding: 10, fontSize: 12 }}>
-                                        {u.role || 'user'}
-                                    </td>
-                                    <td style={{ padding: 10, fontSize: 12 }}>
-                                        <select
-                                            value={u.vipTier || (u.isVip ? 'gold' : 'none')}
-                                            onChange={(e) => handleVipTierChange(u.id, e.target.value)}
-                                            style={{
-                                                background: u.vipTier === 'platinum' ? '#7B68EE' : u.vipTier === 'gold' || (u.isVip && !u.vipTier) ? '#B8860B' : u.vipTier === 'silver' ? '#808080' : '#333',
-                                                color: u.isVip || u.vipTier ? '#fff' : '#aaa',
-                                                border: 'none',
-                                                padding: '4px 8px',
-                                                borderRadius: 5,
-                                                fontSize: 11,
-                                                cursor: 'pointer',
-                                                fontWeight: u.isVip || u.vipTier ? 'bold' : 'normal'
-                                            }}
-                                        >
-                                            <option value="none">Standart</option>
-                                            <option value="silver">🥈 Gümüş VIP</option>
-                                            <option value="gold">👑 Altın VIP</option>
-                                            <option value="platinum">💎 Platin VIP</option>
-                                        </select>
-                                    </td>
-                                    <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
-                                        {vipMeta.startText}
-                                    </td>
-                                    <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
-                                        {vipMeta.endText}
-                                    </td>
-                                    <td style={{ padding: 10, fontSize: 12, color: vipMeta.isVipActive ? 'var(--success)' : '#aaa', fontWeight: 'bold' }}>
-                                        {vipMeta.remainingDays === null ? '-' : `${vipMeta.remainingDays}g`}
-                                    </td>
-                                    <td style={{ padding: 10, fontSize: 12 }}>
-                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <tr
+                                        key={u.id}
+                                        style={{ borderBottom: '1px solid #333' }}
+                                    >
+                                        <td style={{ padding: 10, fontSize: 13, color: 'var(--gold)', fontWeight: '700' }}>
+                                            {u.displayId || '-'}
+                                        </td>
+                                        <td style={{ padding: 10, fontSize: 12 }}>
+                                            {u.email}
+                                        </td>
+                                        <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
+                                            {u.username || '-'}
+                                        </td>
+                                        <td style={{ padding: 10, fontSize: 12 }}>
+                                            {u.role || 'user'}
+                                        </td>
+                                        <td style={{ padding: 10, fontSize: 12 }}>
                                             <select
+                                                value={u.vipTier || (u.isVip ? 'gold' : 'none')}
+                                                onChange={(e) => handleVipTierChange(u.id, e.target.value)}
                                                 style={{
-                                                    background: '#222',
-                                                    color: '#fff',
-                                                    border: '1px solid #444',
-                                                    padding: 5,
+                                                    background: u.vipTier === 'platinum' ? '#7B68EE' : u.vipTier === 'gold' || (u.isVip && !u.vipTier) ? '#B8860B' : u.vipTier === 'silver' ? '#808080' : '#333',
+                                                    color: u.isVip || u.vipTier ? '#fff' : '#aaa',
+                                                    border: 'none',
+                                                    padding: '4px 8px',
                                                     borderRadius: 5,
-                                                    fontSize: 11
+                                                    fontSize: 11,
+                                                    cursor: 'pointer',
+                                                    fontWeight: u.isVip || u.vipTier ? 'bold' : 'normal'
                                                 }}
-                                                value={u.role || 'user'}
-                                                onChange={(e) => handleRoleChange(u.id, e.target.value)}
                                             >
-                                                <option value="user">Üye</option>
-                                                <option value="moderator">Moderatör</option>
-                                                <option value="editor">Editör</option>
-                                                <option value="admin">Admin</option>
+                                                <option value="none">Standart</option>
+                                                <option value="silver">🥈 Gümüş VIP</option>
+                                                <option value="gold">👑 Altın VIP</option>
+                                                <option value="platinum">💎 Platin VIP</option>
                                             </select>
-                                            <button
-                                                onClick={() => handlePasswordReset(u.email)}
-                                                style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 5, fontSize: 10, cursor: 'pointer' }}
-                                                title="Şifre sıfırlama maili gönder"
-                                            >
-                                                Şifre
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteUser(u.id, u.email)}
-                                                style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 5, fontSize: 10, cursor: 'pointer' }}
-                                                title="Kullanıcıyı sil"
-                                            >
-                                                Sil
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
+                                            {vipMeta.startText}
+                                        </td>
+                                        <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
+                                            {vipMeta.endText}
+                                        </td>
+                                        <td style={{ padding: 10, fontSize: 12, color: vipMeta.isVipActive ? 'var(--success)' : '#aaa', fontWeight: 'bold' }}>
+                                            {vipMeta.remainingDays === null ? '-' : `${vipMeta.remainingDays}g`}
+                                        </td>
+                                        <td style={{ padding: 10, fontSize: 12 }}>
+                                            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                <select
+                                                    style={{
+                                                        background: '#222',
+                                                        color: '#fff',
+                                                        border: '1px solid #444',
+                                                        padding: 5,
+                                                        borderRadius: 5,
+                                                        fontSize: 11
+                                                    }}
+                                                    value={u.role || 'user'}
+                                                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                                                >
+                                                    <option value="user">Üye</option>
+                                                    <option value="moderator">Moderatör</option>
+                                                    <option value="editor">Editör</option>
+                                                    <option value="admin">Admin</option>
+                                                </select>
+                                                <button
+                                                    onClick={() => handlePasswordReset(u.email)}
+                                                    style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 5, fontSize: 10, cursor: 'pointer' }}
+                                                    title="Şifre sıfırlama maili gönder"
+                                                >
+                                                    Şifre
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteUser(u.id, u.email)}
+                                                    style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: 5, fontSize: 10, cursor: 'pointer' }}
+                                                    title="Kullanıcıyı sil"
+                                                >
+                                                    Sil
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 );
                             })}
                         </tbody>
@@ -3556,56 +3556,94 @@ function CouponScreen({ onBack, showAlert, userData }) {
                                     }}>{selectedType.name}</span>
                                 </div>
                                 {c.status && (
-                                    <span style={{
-                                        fontSize: '11px',
-                                        fontWeight: '900',
-                                        padding: '4px 12px',
-                                        borderRadius: '20px',
-                                        background: isWon ? '#4ade80' : isLost ? '#f87171' : 'rgba(255,255,255,0.2)',
-                                        color: isWon || isLost ? '#000' : '#fff',
-                                        boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+                                    <div style={{
+                                        background: isWon ? '#22c55e' : '#ef4444',
+                                        color: 'white',
+                                        width: '28px',
+                                        height: '28px',
+                                        borderRadius: '50%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                                     }}>
-                                        {isWon ? 'KAZANDI' : isLost ? 'KAYBETTİ' : ''}
-                                    </span>
+                                        {isWon ? '✓' : '✗'}
+                                    </div>
                                 )}
                             </div>
 
                             {/* Match Items */}
                             <div style={{ padding: '10px 0' }}>
-                                {c.matches.map((m, idx) => (
-                                    <div key={idx}>
-                                        <div style={{
-                                            padding: '15px 25px',
-                                            position: 'relative'
-                                        }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <div style={{ color: '#fff', fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>{m.home}</div>
-                                                    <div style={{ color: '#fff', fontSize: '15px', fontWeight: '600' }}>{m.away}</div>
+                                {c.matches.map((m, idx) => {
+                                    const homeTeam = m.home || 'Ev Sahibi';
+                                    const awayTeam = m.away || 'Deplasman';
+
+                                    return (
+                                        <div key={idx}>
+                                            <div style={{
+                                                padding: '15px 25px',
+                                                position: 'relative'
+                                            }}>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    gap: '16px'
+                                                }}>
+                                                    {/* Ev Sahibi */}
+                                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                                        <img src={getTeamLogo(homeTeam)} alt={homeTeam} onError={handleLogoError} style={{ width: '70px', height: '70px', objectFit: 'contain' }} />
+                                                        <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff', textAlign: 'center' }}>{homeTeam}</span>
+                                                    </div>
+
+                                                    {/* Ortada Sadece VS */}
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
+                                                        <span style={{ fontSize: '24px', fontWeight: '900', color: '#FDB913', fontStyle: 'italic' }}>VS</span>
+                                                    </div>
+
+                                                    {/* Deplasman */}
+                                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                                        <img src={getTeamLogo(awayTeam)} alt={awayTeam} onError={handleLogoError} style={{ width: '70px', height: '70px', objectFit: 'contain' }} />
+                                                        <span style={{ fontSize: '14px', fontWeight: '700', color: '#fff', textAlign: 'center' }}>{awayTeam}</span>
+                                                    </div>
                                                 </div>
-                                                <div style={{ textAlign: 'right', minWidth: '100px' }}>
-                                                    <div style={{
-                                                        color: selectedType.color,
-                                                        fontSize: '14px',
-                                                        fontWeight: '800',
-                                                        background: 'rgba(255,255,255,0.05)',
-                                                        padding: '4px 10px',
-                                                        borderRadius: '6px',
-                                                        display: 'inline-block',
-                                                        marginBottom: '4px'
-                                                    }}>{m.prediction}</div>
-                                                    <div style={{ color: '#aaa', fontSize: '15px', fontWeight: '700' }}>{m.odds}</div>
+
+                                                <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'auto auto', gap: '15px', alignItems: 'center' }}>
+                                                        <div style={{
+                                                            background: 'rgba(0,0,0,0.3)',
+                                                            padding: '8px 16px',
+                                                            borderRadius: '8px',
+                                                            textAlign: 'center',
+                                                            border: '1px solid rgba(255,255,255,0.05)'
+                                                        }}>
+                                                            <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '700' }}>TAHMİN</div>
+                                                            <div style={{ fontSize: '14px', fontWeight: '900', color: '#10B981' }}>{m.prediction}</div>
+                                                        </div>
+                                                        <div style={{
+                                                            background: 'rgba(0,0,0,0.3)',
+                                                            padding: '8px 16px',
+                                                            borderRadius: '8px',
+                                                            textAlign: 'center',
+                                                            border: '1px solid rgba(255,255,255,0.05)'
+                                                        }}>
+                                                            <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '700' }}>ORAN</div>
+                                                            <div style={{ fontSize: '14px', fontWeight: '900', color: '#FDB913' }}>{m.odds}</div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            {idx !== c.matches.length - 1 && (
+                                                <div style={{
+                                                    borderBottom: '2px dotted rgba(255,255,255,0.1)',
+                                                    margin: '0 25px'
+                                                }}></div>
+                                            )}
                                         </div>
-                                        {idx !== c.matches.length - 1 && (
-                                            <div style={{
-                                                borderBottom: '2px dotted rgba(255,255,255,0.1)',
-                                                margin: '0 25px'
-                                            }}></div>
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Footer Section */}
@@ -3693,14 +3731,37 @@ function PredictionCard({ item, userData }) {
                 padding: '24px',
                 transition: 'all 0.3s ease',
                 display: 'block', // Reset flex from generic class if needed
-                minHeight: 'auto'
+                minHeight: 'auto',
+                position: 'relative'
             }}
         >
             {/* Top Right Badges (Floating) */}
-            <div className="card-header-overlay" style={{ top: 10, right: 10 }}>
-                {item.status && <span className={`status-badge ${item.status}`}>{item.status === 'won' ? 'KAZANDI' : item.status === 'lost' ? 'KAYBETTİ' : ''}</span>}
+            <div className="card-header-overlay" style={{ top: 10, right: 10, position: 'absolute' }}>
                 {isPremium && <span className="premium-badge-icon">★</span>}
             </div>
+
+            {/* Kazandı / Kaybetti Icon Top Left */}
+            {item.status && (
+                <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: '10px',
+                    background: item.status === 'won' ? '#22c55e' : '#ef4444',
+                    color: 'white',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                    zIndex: 10
+                }}>
+                    {item.status === 'won' ? '✓' : '✗'}
+                </div>
+            )}
 
             {/* Lig Bilgisi */}
             {item.league && (

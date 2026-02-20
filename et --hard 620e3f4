@@ -1,0 +1,31 @@
+[33m2d038e6[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{0}: reset: moving to origin/main
+[33m4d7d755[m HEAD@{1}: pull origin main --rebase (pick): Add terser
+[33m21e0542[m HEAD@{2}: pull origin main --rebase (start): checkout 21e0542b885fcdfd1a3af3fa777873233874d888
+[33m2d038e6[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{3}: commit: Admin panel fixes, prediction results styling, and league input update
+[33m620e3f4[m HEAD@{4}: commit: Add terser
+[33md68fe26[m HEAD@{5}: commit: Merge: resolve .gitignore conflict
+[33m074381a[m HEAD@{6}: pull origin main: Merge made by the 'ort' strategy.
+[33m7e05cb4[m HEAD@{7}: reset: moving to HEAD
+[33m7e05cb4[m HEAD@{8}: commit: FIX: Admin panel categoryKey type mismatch ve AdminPanel component ayrıştırması
+[33md74f6fc[m HEAD@{9}: commit: 250120261410
+[33ma937af3[m HEAD@{10}: reset: moving to a937af3
+[33m20ec831[m HEAD@{11}: reset: moving to 20ec831
+[33ma937af3[m HEAD@{12}: commit: Added security, performance and architecture improvements
+[33m20ec831[m HEAD@{13}: commit: Maç kartları yeniden tasarlandı: koyu gri arka plan, yeşil çerçeve, alt alta düzen, default logo eklendi
+[33m8b4a3a6[m HEAD@{14}: commit: feat: updated menu and cleaned up AI analysis code
+[33m3465644[m HEAD@{15}: reset: moving to HEAD~1
+[33mcf3c8d1[m HEAD@{16}: commit: feat: updated menu and cleaned up AI analysis code
+[33m3465644[m HEAD@{17}: commit: Revert: Removed custom Hero header from CategoryScreen and restored standard layout as requested.
+[33mc296561[m HEAD@{18}: commit: Feat: Added custom Hero header for 'First Half Goals List' with transparent overlay and background image.
+[33m9bed26d[m HEAD@{19}: commit: Fix: Completely emptied AI Analysis screen and resolved black screen crash using category safety check.
+[33m01c8b07[m HEAD@{20}: commit: Completely cleared AI Analysis screen content and removed associated Excel styles as requested by user.
+[33m370cc02[m HEAD@{21}: commit: Fix: Implemented connection timeout (5s) to prevent infinite loading state in AI Analysis screen. Added safer data parsing logic.
+[33m451d58a[m HEAD@{22}: commit: Fix: Critical TypeError in search logic caused by calling toLowerCase() on undefined values. Implemented robust null-checking.
+[33m7b05475[m HEAD@{23}: commit: Fix: Resolved ReferenceError by adding missing Firebase Database imports and restored mobile responsive styles.
+[33m9181ff1[m HEAD@{24}: commit: Integrated professional Excel-style interaktif data table into AI Analysis menu. Includes sorting, column filtering, global search, pagination, and CSV export.
+[33mcb169ea[m HEAD@{25}: commit: Emptied Kart / Korner section as requested.
+[33m0191202[m HEAD@{26}: commit: Fix: Kart/Korner menu background issue resolved by updating the category mapping.
+[33ma285a24[m HEAD@{27}: commit: Emptied AI Analysis and Daily Coupons sections to prepare for new implementation.
+[33m2ced638[m HEAD@{28}: commit: Restored functional AI Analysis Engine and fixed Firebase RTDB connectivity. Reverted misinterpreted Excel UI to maintain design consistency.
+[33m87e8907[m HEAD@{29}: reset: moving to 87e8907
+[33mdd34647[m HEAD@{30}: commit: Fix: AI Analysis screen now renders immediately to avoid stuck loading spinner

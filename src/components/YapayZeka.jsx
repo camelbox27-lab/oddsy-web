@@ -212,17 +212,19 @@ export default function YapayZeka() {
             'MS 2.5 Üst': 0,
             'MS 2.5 Alt': 0,
             'MS 3.5 Üst': 0,
-            'Toplam 2-3 Gol': 0,
             'İlk Yarı 1.5 Üst': 0,
-            'İlk Yarı 1.5 Alt': 0,
             'İlk Yarı KG Var': 0,
-            'MS 6+': 0,
             'KG Var': 0,
             'KG Yok': 0,
             'MS 1': 0,
             'MS 0': 0,
             'MS 2': 0
         };
+
+        let tg_0_1 = 0;
+        let tg_2_3 = 0;
+        let tg_4_5 = 0;
+        let tg_6_plus = 0;
 
         matches.forEach(match => {
             const msScore = match.macSonucu || match['Maç Sonucu Skor'] || '-';
@@ -257,11 +259,10 @@ export default function YapayZeka() {
             // MS 3.5 Üst
             if (ms.total >= 4) marketStats['MS 3.5 Üst']++;
 
-            // Toplam 2-3 Gol (1-2, 0-3, 1-1, 2-0, 2-1, 1-2 vb)
-            if (ms.total === 2 || ms.total === 3) marketStats['Toplam 2-3 Gol']++;
-
-            // MS 6+ (Toplam 6+ gol)
-            if (ms.total >= 6) marketStats['MS 6+']++;
+            if (ms.total <= 1) tg_0_1++;
+            else if (ms.total === 2 || ms.total === 3) tg_2_3++;
+            else if (ms.total === 4 || ms.total === 5) tg_4_5++;
+            else if (ms.total >= 6) tg_6_plus++;
 
             // KG Var/Yok
             if (ms.home > 0 && ms.away > 0) marketStats['KG Var']++;
@@ -275,12 +276,19 @@ export default function YapayZeka() {
             // İlk Yarı 1.5 Üst/Alt ve İlk Yarı KG Var
             if (iy) {
                 if (iy.total >= 2) marketStats['İlk Yarı 1.5 Üst']++;
-                else marketStats['İlk Yarı 1.5 Alt']++;
 
                 // İlk Yarı KG Var (ilk yarıda her iki takım da gol atarsa)
                 if (iy.home > 0 && iy.away > 0) marketStats['İlk Yarı KG Var']++;
             }
         });
+
+        const tgMax = Math.max(tg_0_1, tg_2_3, tg_4_5, tg_6_plus);
+        if (tgMax > 0) {
+            if (tgMax === tg_0_1) marketStats['Toplam 0-1 Gol'] = tgMax;
+            else if (tgMax === tg_2_3) marketStats['Toplam 2-3 Gol'] = tgMax;
+            else if (tgMax === tg_4_5) marketStats['Toplam 4-5 Gol'] = tgMax;
+            else if (tgMax === tg_6_plus) marketStats['Toplam 6+ Gol'] = tgMax;
+        }
 
         // Yüzdelikleri hesapla ve %50+ olanları filtrele
         const totalMatches = matches.length;
@@ -321,6 +329,7 @@ export default function YapayZeka() {
         });
 
         if (!topIYMS) return null;
+        if (!['1/0', '1/2', '2/1', '2/0'].includes(topIYMS)) return null;
 
         const percentage = Math.round((maxCount / matches.length) * 100);
 
@@ -705,11 +714,10 @@ export default function YapayZeka() {
                 <div className="flex justify-end">
                     <button
                         onClick={() => setShowFeatured(!showFeatured)}
-                        className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
-                            showFeatured
+                        className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${showFeatured
                                 ? 'bg-[#FDB913] text-[#333] shadow-[0_0_15px_rgba(253,185,19,0.4)]'
                                 : 'bg-[#404040] text-[#FDB913] border border-[#FDB913] hover:bg-[#4a4a4a]'
-                        }`}
+                            }`}
                     >
                         <Star size={18} fill={showFeatured ? '#333' : 'none'} />
                         ÖNE ÇIKAN EŞLEŞMELER
