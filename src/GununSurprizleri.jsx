@@ -35,7 +35,7 @@ function GununSurprizleri({ userData }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch('/data/dailySurprises.json?t=' + Date.now());
+                const res = await fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/data/dailySurprises.json?t=' + Date.now());
                 const list = await res.json();
                 setJsonMatches(list);
             } catch (error) {

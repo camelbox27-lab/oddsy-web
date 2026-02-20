@@ -33,7 +33,7 @@ function IlkYariGolListesi({ userData }) {
 
     // JSON verilerini çek (bot tahminleri)
     useEffect(() => {
-        fetch('/data/halfTimeGoals.json?t=' + Date.now())
+        fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/data/halfTimeGoals.json?t=' + Date.now())
             .then(res => res.json())
             .then(data => {
                 setJsonMatches(data);

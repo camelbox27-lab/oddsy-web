@@ -152,23 +152,30 @@ export default function ManuelAnaliz() {
             }
         });
 
+        // Toplam Gol Önerisi - ayrı hesapla (%50 filtresinden bağımsız)
         const tgMax = Math.max(tg_0_1, tg_2_3, tg_4_5, tg_6_plus);
-        if (tgMax > 0) {
-            if (tgMax === tg_0_1) marketStats['Toplam 0-1 Gol'] = tgMax;
-            else if (tgMax === tg_2_3) marketStats['Toplam 2-3 Gol'] = tgMax;
-            else if (tgMax === tg_4_5) marketStats['Toplam 4-5 Gol'] = tgMax;
-            else if (tgMax === tg_6_plus) marketStats['Toplam 6+ Gol'] = tgMax;
+        let toplamGolOnerisi = null;
+        const totalMatches = matches.length;
+        if (tgMax > 0 && totalMatches > 0) {
+            let label = '';
+            if (tgMax === tg_0_1) label = 'Toplam 0-1 Gol';
+            else if (tgMax === tg_2_3) label = 'Toplam 2-3 Gol';
+            else if (tgMax === tg_4_5) label = 'Toplam 4-5 Gol';
+            else if (tgMax === tg_6_plus) label = 'Toplam 6+ Gol';
+            toplamGolOnerisi = { label, count: tgMax, percentage: Math.round((tgMax / totalMatches) * 100) };
         }
 
-        const totalMatches = matches.length;
-        return Object.entries(marketStats)
-            .map(([market, count]) => ({
-                market,
-                count,
-                percentage: Math.round((count / totalMatches) * 100)
-            }))
-            .filter(item => item.percentage >= 50)
-            .sort((a, b) => b.percentage - a.percentage);
+        return {
+            recommendations: Object.entries(marketStats)
+                .map(([market, count]) => ({
+                    market,
+                    count,
+                    percentage: Math.round((count / totalMatches) * 100)
+                }))
+                .filter(item => item.percentage >= 50)
+                .sort((a, b) => b.percentage - a.percentage),
+            toplamGolOnerisi
+        };
     };
 
     const analyzeIYMS = (matches) => {
@@ -275,7 +282,7 @@ export default function ManuelAnaliz() {
 
             const analysisMatches = allMatches;
 
-            const recommendations = analyzeBettingMarkets(analysisMatches.map(match => ({
+            const { recommendations, toplamGolOnerisi } = analyzeBettingMarkets(analysisMatches.map(match => ({
                 evSahibi: match['Ev Sahibi'] || '-',
                 deplasman: match['Deplasman'] || '-',
                 ilkYari: formatScore(match['İlk Yarı Skor']),
@@ -304,7 +311,7 @@ export default function ManuelAnaliz() {
                 lig: match._ligAdi
             }));
 
-            setResults({ matches: topResults, recommendations, iymsRecommendation, totalAnalyzed: analysisMatches.length });
+            setResults({ matches: topResults, recommendations, iymsRecommendation, toplamGolOnerisi, totalAnalyzed: analysisMatches.length });
             setShowResults(true);
         } catch (err) {
             console.error(err);
@@ -335,7 +342,7 @@ export default function ManuelAnaliz() {
     }
 
     if (showResults) {
-        const { matches = [], recommendations = [], iymsRecommendation = null, totalAnalyzed = 0 } = results || {};
+        const { matches = [], recommendations = [], iymsRecommendation = null, toplamGolOnerisi = null, totalAnalyzed = 0 } = results || {};
 
         return (
             <div className="min-h-screen p-4 bg-[#333] text-white font-sans">
@@ -389,7 +396,7 @@ export default function ManuelAnaliz() {
                     </div>
 
                     {/* Bahis Türü Önerileri */}
-                    {(recommendations.length > 0 || iymsRecommendation) && (
+                    {(recommendations.length > 0 || iymsRecommendation || toplamGolOnerisi) && (
                         <div className="bg-[#404040] p-3 sm:p-4 rounded-lg border-2 border-[#FDB913] shadow-[0_0_15px_rgba(253,185,19,0.3)]">
                             <div className="flex items-center gap-2 mb-3">
                                 <Zap className="text-[#FDB913]" size={20} />
@@ -422,6 +429,21 @@ export default function ManuelAnaliz() {
                                         </div>
                                         <div className="w-full bg-[#222] rounded-full h-1.5">
                                             <div className="h-1.5 rounded-full bg-red-500" style={{ width: `${recommendations.find(r => r.market === 'İlk Yarı KG Var').percentage}%` }} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Toplam Gol Önerisi - Kırmızı Çerçeveli */}
+                                {toplamGolOnerisi && (
+                                    <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-red-400 font-bold text-xs sm:text-sm">Toplam Gol Önerisi</span>
+                                            <span className="text-lg sm:text-xl font-black text-white">
+                                                {toplamGolOnerisi.label}
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-[#222] rounded-full h-1.5">
+                                            <div className="h-1.5 rounded-full bg-red-500" style={{ width: `${toplamGolOnerisi.percentage}%` }} />
                                         </div>
                                     </div>
                                 )}
