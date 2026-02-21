@@ -628,34 +628,14 @@ export default function YapayZeka() {
                     {/* İY/MS Önerisi - Kırmızı Çerçeveli Kutu (Diğer tercihler arasında) */}
 
                     {/* Bahis Türü Önerileri */}
-                    {(recommendations.length > 0 || iymsRecommendation || toplamGolOnerisi) && (
+                    {(recommendations.length > 0 || toplamGolOnerisi) && (
                         <div className="bg-[#404040] p-3 sm:p-4 rounded-lg border-2 border-[#FDB913] shadow-[0_0_15px_rgba(253,185,19,0.3)]">
                             <div className="flex items-center gap-2 mb-3">
                                 <Zap className="text-[#FDB913]" size={20} />
                                 <h2 className="text-base sm:text-lg font-bold text-[#FDB913]">Önerilen Bahis Türleri</h2>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                                {/* Önerilen İY/MS - Kırmızı Çerçeveli */}
-                                {iymsRecommendation && (
-                                    <div
-                                        className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all"
-                                    >
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="text-red-400 font-bold text-xs sm:text-sm">Önerilen İY/MS</span>
-                                            <span className="text-2xl sm:text-3xl font-black text-white">
-                                                {iymsRecommendation.iyms}
-                                            </span>
-                                        </div>
-                                        {iymsRecommendation.showPercentage && (
-                                            <div className="w-full bg-[#222] rounded-full h-1.5">
-                                                <div
-                                                    className="h-1.5 rounded-full bg-red-500"
-                                                    style={{ width: `${iymsRecommendation.percentage}%` }}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+
 
                                 {/* İlk Yarı KG Var - Kırmızı Çerçeveli (eğer %50+ ise göster) */}
                                 {recommendations.find(r => r.market === 'İlk Yarı KG Var') && (
