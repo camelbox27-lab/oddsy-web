@@ -141,6 +141,12 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
+    // ===== ANALİTİKLER (Menü Ziyaret Takibi) =====
+    match /analytics/{docId} {
+      allow read: if isAdmin();
+      allow write: if isSignedIn();
+    }
+
     // ===== GÜVENLİK: TÜM DİĞER ERİŞİMLER KAPALI =====
     match /{document=**} {
       allow read, write: if false;

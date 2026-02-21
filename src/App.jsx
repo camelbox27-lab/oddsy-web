@@ -16,6 +16,7 @@ import {
     doc,
     getDoc,
     getDocs,
+    increment,
     onSnapshot,
     query,
     where,
@@ -2064,57 +2065,66 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
     );
 }
 
+const ROUTE_LABELS = {
+    'yapay-zeka-analizleri': { label: 'Yapay Zeka Analiz Botu', icon: '🤖' },
+    'manuel-analiz':         { label: 'Manuel Analiz Yap', icon: '✏️' },
+    'ilk-yari-gol':          { label: 'İlk Yarı Gol Listesi', icon: '⚽' },
+    'coupons':               { label: 'Günün Kuponları', icon: '🎫' },
+    'kart-analizi':          { label: 'Kart Analiz Botu', icon: '🟨' },
+    'korner-analizi':        { label: 'Korner Analiz Botu', icon: '🚩' },
+    'gunun-tercihleri':      { label: 'Günün Tercihleri', icon: '⭐' },
+    'gunun-surprizleri':     { label: 'Sürprizler', icon: '💥' },
+    'iy-ms-tahminleri':      { label: 'İY/MS Tahminleri', icon: '🔄' },
+    'category':              { label: 'Editörün Seçimi', icon: '✍️' },
+    'performance-summary':   { label: 'Tahmin Sonuçları', icon: '📊' },
+    'abonelik':              { label: 'Abonelik', icon: '💳' },
+    'profile':               { label: 'Profil', icon: '👤' },
+    'dropping-odds':         { label: 'Dropping Odds', icon: '📉' },
+};
+
 function AdminDashboard({ onBack, userData }) {
-    const [stats, setStats] = useState({
-        totalUsers: 0,
-        onlineUsers: 0,
-        totalPredictions: 0,
-        totalCoupons: 0
-    });
-    const [menuStats, setMenuStats] = useState({});
     const [users, setUsers] = useState([]);
+    const [onlineCount, setOnlineCount] = useState(0);
+    const [totalPredictions, setTotalPredictions] = useState(0);
+    const [totalCoupons, setTotalCoupons] = useState(0);
+    const [menuVisits, setMenuVisits] = useState({});
     const [loading, setLoading] = useState(true);
 
+    // Kullanıcılar: canlı onSnapshot (çevrimiçi sayısı için)
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [uSnap, pSnap, cSnap] = await Promise.all([
-                    getDocs(collection(db, 'users')),
-                    getDocs(collection(db, 'predictions')),
-                    getDocs(collection(db, 'coupons'))
-                ]);
+        const unsub = onSnapshot(collection(db, 'users'), (snap) => {
+            const uData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            setUsers(uData);
+            const now = Date.now();
+            const online = uData.filter(u =>
+                u.lastActive && (now - (u.lastActive?.toMillis?.() ?? 0) < 300000)
+            ).length;
+            setOnlineCount(online);
+            setLoading(false);
+        }, (err) => {
+            console.error('Kullanıcı veri hatası:', err);
+            setLoading(false);
+        });
+        return () => unsub();
+    }, []);
 
-                const uData = uSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                setUsers(uData);
+    // Menü analitikleri: canlı onSnapshot
+    useEffect(() => {
+        const unsub = onSnapshot(doc(db, 'analytics', 'menuStats'), (snap) => {
+            if (snap.exists()) setMenuVisits(snap.data());
+        });
+        return () => unsub();
+    }, []);
 
-                const mStats = {};
-                pSnap.docs.forEach(d => {
-                    const p = d.data();
-                    const key = p.categoryKey || 'other';
-                    if (!mStats[key]) mStats[key] = { total: 0, won: 0, lost: 0, pending: 0 };
-                    mStats[key].total++;
-                    if (p.status === 'won') mStats[key].won++;
-                    else if (p.status === 'lost') mStats[key].lost++;
-                    else mStats[key].pending++;
-                });
-
-                setMenuStats(mStats);
-                setStats({
-                    totalUsers: uData.length,
-                    onlineUsers: uData.filter(u =>
-                        u.lastActive &&
-                        (Date.now() - u.lastActive?.toMillis?.() < 300000)
-                    ).length,
-                    totalPredictions: pSnap.size,
-                    totalCoupons: cSnap.size
-                });
-                setLoading(false);
-            } catch (err) {
-                console.error('Veri çekme hatası:', err);
-                setLoading(false);
-            }
-        };
-        fetchData();
+    // Tahmin ve kupon sayıları: bir kez çek
+    useEffect(() => {
+        Promise.all([
+            getDocs(collection(db, 'predictions')),
+            getDocs(collection(db, 'coupons'))
+        ]).then(([pSnap, cSnap]) => {
+            setTotalPredictions(pSnap.size);
+            setTotalCoupons(cSnap.size);
+        }).catch(err => console.error('Sayım hatası:', err));
     }, []);
 
     const handlePasswordReset = async (email) => {
@@ -2211,6 +2221,16 @@ function AdminDashboard({ onBack, userData }) {
         </div>
     );
 
+    // Menü ziyaretlerini sırala
+    const sortedVisits = Object.entries(menuVisits)
+        .map(([route, count]) => ({
+            route,
+            count: typeof count === 'number' ? count : 0,
+            ...(ROUTE_LABELS[route] || { label: route, icon: '📌' })
+        }))
+        .sort((a, b) => b.count - a.count);
+    const maxVisit = sortedVisits[0]?.count || 1;
+
     return (
         <div style={{
             padding: '20px',
@@ -2222,161 +2242,79 @@ function AdminDashboard({ onBack, userData }) {
                 Geri
             </button>
 
-            <h1 style={{
-                color: 'var(--gold)',
-                marginTop: 20,
-                marginBottom: 30
-            }}>
+            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 30 }}>
                 Admin Dashboard
             </h1>
 
             {/* İSTATİSTİKLER */}
             <div className="admin-dashboard-stats" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                 gap: 15,
                 marginBottom: 30
             }}>
-                <div style={{
-                    background: 'var(--bg-card)',
-                    padding: 20,
-                    borderRadius: 10,
-                    textAlign: 'center'
-                }}>
-                    <div style={{
-                        fontSize: 32,
-                        color: 'var(--gold)',
-                        fontWeight: 'bold'
-                    }}>
-                        {stats.totalUsers}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>
-                        Toplam Üye
-                    </div>
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 32, color: 'var(--gold)', fontWeight: 'bold' }}>{users.length}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>Toplam Üye</div>
                 </div>
-
-                <div style={{
-                    background: 'var(--bg-card)',
-                    padding: 20,
-                    borderRadius: 10,
-                    textAlign: 'center'
-                }}>
-                    <div style={{
-                        fontSize: 32,
-                        color: '#4ade80',
-                        fontWeight: 'bold'
-                    }}>
-                        {stats.onlineUsers}
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 8px #4ade80', animation: 'pulse 2s infinite' }} />
+                        <span style={{ fontSize: 32, color: '#4ade80', fontWeight: 'bold' }}>{onlineCount}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>
-                        Çevrimiçi
-                    </div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>Çevrimiçi</div>
                 </div>
-
-                <div style={{
-                    background: 'var(--bg-card)',
-                    padding: 20,
-                    borderRadius: 10,
-                    textAlign: 'center'
-                }}>
-                    <div style={{
-                        fontSize: 32,
-                        color: '#10B981',
-                        fontWeight: 'bold'
-                    }}>
-                        {stats.totalPredictions}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>
-                        Toplam Tahmin
-                    </div>
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 32, color: '#10B981', fontWeight: 'bold' }}>{totalPredictions}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>Toplam Tahmin</div>
                 </div>
-
-                <div style={{
-                    background: 'var(--bg-card)',
-                    padding: 20,
-                    borderRadius: 10,
-                    textAlign: 'center'
-                }}>
-                    <div style={{
-                        fontSize: 32,
-                        color: '#f87171',
-                        fontWeight: 'bold'
-                    }}>
-                        {stats.totalCoupons}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>
-                        Toplam Kupon
-                    </div>
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 32, color: '#f87171', fontWeight: 'bold' }}>{totalCoupons}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>Toplam Kupon</div>
                 </div>
             </div>
 
-            {/* KATEGORİ İSTATİSTİKLERİ */}
-            <div style={{
-                background: 'var(--bg-card)',
-                padding: 20,
-                borderRadius: 10,
-                marginBottom: 30
-            }}>
-                <h2 style={{
-                    color: 'var(--gold)',
-                    fontSize: 18,
-                    marginBottom: 20
-                }}>
-                    Kategori İstatistikleri
-                </h2>
-                <div className="admin-category-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                    gap: 15
-                }}>
-                    {MENU_ITEMS.map(item => {
-                        const s = menuStats[item.key] || {
-                            total: 0,
-                            won: 0,
-                            lost: 0
-                        };
-                        const winRate = s.total > 0
-                            ? ((s.won / (s.won + s.lost || 1)) * 100).toFixed(1)
-                            : 0;
-
-                        return (
-                            <div
-                                key={item.id}
-                                style={{
-                                    border: '1px solid #444',
-                                    padding: 15,
-                                    borderRadius: 10
-                                }}
-                            >
-                                <div style={{
-                                    color: item.color,
-                                    fontWeight: 'bold',
-                                    marginBottom: 10,
-                                    fontSize: 12
-                                }}>
-                                    {item.title}
+            {/* MENÜ ZİYARET SIRALAMALARI */}
+            <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, marginBottom: 30 }}>
+                <h2 style={{ color: 'var(--gold)', fontSize: 18, marginBottom: 6 }}>Menü Ziyaret Sıralaması</h2>
+                <p style={{ color: '#666', fontSize: 12, marginBottom: 20, margin: '0 0 20px 0' }}>
+                    Kullanıcıların her menüye toplam kaç kez girdiği (canlı)
+                </p>
+                {sortedVisits.length === 0 ? (
+                    <div style={{ color: '#666', fontSize: 13, textAlign: 'center', padding: 20 }}>
+                        Henüz ziyaret verisi yok. Kullanıcılar menülere girdikçe burada görünecek.
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {sortedVisits.map((item, idx) => (
+                            <div key={item.route} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <span style={{ color: '#555', fontSize: 12, width: 20, textAlign: 'right', flexShrink: 0 }}>
+                                    {idx + 1}.
+                                </span>
+                                <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                                <span style={{ fontSize: 13, color: '#ddd', width: 180, flexShrink: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {item.label}
+                                </span>
+                                <div style={{ flex: 1, background: 'rgba(255,255,255,0.06)', borderRadius: 6, height: 18, overflow: 'hidden', minWidth: 60 }}>
+                                    <div style={{
+                                        width: `${Math.round((item.count / maxVisit) * 100)}%`,
+                                        height: '100%',
+                                        background: idx === 0
+                                            ? 'linear-gradient(90deg, #FDB913, #f59e0b)'
+                                            : idx === 1
+                                                ? 'linear-gradient(90deg, #60a5fa, #3b82f6)'
+                                                : 'linear-gradient(90deg, #4ade80, #22c55e)',
+                                        borderRadius: 6,
+                                        transition: 'width 0.5s ease'
+                                    }} />
                                 </div>
-                                <div style={{ fontSize: 11, color: '#aaa' }}>
-                                    Toplam: {s.total}
-                                </div>
-                                <div style={{ fontSize: 11, color: '#4ade80' }}>
-                                    Kazanan: {s.won}
-                                </div>
-                                <div style={{ fontSize: 11, color: '#f87171' }}>
-                                    Kaybeden: {s.lost}
-                                </div>
-                                <div style={{
-                                    fontSize: 14,
-                                    color: 'var(--gold)',
-                                    fontWeight: 'bold',
-                                    marginTop: 5
-                                }}>
-                                    Başarı: %{winRate}
-                                </div>
+                                <span style={{ fontSize: 13, color: 'var(--gold)', fontWeight: 'bold', width: 50, textAlign: 'right', flexShrink: 0 }}>
+                                    {item.count.toLocaleString()}
+                                </span>
                             </div>
-                        );
-                    })}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* KULLANICI YÖNETİMİ */}
@@ -2876,7 +2814,6 @@ function PerformanceSummaryScreen({ onBack }) {
                     { key: 6, label: 'Günün Sürprizleri' },
                     { key: 7, label: 'İY/MS Tahminleri' },
                     { key: 8, label: 'Editörün Seçimi' },
-                    { key: 2, label: 'Tahminciler' }
                 ];
 
                 const predictions = predSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -4115,6 +4052,19 @@ export default function App() {
         return () => window.removeEventListener('popstate', handlePopState);
     }, []);
 
+    // Çevrimiçi kullanıcı takibi: lastActive'i her 2 dakikada güncelle
+    useEffect(() => {
+        if (!user) return;
+        const updateActive = () => {
+            try {
+                updateDoc(doc(db, 'users', user.uid), { lastActive: serverTimestamp() });
+            } catch (_) {}
+        };
+        updateActive();
+        const interval = setInterval(updateActive, 2 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, [user]);
+
     const navigate = useCallback((r, p = {}, push = true) => {
         if (r === 'about_modal') {
             setLegalType('about');
@@ -4128,7 +4078,14 @@ export default function App() {
         if (push !== false) {
             window.history.pushState({ route: r, params: p }, '');
         }
-    }, []);
+
+        // Menü ziyaret analitik takibi
+        if (user && r && !['auth', 'admin', 'home'].includes(r)) {
+            try {
+                setDoc(doc(db, 'analytics', 'menuStats'), { [r]: increment(1) }, { merge: true });
+            } catch (_) {}
+        }
+    }, [user]);
     const showAlert = useCallback((m, t) => setAlert({ message: m, type: t }), []);
 
     if (loading && route !== 'auth') return <div className="auth-loading-screen"><div className="spinner" /><h3>Oddsy Yükleniyor...</h3></div>;
