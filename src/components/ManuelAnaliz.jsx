@@ -155,16 +155,43 @@ export default function ManuelAnaliz() {
         const tgMax = Math.max(tg_0_1, tg_2_3, tg_4_5, tg_6_plus);
         let toplamGolOnerisi = null;
         const totalMatches = matches.length;
-        if (tgMax > 0 && totalMatches > 0) {
-            let label = '';
-            if (tgMax === tg_0_1) label = 'Toplam 0-1 Gol';
-            else if (tgMax === tg_2_3) label = 'Toplam 2-3 Gol';
-            else if (tgMax === tg_4_5) label = 'Toplam 4-5 Gol';
-            else if (tgMax === tg_6_plus) label = 'Toplam 6+ Gol';
-            const tgPct = Math.round((tgMax / totalMatches) * 100);
-            if (tgPct >= 60) {
-                toplamGolOnerisi = { label, count: tgMax, percentage: tgPct };
+        if (totalMatches > 0) {
+            const araliklar = [
+                { aralik: "0-1 Gol", count: tg_0_1 },
+                { aralik: "2-3 Gol", count: tg_2_3 },
+                { aralik: "4-5 Gol", count: tg_4_5 },
+                { aralik: "6+ Gol", count: tg_6_plus }
+            ].map(a => ({
+                ...a,
+                yuzde: Math.round((a.count / totalMatches) * 100)
+            })).sort((a, b) => b.yuzde - a.yuzde);
+
+            const birinci = araliklar[0];
+            const ikinci = araliklar[1];
+            let guc, oneriText;
+
+            if (birinci.yuzde >= 50) {
+                guc = "guclu";
+                oneriText = `Toplam ${birinci.aralik}`;
+            } else if (birinci.yuzde >= 35) {
+                guc = "normal";
+                oneriText = `Toplam ${birinci.aralik}`;
+            } else if (birinci.yuzde - ikinci.yuzde <= 5) {
+                guc = "belirsiz";
+                oneriText = `Toplam ${birinci.aralik} / ${ikinci.aralik}`;
+            } else {
+                guc = "normal";
+                oneriText = `Toplam ${birinci.aralik}`;
             }
+
+            toplamGolOnerisi = {
+                oneri: oneriText,
+                label: oneriText,
+                yuzde: birinci.yuzde,
+                percentage: birinci.yuzde,
+                guc: guc,
+                detay: araliklar
+            };
         }
 
         // Alt/Üst çakismasını önle: sadece biri gösterilecek
@@ -469,17 +496,40 @@ export default function ManuelAnaliz() {
                                     </div>
                                 )}
 
-                                {/* Toplam Gol Önerisi - Kırmızı Çerçeveli */}
+                                {/* Toplam Gol Önerisi - Detaylı Görünüm */}
                                 {toplamGolOnerisi && (
                                     <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all">
-                                        <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center justify-between mb-2">
                                             <span className="text-red-400 font-bold text-xs sm:text-sm">Toplam Gol Önerisi</span>
-                                            <span className="text-lg sm:text-xl font-black text-white">
-                                                {toplamGolOnerisi.label}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-lg sm:text-xl font-black text-white">{toplamGolOnerisi.oneri}</span>
+                                                {toplamGolOnerisi.guc === 'guclu' && <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded">Güçlü</span>}
+                                                <span className="text-sm font-bold text-gray-300">%{toplamGolOnerisi.yuzde}</span>
+                                            </div>
                                         </div>
-                                        <div className="w-full bg-[#222] rounded-full h-1.5">
-                                            <div className="h-1.5 rounded-full bg-red-500" style={{ width: `${toplamGolOnerisi.percentage}%` }} />
+
+                                        <div className="w-full bg-[#222] rounded-full h-2 mb-3">
+                                            <div className={`h-2 rounded-full ${toplamGolOnerisi.guc === 'guclu' ? 'bg-red-500' : 'bg-orange-500'}`} style={{ width: `${toplamGolOnerisi.yuzde}%` }} />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2 pt-2 border-t border-gray-700">
+                                            {toplamGolOnerisi.detay.sort((a, b) => {
+                                                const order = { "0-1 Gol": 1, "2-3 Gol": 2, "4-5 Gol": 3, "6+ Gol": 4 };
+                                                return order[a.aralik] - order[b.aralik];
+                                            }).map((item, idx) => (
+                                                <div key={idx} className="flex flex-col gap-1">
+                                                    <div className="flex justify-between text-[10px] sm:text-xs text-gray-400">
+                                                        <span>{item.aralik}</span>
+                                                        <span className={item.yuzde >= 35 ? "text-white font-bold" : ""}>%{item.yuzde}</span>
+                                                    </div>
+                                                    <div className="w-full bg-[#222] rounded-full h-1">
+                                                        <div
+                                                            className={`h-1 rounded-full ${item.yuzde >= 50 ? 'bg-red-500' : item.yuzde >= 35 ? 'bg-orange-400' : 'bg-gray-600'}`}
+                                                            style={{ width: `${item.yuzde}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
