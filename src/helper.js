@@ -1457,7 +1457,7 @@ export const handleLogoError = async (e) => {
         if (resp.ok) {
             const data = await resp.json();
             if (data.teams && data.teams[0] && data.teams[0].strBadge) {
-                const logoUrl = data.teams[0].strBadge + '/preview';
+                const logoUrl = data.teams[0].strBadge;
                 _logoCache[teamName] = logoUrl;
                 if (img.parentNode) img.src = logoUrl;
                 return;
