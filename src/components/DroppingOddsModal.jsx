@@ -14,17 +14,10 @@ const DroppingOddsModal = ({ onClose }) => {
     const fetchDroppingOdds = async () => {
         setLoading(true);
         try {
-            // ✅ FIREBASE'DEN ÇEK
-            const q = query(
-                collection(db, 'predictions'),
-                where('categoryKey', '==', 'oran-dusen-maclar')
-            );
-
-            const snapshot = await getDocs(q);
-            let data = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const ts = new Date().getTime();
+            const response = await fetch(`https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/data/droppingOdds.json?t=${ts}`);
+            if (!response.ok) throw new Error('Data fetch failed');
+            let data = await response.json();
 
             // ✅ SAATE GÖRE SIRALA
             data = data.sort((a, b) => {
@@ -39,6 +32,21 @@ const DroppingOddsModal = ({ onClose }) => {
                 }
                 return (minA || 0) - (minB || 0);
             });
+
+            // Map data items to match standard fields
+            data = data.map((d, index) => ({
+                id: `dropping_json_${index}`,
+                homeTeam: d.homeTeam || d.home_team || d.Ev || '',
+                awayTeam: d.awayTeam || d.away_team || d.Dep || '',
+                saat: d.saat || d.time,
+                category: d.category || d.league || d.Lig || '',
+                tournament: d.tournament || '',
+                dropPercentage: d.dropPercentage || d.drop_percentage || d['Düşüş Yüzdesi'] || 0,
+                droppingChoice: d.droppingChoice || d.choice_name || d.Tercih || '',
+                currentOdds: d.currentOdds || d.Güncel || { '1': d.ms1_guncel, 'X': d.ms0_guncel, '2': d.ms2_guncel },
+                initialOdds: d.initialOdds || d.İlk || { '1': d.ms1_ilk, 'X': d.ms0_ilk, '2': d.ms2_ilk },
+                ...d
+            }));
 
             setMatches(data);
 

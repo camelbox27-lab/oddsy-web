@@ -26,8 +26,10 @@ function Kart({ onBack }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const ktDoc = await getDoc(doc(db, 'kartKornerData', 'kart'));
-                if (ktDoc.exists()) setKartData(ktDoc.data().data || ktDoc.data());
+                // Kart verileri GitHub üzerinden çekiliyor
+                const res = await fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/data/kart.json?t=' + Date.now());
+                const data = await res.json();
+                if (data) setKartData(data.data || data);
                 setLoading(false);
             } catch (e) {
                 console.error(e);

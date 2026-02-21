@@ -455,8 +455,17 @@ export default function YapayZeka() {
             // İY/MS önerisi hesapla
             const iymsRecommendation = analyzeIYMS(analysisMatches.slice(0, 20));
 
+            let displayMatches = analysisMatches.slice(0, 20);
+            if (iymsRecommendation && iymsRecommendation.iyms) {
+                // Ensure the displayed matches actually end with the recommended HT/FT result
+                const matchingIYMS = analysisMatches.filter(m => formatIYMS(m['İY/MS']) === iymsRecommendation.iyms);
+                if (matchingIYMS.length > 0) {
+                    displayMatches = matchingIYMS.slice(0, 20);
+                }
+            }
+
             // Gösterilecek 20 maç
-            const topResults = analysisMatches.slice(0, 20).map(match => ({
+            const topResults = displayMatches.map(match => ({
                 evSahibi: match['Ev Sahibi'] || '-',
                 deplasman: match['Deplasman'] || '-',
                 ilkYari: formatScore(match['İlk Yarı Skor']),

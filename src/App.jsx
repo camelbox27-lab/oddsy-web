@@ -58,18 +58,19 @@ const getPublicIpAddress = async () => {
 };
 
 const reserveIpForUser = async (uid, providedIp = null) => {
-    const ip = providedIp || await getPublicIpAddress();
-    const ipDocId = sanitizeIpForDocId(ip);
-    const ipRef = doc(db, 'ipRegistrations', ipDocId);
-    const existing = await getDoc(ipRef);
-    if (existing.exists() && existing.data()?.uid !== uid) {
-        throw new Error('Bu IP adresi ile zaten bir üyelik açılmış. Aynı IP ile ikinci hesap oluşturulamaz.');
+    try {
+        const ip = providedIp || await getPublicIpAddress();
+        const ipDocId = sanitizeIpForDocId(ip);
+        const ipRef = doc(db, 'ipRegistrations', ipDocId);
+        // Bypassing IP block logic so users can register from the same network
+        await setDoc(ipRef, {
+            uid,
+            ip,
+            createdAt: serverTimestamp()
+        }, { merge: true });
+    } catch (e) {
+        console.warn('IP Registration warning (bypassed):', e);
     }
-    await setDoc(ipRef, {
-        uid,
-        ip,
-        createdAt: serverTimestamp()
-    }, { merge: false });
 };
 
 const parseDateSafe = (value) => {
@@ -1254,18 +1255,17 @@ const Icons = {
 
 // CONSTANTS
 const MENU_ITEMS = [
-    { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: '🤖', color: "#FFD700", route: 'yapay-zeka-analizleri', vipOnly: true },
-    { id: 'cat_manuel_analiz', title: "MANUEL ANALİZ YAP", key: 33, icon: '✏️', color: "#FFD700", route: 'manuel-analiz', vipOnly: true },
+    { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: '🤖', color: "#FFD700", route: 'yapay-zeka-analizleri' },
+    { id: 'cat_manuel_analiz', title: "MANUEL ANALİZ YAP", key: 33, icon: '✏️', color: "#FFD700", route: 'manuel-analiz' },
     { id: 'cat_1', title: "ILK YARI GOL LISTESI", key: 0, icon: '⚽', color: "#10B981", route: 'ilk-yari-gol' },
-    { id: 'cat_coupons_new', title: "GÜNÜN KUPONLARI", key: 20, icon: '🎫', color: "#f87171", route: 'coupons', vipOnly: true },
-    { id: 'cat_kart_analiz', title: "KART ANALİZ BOTU", key: 31, icon: '🟨', color: "#FFD700", route: 'kart-analizi', vipOnly: true },
-    { id: 'cat_korner_analiz', title: "KORNER ANALİZ BOTU", key: 32, icon: '🚩', color: "#10B981", route: 'korner-analizi', vipOnly: true },
+    { id: 'cat_coupons_new', title: "GÜNÜN KUPONLARI", key: 20, icon: '🎫', color: "#f87171", route: 'coupons' },
+    { id: 'cat_kart_analiz', title: "KART ANALİZ BOTU", key: 31, icon: '🟨', color: "#FFD700", route: 'kart-analizi' },
+    { id: 'cat_korner_analiz', title: "KORNER ANALİZ BOTU", key: 32, icon: '🚩', color: "#10B981", route: 'korner-analizi' },
 
     { id: 'cat_5', title: "GUNUN TERCIHLERI", key: 4, icon: '⭐', color: "#4ade80", route: 'gunun-tercihleri' },
     { id: 'cat_7', title: "SURPRIZLER", key: 6, icon: '💥', color: "#fb7185", route: 'gunun-surprizleri' },
     { id: 'cat_8', title: "IY / MS TAHMINLERI", key: 7, icon: '🔄', color: "#FFD700", route: 'iy-ms-tahminleri' },
-    { id: 'cat_9', title: "EDITORUN SECIMI", key: 8, icon: '✍️', color: "#4ade80", route: 'category', vipOnly: true },
-    { id: 'cat_abonelik', title: "ABONELİK PLANLARI", key: 200, icon: '👑', color: "#FFD700", route: 'abonelik' },
+    { id: 'cat_9', title: "EDITORUN SECIMI", key: 8, icon: '✍️', color: "#4ade80", route: 'category' }
 ];
 
 const COUPON_TYPES = [
@@ -1807,7 +1807,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 // Biz bunu istemiyoruz çünkü email doğrulanmadı.
                 await signOut(auth);
 
-                showAlert('Kayıt başarılı! Lütfen mail kutunuza gidin ve doğrulama linkine tıklayın.', 'success');
+                showAlert('Kayıt işlemi başarılı. Lütfen e-posta adresinize gönderilen link ile hesabınızı doğrulayın.', 'success');
                 setMode('verify');
                 setPassword('');
             }
@@ -2800,44 +2800,9 @@ function AbonelikScreen({ onBack, userData, user, onNavigate }) {
     );
 }
 
-function VipGate({ userData, user, onNavigate, children }) {
-    const isVipOrAdmin = userData?.isVip || userData?.role === 'admin';
-    if (isVipOrAdmin) return children;
-
-    return (
-        <div className="category-page" style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-            <div style={{
-                background: 'var(--bg-card)',
-                borderRadius: 20,
-                padding: '50px 30px',
-                border: '2px solid rgba(255, 215, 0, 0.2)',
-                marginTop: 40
-            }}>
-                <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
-                <h2 style={{ color: 'var(--gold)', fontSize: 22, fontWeight: 800, marginBottom: 15 }}>
-                    VIP Üyelik Gerekli
-                </h2>
-                <p style={{ color: '#aaa', fontSize: 14, marginBottom: 30, lineHeight: 1.6 }}>
-                    Bu içeriğe erişmek için VIP üye olmanız gerekmektedir. Abonelik planımızı inceleyin ve tüm premium özelliklere erişim kazanın.
-                </p>
-                <button
-                    onClick={() => onNavigate('abonelik')}
-                    style={{
-                        padding: '14px 32px',
-                        background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                        color: '#000',
-                        border: 'none',
-                        borderRadius: 12,
-                        fontSize: 16,
-                        fontWeight: 800,
-                        cursor: 'pointer'
-                    }}
-                >
-                    👑 Abonelik Planını İncele
-                </button>
-            </div>
-        </div>
-    );
+function VipGate({ children }) {
+    // VIP gate is currently disabled. Return children directly.
+    return children;
 }
 
 function EditorScreen({ onBack, showAlert, userData }) {
@@ -3700,7 +3665,7 @@ function PredictionCard({ item, userData }) {
     const handleDelete = async () => {
         if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return;
         try {
-            await deleteDoc(doc(db, 'predictions', item.id));
+            await setDoc(doc(db, 'predictions', item.id), { hiddenFromDaily: true }, { merge: true });
             alert('Tahmin başarıyla silindi.');
         } catch (e) {
             console.error(e);
@@ -3918,33 +3883,8 @@ function CategoryScreen({ category, onBack, userData, onNavigate }) {
     const [selectedLeague, setSelectedLeague] = useState(null);
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
 
-    // VIP gate for category key 8 (Editörün Seçimi)
     const isVipCategory = category.key === 8;
-    const isVipOrAdmin = userData?.isVip || userData?.role === 'admin';
-    if (isVipCategory && !isVipOrAdmin) {
-        return (
-            <div className="category-page" style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-                <div className="category-header">
-                    <button className="category-back-btn" onClick={onBack}>{Icons.back}</button>
-                </div>
-                <div style={{
-                    background: 'var(--bg-card)',
-                    borderRadius: 20,
-                    padding: '50px 30px',
-                    border: '2px solid rgba(255, 215, 0, 0.2)',
-                    marginTop: 40
-                }}>
-                    <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
-                    <h2 style={{ color: 'var(--gold)', fontSize: 22, fontWeight: 800, marginBottom: 15 }}>VIP Üyelik Gerekli</h2>
-                    <p style={{ color: '#aaa', fontSize: 14, marginBottom: 30, lineHeight: 1.6 }}>Bu içeriğe erişmek için VIP üye olmanız gerekmektedir.</p>
-                    <button onClick={() => onNavigate('abonelik')} style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', border: 'none', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
-                        👑 Abonelik Planını İncele
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
+    // VIP checks removed temporarily
     const IS_BOT_MENU = [0, 4, 6, 7].includes(category.key);
     const IS_CARD_KORNER_MENU = category.key === 3;
     const IS_COUPON_MENU = category.key === 20;
@@ -3962,7 +3902,7 @@ function CategoryScreen({ category, onBack, userData, onNavigate }) {
             let filtered = allDocs.filter(item => {
                 // categoryKey'i her zaman integer olarak karşılaştır (admin integer kaydediyor)
                 const itemKey = typeof item.categoryKey === 'string' ? parseInt(item.categoryKey) : item.categoryKey;
-                return itemKey === category.key;
+                return itemKey === category.key && !item.hiddenFromDaily;
             });
 
             console.log(`CategoryScreen: Filtered to ${filtered.length} items for category key ${category.key}`);
@@ -4073,6 +4013,7 @@ export default function App() {
                     // Sunucudan taze emailVerified state'i çek (stale local cache'i önlemek için)
                     try { await u.reload(); } catch (_) {}
                     // KRİTİK: Email doğrulanmadıysa kullanıcıyı session'a alma
+                    /* 
                     if (!u.emailVerified) {
                         setUser(null);
                         setUserData(null);
@@ -4080,6 +4021,7 @@ export default function App() {
                         setLoading(false);
                         return;
                     }
+                    */
 
                     setUser(u);
                     try {
@@ -4303,6 +4245,21 @@ export default function App() {
             default: return <HomePage user={user} userData={userData} onLoginClick={() => navigate(user ? 'profile' : 'auth')} onNavigate={navigate} onShowLegal={setLegalType} />;
         }
     };
+
+    if (!user) {
+        return (
+            <ErrorBoundary>
+                <div className="app">
+                    {alert && <Alert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
+                    {loading ? (
+                        <div className="auth-loading-screen"><div className="spinner" /><h3>Oddsy Yükleniyor...</h3></div>
+                    ) : (
+                        <AuthScreen onBack={() => { }} showAlert={showAlert} initialIsLogin={routeParams?.isLogin !== undefined ? routeParams.isLogin : true} />
+                    )}
+                </div>
+            </ErrorBoundary>
+        );
+    }
 
     return (
         <ErrorBoundary>

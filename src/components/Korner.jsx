@@ -26,9 +26,10 @@ function Korner({ onBack }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Korner verileri genellikle 'korner' dökümanında
-                const ktDoc = await getDoc(doc(db, 'kartKornerData', 'korner'));
-                if (ktDoc.exists()) setKornerData(ktDoc.data().data || ktDoc.data());
+                // Korner verileri GitHub üzerinden çekiliyor
+                const res = await fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/data/korner.json?t=' + Date.now());
+                const data = await res.json();
+                if (data) setKornerData(data.data || data);
                 setLoading(false);
             } catch (e) {
                 console.error(e);

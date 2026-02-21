@@ -297,8 +297,16 @@ export default function ManuelAnaliz() {
 
             const iymsRecommendation = analyzeIYMS(analysisMatches.slice(0, 10));
 
+            let displayMatches = analysisMatches.slice(0, 10);
+            if (iymsRecommendation && iymsRecommendation.iyms) {
+                const matchingIYMS = analysisMatches.filter(m => formatIYMS(m['İY/MS']) === iymsRecommendation.iyms);
+                if (matchingIYMS.length > 0) {
+                    displayMatches = matchingIYMS.slice(0, 10);
+                }
+            }
+
             // Manuel analizde 10 maç göster
-            const topResults = analysisMatches.slice(0, 10).map(match => ({
+            const topResults = displayMatches.map(match => ({
                 evSahibi: match['Ev Sahibi'] || '-',
                 deplasman: match['Deplasman'] || '-',
                 ilkYari: formatScore(match['İlk Yarı Skor']),

@@ -51,7 +51,8 @@ function IYMSTahminleri({ userData }) {
     useEffect(() => {
         const q = query(collection(db, 'predictions'), where('categoryKey', '==', 7));
         const unsub = onSnapshot(q, (snap) => {
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data(), source: 'admin' }));
+            let list = snap.docs.map(d => ({ id: d.id, ...d.data(), source: 'admin' }));
+            list = list.filter(item => !item.hiddenFromDaily);
             list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
             setFirestoreMatches(list);
             setFsLoading(false);
@@ -264,7 +265,7 @@ function IYMSTahminleri({ userData }) {
                                 {/* Admin: Kazandı/Kaybetti/Sil */}
                                 {isAdmin && (
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px' }}>
-                                        <button className="admin-btn delete" onClick={async () => { if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return; try { await hideJsonItem(match); setHiddenKeys(prev => new Set([...prev, buildMatchKey(match)])); if (match.source === 'admin') { await deleteDoc(doc(db, 'predictions', match.id)); setFirestoreMatches(prev => prev.filter(m => m.id !== match.id)); } window.alert('Tahmin başarıyla silindi.'); } catch (err) { console.error('Silme hatası:', err); window.alert('Silme hatası: ' + err.message); } }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
+                                        <button className="admin-btn delete" onClick={async () => { if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return; try { await hideJsonItem(match); setHiddenKeys(prev => new Set([...prev, buildMatchKey(match)])); if (match.source === 'admin') { await setDoc(doc(db, 'predictions', match.id), { hiddenFromDaily: true }, { merge: true }); setFirestoreMatches(prev => prev.filter(m => m.id !== match.id)); } window.alert('Tahmin başarıyla silindi.'); } catch (err) { console.error('Silme hatası:', err); window.alert('Silme hatası: ' + err.message); } }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
                                         {match.analysis && (
                                             <button className="admin-btn" onClick={() => setShowAnalysis(showAnalysis === match.id ? null : match.id)} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px', background: showAnalysis === match.id ? '#FDB913' : '#6366f1', color: '#fff' }}>YORUM {showAnalysis === match.id ? 'KAPAT' : 'GÖSTER'}</button>
                                         )}
