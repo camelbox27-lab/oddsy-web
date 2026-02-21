@@ -230,7 +230,6 @@ export default function YapayZeka() {
             const msScore = match.macSonucu || match['Maç Sonucu Skor'] || '-';
             const iyScore = match.ilkYari || match['İlk Yarı Skor'] || '-';
 
-            // Skorları parse et
             const parseScore = (score) => {
                 if (!score || score === '-') return null;
                 const parts = String(score).split('-');
@@ -246,17 +245,12 @@ export default function YapayZeka() {
 
             if (!ms) return;
 
-            // Ev Sahibi 1.5 Üst (Ev sahibi 2+ gol)
             if (ms.home >= 2) marketStats['Ev Sahibi 1.5 Üst']++;
-
-            // Deplasman 1.5 Üst (Deplasman 2+ gol)
             if (ms.away >= 2) marketStats['Deplasman 1.5 Üst']++;
 
-            // MS 2.5 Üst/Alt
             if (ms.total >= 3) marketStats['MS 2.5 Üst']++;
             else marketStats['MS 2.5 Alt']++;
 
-            // MS 3.5 Üst
             if (ms.total >= 4) marketStats['MS 3.5 Üst']++;
 
             if (ms.total <= 1) tg_0_1++;
@@ -264,25 +258,19 @@ export default function YapayZeka() {
             else if (ms.total === 4 || ms.total === 5) tg_4_5++;
             else if (ms.total >= 6) tg_6_plus++;
 
-            // KG Var/Yok
             if (ms.home > 0 && ms.away > 0) marketStats['KG Var']++;
             else marketStats['KG Yok']++;
 
-            // MS 1/0/2
             if (ms.home > ms.away) marketStats['MS 1']++;
             else if (ms.home === ms.away) marketStats['MS 0']++;
             else marketStats['MS 2']++;
 
-            // İlk Yarı 1.5 Üst/Alt ve İlk Yarı KG Var
             if (iy) {
                 if (iy.total >= 2) marketStats['İlk Yarı 1.5 Üst']++;
-
-                // İlk Yarı KG Var (ilk yarıda her iki takım da gol atarsa)
                 if (iy.home > 0 && iy.away > 0) marketStats['İlk Yarı KG Var']++;
             }
         });
 
-        // Toplam Gol Önerisi - ayrı hesapla (%50 filtresinden bağımsız)
         const tgMax = Math.max(tg_0_1, tg_2_3, tg_4_5, tg_6_plus);
         let toplamGolOnerisi = null;
         const totalMatches = matches.length;
@@ -292,34 +280,66 @@ export default function YapayZeka() {
             else if (tgMax === tg_2_3) label = 'Toplam 2-3 Gol';
             else if (tgMax === tg_4_5) label = 'Toplam 4-5 Gol';
             else if (tgMax === tg_6_plus) label = 'Toplam 6+ Gol';
-            toplamGolOnerisi = { label, count: tgMax, percentage: Math.round((tgMax / totalMatches) * 100) };
+            const tgPct = Math.round((tgMax / totalMatches) * 100);
+            // Toplam gol önerisi de %60+ olmaya zorla
+            if (tgPct >= 60) {
+                toplamGolOnerisi = { label, count: tgMax, percentage: tgPct };
+            }
         }
 
-        // Yüzdelikleri hesapla ve %50+ olanları filtrele
+        // --- DÜZELTME 1: Alt/Üst çakismasını önle: bir pazarda sadece biri gösterilecek ---
+        // Önce ham yuzdeleri hesapla
+        const rawPercentages = {};
+        Object.entries(marketStats).forEach(([market, count]) => {
+            rawPercentages[market] = Math.round((count / totalMatches) * 100);
+        });
+
+        // Alt/Üst çiftlerinde sadece yüksek olanı tut
+        const altUstPairs = [
+            ['MS 2.5 Üst', 'MS 2.5 Alt'],
+            ['KG Var', 'KG Yok'],
+        ];
+        const suppressedMarkets = new Set();
+        altUstPairs.forEach(([a, b]) => {
+            const pA = rawPercentages[a] || 0;
+            const pB = rawPercentages[b] || 0;
+            // Hangisi düşükse onu bastır
+            if (pA >= pB) suppressedMarkets.add(b);
+            else suppressedMarkets.add(a);
+        });
+
+        // --- DÜZELTME 2 & 3: %60 altında olanı gösterme, bastırılmış olanları çıkar ---
+        const THRESHOLD = 60;
         const recommendations = Object.entries(marketStats)
+            .filter(([market]) => !suppressedMarkets.has(market))
             .map(([market, count]) => ({
                 market,
                 count,
                 percentage: Math.round((count / totalMatches) * 100)
             }))
-            .filter(item => item.percentage >= 50)
+            .filter(item => item.percentage >= THRESHOLD)
             .sort((a, b) => b.percentage - a.percentage);
 
         return { recommendations, toplamGolOnerisi };
     };
 
-    // İY/MS analiz fonksiyonu
+    // İY/MS analiz fonksiyonu - Sadece 1/0, 2/0, 1/2, 2/1
     const analyzeIYMS = (matches) => {
         if (!matches || matches.length === 0) return null;
 
+        const ALLOWED_IYMS = ['1/0', '2/0', '1/2', '2/1'];
         const iymsStats = {};
 
         matches.forEach(match => {
             const iyms = match.iyms || match['İY/MS'] || '-';
-            if (iyms && iyms !== '-') {
-                iymsStats[iyms] = (iymsStats[iyms] || 0) + 1;
+            const formatted = typeof iyms === 'string' ? iyms.trim() : String(iyms).trim();
+            // Sadece izin verilen kombinasyonları say
+            if (ALLOWED_IYMS.includes(formatted)) {
+                iymsStats[formatted] = (iymsStats[formatted] || 0) + 1;
             }
         });
+
+        if (Object.keys(iymsStats).length === 0) return null;
 
         // En çok tekrar eden İY/MS'i bul
         let maxCount = 0;
@@ -333,18 +353,14 @@ export default function YapayZeka() {
         });
 
         if (!topIYMS) return null;
-        if (!['1/0', '1/2', '2/1', '2/0'].includes(topIYMS)) return null;
 
         const percentage = Math.round((maxCount / matches.length) * 100);
-
-        // 1/2 ve 2/1 için yüzdelik gösterme (zor tahmin)
-        const showPercentage = !['1/2', '2/1'].includes(topIYMS);
 
         return {
             iyms: topIYMS,
             count: maxCount,
             percentage,
-            showPercentage
+            showPercentage: true
         };
     };
 
@@ -452,16 +468,31 @@ export default function YapayZeka() {
                 lig: match._ligAdi
             })));
 
-            // İY/MS önerisi hesapla
-            const iymsRecommendation = analyzeIYMS(analysisMatches.slice(0, 20));
+            // İY/MS önerisi - Tüm eşleşen maçlarda izin verilen kombinasyonları ara
+            // Önce eşleşen tüm maçların formatlanmış versiyonunu oluştur
+            const formattedAll = analysisMatches.map(match => ({
+                ...match,
+                _iymsFormatted: formatIYMS(match['İY/MS'])
+            }));
 
-            let displayMatches = analysisMatches.slice(0, 20);
+            // Sadece izin verilen IY/MS kombinasyonlarına sahip maçlara bak
+            const ALLOWED_IYMS = ['1/0', '2/0', '1/2', '2/1'];
+            const allowedMatches = formattedAll.filter(m => ALLOWED_IYMS.includes(m._iymsFormatted));
+
+            // İY/MS önerisi: izin verilen maçlar arasından en sık tekrarlananı bul
+            const iymsRecommendation = analyzeIYMS(
+                allowedMatches.slice(0, 40).map(m => ({ ...m, iyms: m._iymsFormatted }))
+            );
+
+            // --- DÜZELTME: Gösterilen maçlar öneriyle tutarlı olmalı ---
+            // Eğer IY/MS önerisi varsa, SADECE o sonuçla biten maçları göster
+            let displayMatches;
             if (iymsRecommendation && iymsRecommendation.iyms) {
-                // Ensure the displayed matches actually end with the recommended HT/FT result
-                const matchingIYMS = analysisMatches.filter(m => formatIYMS(m['İY/MS']) === iymsRecommendation.iyms);
-                if (matchingIYMS.length > 0) {
-                    displayMatches = matchingIYMS.slice(0, 20);
-                }
+                displayMatches = formattedAll
+                    .filter(m => m._iymsFormatted === iymsRecommendation.iyms)
+                    .slice(0, 20);
+            } else {
+                displayMatches = formattedAll.slice(0, 20);
             }
 
             // Gösterilecek 20 maç

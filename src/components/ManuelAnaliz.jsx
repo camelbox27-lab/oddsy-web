@@ -152,7 +152,6 @@ export default function ManuelAnaliz() {
             }
         });
 
-        // Toplam Gol Önerisi - ayrı hesapla (%50 filtresinden bağımsız)
         const tgMax = Math.max(tg_0_1, tg_2_3, tg_4_5, tg_6_plus);
         let toplamGolOnerisi = null;
         const totalMatches = matches.length;
@@ -162,17 +161,35 @@ export default function ManuelAnaliz() {
             else if (tgMax === tg_2_3) label = 'Toplam 2-3 Gol';
             else if (tgMax === tg_4_5) label = 'Toplam 4-5 Gol';
             else if (tgMax === tg_6_plus) label = 'Toplam 6+ Gol';
-            toplamGolOnerisi = { label, count: tgMax, percentage: Math.round((tgMax / totalMatches) * 100) };
+            const tgPct = Math.round((tgMax / totalMatches) * 100);
+            if (tgPct >= 60) {
+                toplamGolOnerisi = { label, count: tgMax, percentage: tgPct };
+            }
         }
+
+        // Alt/Üst çakismasını önle: sadece biri gösterilecek
+        const rawPercentages = {};
+        Object.entries(marketStats).forEach(([market, count]) => {
+            rawPercentages[market] = Math.round((count / totalMatches) * 100);
+        });
+        const altUstPairs = [['MS 2.5 Üst', 'MS 2.5 Alt'], ['KG Var', 'KG Yok']];
+        const suppressedMarkets = new Set();
+        altUstPairs.forEach(([a, b]) => {
+            const pA = rawPercentages[a] || 0;
+            const pB = rawPercentages[b] || 0;
+            if (pA >= pB) suppressedMarkets.add(b);
+            else suppressedMarkets.add(a);
+        });
 
         return {
             recommendations: Object.entries(marketStats)
+                .filter(([market]) => !suppressedMarkets.has(market))
                 .map(([market, count]) => ({
                     market,
                     count,
                     percentage: Math.round((count / totalMatches) * 100)
                 }))
-                .filter(item => item.percentage >= 50)
+                .filter(item => item.percentage >= 60)
                 .sort((a, b) => b.percentage - a.percentage),
             toplamGolOnerisi
         };
@@ -180,23 +197,24 @@ export default function ManuelAnaliz() {
 
     const analyzeIYMS = (matches) => {
         if (!matches || matches.length === 0) return null;
+        const ALLOWED_IYMS = ['1/0', '2/0', '1/2', '2/1'];
         const iymsStats = {};
         matches.forEach(match => {
             const iyms = match.iyms || match['İY/MS'] || '-';
-            if (iyms && iyms !== '-') {
-                iymsStats[iyms] = (iymsStats[iyms] || 0) + 1;
+            const formatted = typeof iyms === 'string' ? iyms.trim() : String(iyms).trim();
+            if (ALLOWED_IYMS.includes(formatted)) {
+                iymsStats[formatted] = (iymsStats[formatted] || 0) + 1;
             }
         });
+        if (Object.keys(iymsStats).length === 0) return null;
         let maxCount = 0;
         let topIYMS = null;
         Object.entries(iymsStats).forEach(([iyms, count]) => {
             if (count > maxCount) { maxCount = count; topIYMS = iyms; }
         });
         if (!topIYMS) return null;
-        if (!['1/0', '1/2', '2/1', '2/0'].includes(topIYMS)) return null;
         const percentage = Math.round((maxCount / matches.length) * 100);
-        const showPercentage = !['1/2', '2/1'].includes(topIYMS);
-        return { iyms: topIYMS, count: maxCount, percentage, showPercentage };
+        return { iyms: topIYMS, count: maxCount, percentage, showPercentage: true };
     };
 
     const startAnalysis = async () => {
@@ -295,14 +313,24 @@ export default function ManuelAnaliz() {
                 lig: match._ligAdi
             })));
 
-            const iymsRecommendation = analyzeIYMS(analysisMatches.slice(0, 10));
+            // IY/MS: sadece izin verilen kombinasyonları ara, maçlarla tutarlı ol
+            const ALLOWED_IYMS = ['1/0', '2/0', '1/2', '2/1'];
+            const formattedAll = analysisMatches.map(m => ({
+                ...m,
+                _iymsFormatted: formatIYMS(m['İY/MS'])
+            }));
+            const allowedMatches = formattedAll.filter(m => ALLOWED_IYMS.includes(m._iymsFormatted));
+            const iymsRecommendation = analyzeIYMS(
+                allowedMatches.slice(0, 40).map(m => ({ ...m, iyms: m._iymsFormatted }))
+            );
 
-            let displayMatches = analysisMatches.slice(0, 10);
+            let displayMatches;
             if (iymsRecommendation && iymsRecommendation.iyms) {
-                const matchingIYMS = analysisMatches.filter(m => formatIYMS(m['İY/MS']) === iymsRecommendation.iyms);
-                if (matchingIYMS.length > 0) {
-                    displayMatches = matchingIYMS.slice(0, 10);
-                }
+                displayMatches = formattedAll
+                    .filter(m => m._iymsFormatted === iymsRecommendation.iyms)
+                    .slice(0, 10);
+            } else {
+                displayMatches = formattedAll.slice(0, 10);
             }
 
             // Manuel analizde 10 maç göster
