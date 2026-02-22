@@ -90,6 +90,8 @@ export default function ManuelAnaliz() {
     const analyzeBettingMarkets = (matches) => {
         if (!matches || matches.length === 0) return [];
 
+        const totalMatches = matches.length;
+
         const marketStats = {
             'Ev Sahibi 1.5 Üst': 0,
             'Deplasman 1.5 Üst': 0,
