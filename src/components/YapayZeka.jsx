@@ -357,6 +357,65 @@ export default function YapayZeka() {
         return { recommendations, toplamGolOnerisi, msPercentages, altUstPercentages };
     };
 
+    // İY/MS analiz fonksiyonu - Sadece 1/0, 2/0, 1/2, 2/1
+    const analyzeIYMS = (matches) => {
+        if (!matches || matches.length === 0) return null;
+
+        const ALLOWED_IYMS = ['1/0', '2/0', '1/2', '2/1'];
+        const iymsStats = {};
+
+        matches.forEach(match => {
+            const iyms = match.iyms || match['İY/MS'] || '-';
+            const formatted = typeof iyms === 'string' ? iyms.trim() : String(iyms).trim();
+            // Sadece izin verilen kombinasyonları say
+            if (ALLOWED_IYMS.includes(formatted)) {
+                iymsStats[formatted] = (iymsStats[formatted] || 0) + 1;
+            }
+        });
+
+        if (Object.keys(iymsStats).length === 0) return null;
+
+        // En çok tekrar eden İY/MS'i bul
+        let maxCount = 0;
+        let topIYMS = null;
+
+        Object.entries(iymsStats).forEach(([iyms, count]) => {
+            if (count > maxCount) {
+                maxCount = count;
+                topIYMS = iyms;
+            }
+        });
+
+        if (!topIYMS) return null;
+
+        const percentage = Math.round((maxCount / matches.length) * 100);
+        const ALLOWED_IYMS_DISPLAY = ['1/0', '2/0', '1/2', '2/1'];
+        const allPercentages = {};
+        ALLOWED_IYMS_DISPLAY.forEach(combo => {
+            allPercentages[combo] = Math.round(((iymsStats[combo] || 0) / matches.length) * 100);
+        });
+
+        return {
+            iyms: topIYMS,
+            count: maxCount,
+            percentage,
+            showPercentage: true,
+            allPercentages
+        };
+    };
+
+    const calculateTopScores = (matches) => {
+        const scoreCounts = {};
+        matches.forEach(m => {
+            const score = m.macSonucu || '-';
+            if (score !== '-') scoreCounts[score] = (scoreCounts[score] || 0) + 1;
+        });
+        return Object.entries(scoreCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 4)
+            .map(([score, count]) => ({ score, count }));
+    };
+
     const startAnalysis = async () => {
         // Validasyon
         if (!oran1 && !oran0 && !oran2) {
@@ -444,9 +503,8 @@ export default function YapayZeka() {
                 return new Date(b.Tarih) - new Date(a.Tarih);
             });
 
-            // TÜM eşleşen maçları formatla
-            const formattedAll = allMatches.map(match => ({
-                ...match,
+            // İlk 10 maçı göster (IY/MS filtresi olmadan, sadece match score sıralaması)
+            const topResults = allMatches.slice(0, 10).map(match => ({
                 evSahibi: match['Ev Sahibi'] || '-',
                 deplasman: match['Deplasman'] || '-',
                 ilkYari: formatScore(match['İlk Yarı Skor']),
@@ -455,24 +513,22 @@ export default function YapayZeka() {
                 tarih: formatDate(match['Tarih']),
                 oran1: getOddsValue(match, oranKey1),
                 oran0: getOddsValue(match, oranKey0),
-                oran2: getOddsValue(match, oranKey2)
+                oran2: getOddsValue(match, oranKey2),
+                lig: match._ligAdi
             }));
 
-            // IY/MS filtresi kaldırıldı - sadece 10 maç döndür
-            const displayMatches = formattedAll.slice(0, 10);
-            const topResults = displayMatches;
-
-            // Analizler SADECE gösterilecek 10 maç üzerinden yapılır
+            // Öneriler, gösterilen 10 maçtan hesaplanıyor
             const { recommendations, toplamGolOnerisi, msPercentages, altUstPercentages } = analyzeBettingMarkets(topResults);
 
-            setResults({
-                matches: topResults,
-                recommendations,
-                toplamGolOnerisi,
-                msPercentages,
-                altUstPercentages,
-                totalAnalyzed: allMatches.length
-            });
+            // İY/MS önerisi - gösterilen 10 maçtan
+            const iymsRecommendation = analyzeIYMS(
+                topResults.map(m => ({ ...m, iyms: m.iyms }))
+            );
+
+            // En çok tekrarlanan skorlar - gösterilen 10 maçtan
+            const topScores = calculateTopScores(topResults);
+
+            setResults({ matches: topResults, recommendations, iymsRecommendation, toplamGolOnerisi, msPercentages, altUstPercentages, topScores, totalAnalyzed: allMatches.length });
             setShowResults(true);
         } catch (err) {
             console.error(err);
@@ -504,23 +560,52 @@ export default function YapayZeka() {
         setError('');
     };
 
+    const loadingMsgs = ["Sistem Hazırlanıyor...", "Tüm Ligler Taranıyor...", "Eşleşmeler Hazırlanıyor...", "Bahis Türleri Analiz Ediliyor..."];
+    const loadingStep = loadingMsgs.indexOf(loadingMsg);
+
     if (analyzing) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#333] text-white">
-                <div className="text-6xl mb-6 animate-[pulse_1.5s_ease-in-out_infinite] scale-110 transition-all opacity-90 text-[#FDB913] drop-shadow-[0_0_15px_rgba(253,185,19,0.5)]">⚡</div>
-                <div className="text-2xl font-bold text-[#FDB913] mb-2">{loadingMsg}</div>
-                <div className="text-sm text-gray-400 mb-6">Lütfen bekleyin...</div>
-                <div className="flex gap-2">
-                    {[0, 1, 2, 3].map(i => (
-                        <div key={i} className={`w-3 h-3 rounded-full bg-[#FDB913] animate-bounce`} style={{ animationDelay: `${i * 0.15}s` }}></div>
-                    ))}
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#333]">
+                <div className="flex flex-col items-center gap-6 p-8">
+                    {/* Animasyonlu ikon */}
+                    <div className="relative flex items-center justify-center w-24 h-24">
+                        <div className="absolute inset-0 rounded-full border-4 border-[#FDB913]/20 animate-ping" />
+                        <div className="absolute inset-2 rounded-full border-2 border-[#FDB913]/40 animate-pulse" />
+                        <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 drop-shadow-[0_0_12px_rgba(253,185,19,0.8)]" style={{ animation: 'bolt-pop 0.6s ease-in-out infinite alternate' }}>
+                            <path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z" fill="url(#boltGrad)" stroke="#FDB913" strokeWidth="0.5" />
+                            <defs>
+                                <linearGradient id="boltGrad" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stopColor="#FFD700" />
+                                    <stop offset="100%" stopColor="#FF6B00" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    {/* Mesaj */}
+                    <div className="text-center">
+                        <p className="text-2xl font-black text-[#FDB913] tracking-wide">{loadingMsg}</p>
+                        <p className="text-sm text-gray-400 mt-1">Lütfen bekleyin...</p>
+                    </div>
+                    {/* Step indicator */}
+                    <div className="flex items-center gap-2">
+                        {loadingMsgs.map((_, i) => (
+                            <div
+                                key={i}
+                                className={`rounded-full transition-all duration-300 ${i <= loadingStep
+                                    ? 'w-8 h-2 bg-[#FDB913]'
+                                    : 'w-2 h-2 bg-[#555]'
+                                    }`}
+                            />
+                        ))}
+                    </div>
                 </div>
+                <style>{`@keyframes bolt-pop { from { transform: scale(0.92) rotate(-3deg); } to { transform: scale(1.08) rotate(3deg); } }`}</style>
             </div>
         );
     }
 
     if (showResults) {
-        const { matches = [], recommendations = [], toplamGolOnerisi = null, msPercentages = null, altUstPercentages = null, totalAnalyzed = 0 } = results || {};
+        const { matches = [], recommendations = [], iymsRecommendation = null, toplamGolOnerisi = null, msPercentages = null, altUstPercentages = null, topScores = [], totalAnalyzed = 0 } = results || {};
 
         return (
             <div className="min-h-screen p-4 bg-[#333] text-white font-sans">
@@ -641,29 +726,65 @@ export default function YapayZeka() {
                                     </div>
                                 )}
 
-                                {/* Diğer Tercihler - Yeşil Çerçeveli */}
-                                {recommendations.filter(r => r.market !== 'İlk Yarı KG Var').map((rec, i) => (
+                                {/* Maç Sonucu - MS 1/0/2 */}
+                                {msPercentages && (
+                                    <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-[#006A4E] hover:border-[#FDB913] transition-all">
+                                        <span className="text-[#FDB913] font-bold text-xs sm:text-sm">Maç Sonucu</span>
+                                        <div className="grid grid-cols-3 gap-1 mt-2">
+                                            {[{ label: 'MS 1', val: msPercentages.ms1 }, { label: 'MS 0', val: msPercentages.ms0 }, { label: 'MS 2', val: msPercentages.ms2 }].map(({ label, val }) => (
+                                                <div key={label} className={`text-center p-1.5 rounded-lg ${val >= 50 ? 'bg-[#006A4E] border border-[#FDB913]/40' : 'bg-[#404040]'}`}>
+                                                    <div className="text-white font-black text-xs">{label}</div>
+                                                    <div className="text-[#FDB913] font-bold text-sm">%{val}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 2.5 Alt / Üst */}
+                                {altUstPercentages && (
+                                    <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-[#006A4E] hover:border-[#FDB913] transition-all">
+                                        <span className="text-[#FDB913] font-bold text-xs sm:text-sm">2.5 Gol</span>
+                                        <div className="grid grid-cols-2 gap-1 mt-2">
+                                            {[{ label: '2.5 Üst', val: altUstPercentages.ust }, { label: '2.5 Alt', val: altUstPercentages.alt }].map(({ label, val }) => (
+                                                <div key={label} className={`text-center p-1.5 rounded-lg ${val >= 60 ? 'bg-[#006A4E] border border-[#FDB913]/40' : 'bg-[#404040]'}`}>
+                                                    <div className="text-white font-black text-xs">{label}</div>
+                                                    <div className="text-[#FDB913] font-bold text-sm">%{val}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* İY/MS Kombinasyonları */}
+                                {iymsRecommendation?.allPercentages && (
+                                    <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-[#FDB913] shadow-[0_0_8px_rgba(253,185,19,0.2)]">
+                                        <span className="text-[#FDB913] font-bold text-xs sm:text-sm">İY/MS Kombinasyonları</span>
+                                        <div className="grid grid-cols-2 gap-1 mt-2">
+                                            {['1/0', '2/0', '1/2', '2/1'].map(combo => (
+                                                <div key={combo} className={`text-center p-1.5 rounded-lg ${iymsRecommendation.iyms === combo ? 'bg-[#006A4E] border border-[#FDB913]' : 'bg-[#404040]'}`}>
+                                                    <div className="text-white font-black text-xs">{combo}</div>
+                                                    <div className="text-[#FDB913] font-bold text-sm">%{iymsRecommendation.allPercentages[combo]}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Diğer Öneriler - MS ve 2.5 dışındakiler */}
+                                {recommendations.filter(r => !['İlk Yarı KG Var', 'MS 1', 'MS 0', 'MS 2', 'MS 2.5 Üst', 'MS 2.5 Alt'].includes(r.market)).map((rec, i) => (
                                     <div
                                         key={i}
                                         className="bg-[#333] p-2 sm:p-3 rounded-lg border border-[#006A4E] hover:border-[#FDB913] hover:shadow-[0_0_10px_rgba(253,185,19,0.4)] transition-all"
                                     >
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-white font-bold text-[11px] sm:text-xs xl:text-sm whitespace-nowrap">{rec.market}</span>
-                                            <span className={`text-base sm:text-lg font-black ${rec.percentage >= 80 ? 'text-green-400' :
-                                                rec.percentage >= 65 ? 'text-yellow-400' :
-                                                    'text-orange-400'
-                                                }`}>
+                                            <span className="text-white font-bold text-xs sm:text-sm">{rec.market}</span>
+                                            <span className={`text-lg sm:text-xl font-black ${rec.percentage >= 80 ? 'text-green-400' : rec.percentage >= 65 ? 'text-yellow-400' : 'text-orange-400'}`}>
                                                 %{rec.percentage}
                                             </span>
                                         </div>
                                         <div className="w-full bg-[#222] rounded-full h-1.5">
-                                            <div
-                                                className={`h-1.5 rounded-full ${rec.percentage >= 80 ? 'bg-green-400' :
-                                                    rec.percentage >= 65 ? 'bg-yellow-400' :
-                                                        'bg-orange-400'
-                                                    }`}
-                                                style={{ width: `${rec.percentage}%` }}
-                                            />
+                                            <div className={`h-1.5 rounded-full ${rec.percentage >= 80 ? 'bg-green-400' : rec.percentage >= 65 ? 'bg-yellow-400' : 'bg-orange-400'}`} style={{ width: `${rec.percentage}%` }} />
                                         </div>
                                     </div>
                                 ))}
@@ -705,6 +826,24 @@ export default function YapayZeka() {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* En Çok Tekrarlanan Skorlar */}
+                    {topScores && topScores.length > 0 && (
+                        <div className="bg-[#404040] p-3 sm:p-4 rounded-lg border-2 border-[#FDB913] shadow-[0_0_15px_rgba(253,185,19,0.2)]">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Trophy className="text-[#FDB913]" size={18} />
+                                <h3 className="text-sm sm:text-base font-bold text-[#FDB913]">En Çok Tekrarlanan Skorlar</h3>
+                            </div>
+                            <div className="grid grid-cols-4 gap-2">
+                                {topScores.map(({ score, count }, i) => (
+                                    <div key={i} className={`bg-[#333] p-3 rounded-lg text-center border-2 transition-all ${i === 0 ? 'border-[#FDB913] shadow-[0_0_8px_rgba(253,185,19,0.3)]' : 'border-[#555]'}`}>
+                                        <div className="text-[#FDB913] font-black text-xl sm:text-2xl">{score}</div>
+                                        <div className="text-gray-400 text-xs mt-1">{count}x tekrar</div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
