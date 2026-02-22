@@ -27,6 +27,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { useCallback, useEffect, useState, useMemo, memo } from 'react';
 
+import AuthAction from './pages/AuthAction';
 import DroppingOddsModal from './components/DroppingOddsModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import Kart from './components/Kart';
@@ -44,6 +45,12 @@ import { debounce, throttle, listenerRegistry, connectionMonitor } from './utils
 import { dataCache } from './utils/cache';
 
 const VIP_TRIAL_DAYS = 0;
+
+// Firebase email action link ayarları — linke tıklayınca oddsy.com.tr/auth/action sayfası açılır
+const AUTH_ACTION_SETTINGS = {
+    url: 'https://oddsy.com.tr/auth/action',
+    handleCodeInApp: false,
+};
 const VIP_ADMIN_DAYS = 30;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const IP_API_URL = 'https://api64.ipify.org?format=json';
@@ -1716,7 +1723,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
             setLoading(true);
             try {
                 const resolvedEmail = await resolveEmail(loginIdentifier);
-                await sendPasswordResetEmail(auth, resolvedEmail);
+                await sendPasswordResetEmail(auth, resolvedEmail, AUTH_ACTION_SETTINGS);
                 showAlert('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success');
                 setMode('login');
             } catch (err) {
@@ -1746,7 +1753,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 try { await userCredential.user.reload(); } catch (_) {}
 
                 if (!userCredential.user.emailVerified) {
-                    await sendEmailVerification(userCredential.user);
+                    await sendEmailVerification(userCredential.user, AUTH_ACTION_SETTINGS);
                     await signOut(auth);
                     showAlert('Email adresiniz henüz doğrulanmamış. Yeni bir doğrulama linki gönderildi.', 'error');
                     setEmail(resolvedEmail);
@@ -1774,7 +1781,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 try { await updateProfile(newUser, { displayName: username.trim() }); } catch (e) { console.error('Profile update failed:', e); }
 
                 // Doğrulama maili gönder
-                try { await sendEmailVerification(newUser); } catch (e) { console.error('Email verification send failed:', e); }
+                try { await sendEmailVerification(newUser, AUTH_ACTION_SETTINGS); } catch (e) { console.error('Email verification send failed:', e); }
 
                 // Firestore dökümanını oluştur - hata olursa bile kayıt devam etsin
                 let nextDisplayId = null;
@@ -2006,7 +2013,7 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
         if (resending) return;
         setResending(true);
         try {
-            await sendEmailVerification(auth.currentUser);
+            await sendEmailVerification(auth.currentUser, AUTH_ACTION_SETTINGS);
             showAlert('Doğrulama linki tekrar gönderildi. Lütfen mailinizi kontrol edin.', 'success');
         } catch (err) {
             showAlert('Hata: ' + err.message, 'error');
@@ -3912,8 +3919,22 @@ const Skeleton = ({ type }) => {
 
 export default function App() {
 
-    const [route, setRoute] = useState('home');
-    const [routeParams, setRouteParams] = useState({});
+    const [route, setRoute] = useState(() => {
+        if (window.location.pathname === '/auth/action') {
+            const p = new URLSearchParams(window.location.search);
+            if (p.get('mode') && p.get('oobCode')) return 'auth-action';
+        }
+        return 'home';
+    });
+    const [routeParams, setRouteParams] = useState(() => {
+        if (window.location.pathname === '/auth/action') {
+            const p = new URLSearchParams(window.location.search);
+            const mode = p.get('mode');
+            const oobCode = p.get('oobCode');
+            if (mode && oobCode) return { mode, oobCode };
+        }
+        return {};
+    });
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [userData, setUserData] = useState(null);
@@ -4088,10 +4109,19 @@ export default function App() {
     }, [user]);
     const showAlert = useCallback((m, t) => setAlert({ message: m, type: t }), []);
 
-    if (loading && route !== 'auth') return <div className="auth-loading-screen"><div className="spinner" /><h3>Oddsy Yükleniyor...</h3></div>;
+    if (loading && route !== 'auth' && route !== 'auth-action') return <div className="auth-loading-screen"><div className="spinner" /><h3>Oddsy Yükleniyor...</h3></div>;
 
     const render = () => {
+        // Giriş gerektiren sayfalar - kullanıcı giriş yapmamışsa auth ekranını göster
+        const publicRoutes = ['home', 'auth', 'auth-action', 'abonelik', 'performance-summary',
+            'dropping-odds', 'category', 'ilk-yari-gol', 'iy-ms-tahminleri',
+            'gunun-surprizleri', 'gunun-tercihleri'];
+        if (!user && !publicRoutes.includes(route)) {
+            return <AuthScreen onBack={() => navigate('home')} showAlert={showAlert} initialIsLogin={true} />;
+        }
+
         switch (route) {
+            case 'auth-action': return <AuthAction mode={routeParams.mode} oobCode={routeParams.oobCode} onNavigate={navigate} />;
             case 'auth': return <AuthScreen onBack={() => navigate('home')} showAlert={showAlert} initialIsLogin={routeParams.isLogin !== undefined ? routeParams.isLogin : true} />;
             case 'profile': return <ProfileScreen user={user} userData={userData} onBack={r => navigate(r || 'home')} showAlert={showAlert} />;
             case 'admin':
@@ -4202,21 +4232,6 @@ export default function App() {
             default: return <HomePage user={user} userData={userData} onLoginClick={() => navigate(user ? 'profile' : 'auth')} onNavigate={navigate} onShowLegal={setLegalType} />;
         }
     };
-
-    if (!user) {
-        return (
-            <ErrorBoundary>
-                <div className="app">
-                    {alert && <Alert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
-                    {loading ? (
-                        <div className="auth-loading-screen"><div className="spinner" /><h3>Oddsy Yükleniyor...</h3></div>
-                    ) : (
-                        <AuthScreen onBack={() => { }} showAlert={showAlert} initialIsLogin={routeParams?.isLogin !== undefined ? routeParams.isLogin : true} />
-                    )}
-                </div>
-            </ErrorBoundary>
-        );
-    }
 
     return (
         <ErrorBoundary>
