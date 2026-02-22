@@ -1228,6 +1228,17 @@ html, body, #root, .app {
   .prediction-card { padding: 12px !important; padding-top: 30px !important; }
 }
 
+/* Mobile App Banner - sadece mobilde göster */
+.mobile-app-banner { display: flex !important; }
+@media (min-width: 769px) {
+  .mobile-app-banner { display: none !important; }
+}
+/* Banner açıkken header ve content aşağı kayar - sadece mobilde */
+@media (max-width: 768px) {
+  .app.banner-visible .header { top: 45px; }
+  .app.banner-visible .main-content { padding-top: calc(85px + 45px); }
+}
+
 /* Admin Action Buttons */
 .admin-actions {
   display: flex;
@@ -4115,6 +4126,7 @@ export default function App() {
     const [loading, setLoading] = useState(true);
     const [legalType, setLegalType] = useState(null);
     const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+    const [appBannerDismissed, setAppBannerDismissed] = useState(() => sessionStorage.getItem('appBannerDismissed') === '1');
 
     const toggleTheme = () => {
         const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -4510,9 +4522,49 @@ export default function App() {
 
     return (
         <ErrorBoundary>
-            <div className="app">
+            <div className={`app${!appBannerDismissed ? ' banner-visible' : ''}`}>
                 {alert && <Alert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
                 {legalType && <LegalModal type={legalType} onClose={() => setLegalType(null)} />}
+                {!appBannerDismissed && (
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        background: 'linear-gradient(90deg, #1a1a1a, #2a2a2a)',
+                        borderBottom: '1px solid rgba(253,185,19,0.3)',
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        zIndex: 9999,
+                    }} className="mobile-app-banner">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                            <img src="/oddsylogo.png" alt="Oddsy" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
+                            <div>
+                                <div style={{ fontSize: '11px', fontWeight: '800', color: '#fff', lineHeight: 1.2 }}>Oddsy Uygulaması</div>
+                                <div style={{ fontSize: '10px', color: 'rgba(253,185,19,0.8)', lineHeight: 1.2 }}>Daha iyi deneyim için indir</div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <a
+                                href="https://github.com/camelbox27-lab/oddsy-web/releases/download/v1.0/Oddsy.apk"
+                                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#FDB913', borderRadius: '8px', padding: '5px 10px', textDecoration: 'none' }}
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M3.18 23a1 1 0 0 1-.68-1.71L15.29 8.5l-2.83-2.83L3.5 14.63a1 1 0 1 1-1.41-1.41L12.46 2.84a1 1 0 0 1 1.41 0l4.24 4.24a1 1 0 0 1 0 1.41L3.86 22.74A1 1 0 0 1 3.18 23z" fill="#333"/>
+                                    <path d="M2.5 2.09v19.82L14.09 12 2.5 2.09z" fill="#333"/>
+                                </svg>
+                                <span style={{ fontSize: '11px', fontWeight: '800', color: '#333' }}>Android</span>
+                            </a>
+                            <button
+                                onClick={() => { setAppBannerDismissed(true); sessionStorage.setItem('appBannerDismissed', '1'); }}
+                                style={{ background: 'none', border: 'none', color: '#888', fontSize: '18px', cursor: 'pointer', padding: '2px 6px', lineHeight: 1 }}
+                            >×</button>
+                        </div>
+                    </div>
+                )}
                 <Header
                     onMenuOpen={() => setSidebarOpen(true)}
                     user={user}
