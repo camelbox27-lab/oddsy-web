@@ -1,5 +1,11 @@
-import { App as CapApp } from '@capacitor/app';
-import { PushNotifications } from '@capacitor/push-notifications';
+// Capacitor modülleri: sadece native Android'de dynamic import ile yüklenir
+const isNative = () => typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
+let CapApp = null;
+let PushNotifications = null;
+if (isNative()) {
+    import('@capacitor/app').then(m => { CapApp = m.App; }).catch(() => {});
+    import('@capacitor/push-notifications').then(m => { PushNotifications = m.PushNotifications; }).catch(() => {});
+}
 import {
     createUserWithEmailAndPassword,
     deleteUser,
@@ -4255,9 +4261,10 @@ export default function App() {
 
     // Push Notification kurulumu (sadece native Capacitor'da çalışır)
     useEffect(() => {
-        if (!user) return;
+        if (!user || !isNative()) return;
         const setupPush = async () => {
             try {
+                if (!PushNotifications) return;
                 const permResult = await PushNotifications.requestPermissions();
                 if (permResult.receive !== 'granted') return;
                 await PushNotifications.register();
@@ -4310,13 +4317,15 @@ export default function App() {
     useEffect(() => {
         let backHandler;
         try {
-            backHandler = CapApp.addListener('backButton', () => {
-                if (window.history.state && window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    CapApp.exitApp();
-                }
-            });
+            if (CapApp) {
+                backHandler = CapApp.addListener('backButton', () => {
+                    if (window.history.state && window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        CapApp.exitApp();
+                    }
+                });
+            }
         } catch (_) {}
         const onPopState = (e) => {
             if (e.state?.route) {
