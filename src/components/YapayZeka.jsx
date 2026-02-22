@@ -328,14 +328,19 @@ export default function YapayZeka() {
             alt: totalMatches ? Math.round((marketStats['MS 2.5 Alt'] / totalMatches) * 100) : 0
         };
 
+        const kgPercentages = {
+            var: totalMatches ? Math.round((marketStats['KG Var'] / totalMatches) * 100) : 0,
+            yok: totalMatches ? Math.round((marketStats['KG Yok'] / totalMatches) * 100) : 0
+        };
+
         const rawPercentages = {};
         Object.entries(marketStats).forEach(([market, count]) => {
             rawPercentages[market] = totalMatches ? Math.round((count / totalMatches) * 100) : 0;
         });
 
-        const suppressedMarkets = new Set(['MS 1', 'MS 0', 'MS 2', 'MS 2.5 Üst', 'MS 2.5 Alt', 'MS 3.5 Üst', 'MS 1.5 Alt', 'MS 5.5 Üst']);
+        const suppressedMarkets = new Set(['MS 1', 'MS 0', 'MS 2', 'MS 2.5 Üst', 'MS 2.5 Alt', 'MS 3.5 Üst', 'MS 1.5 Alt', 'MS 5.5 Üst', 'KG Var', 'KG Yok']);
 
-        const cgPairs = [['KG Var', 'KG Yok']];
+        const cgPairs = [];
         cgPairs.forEach(([a, b]) => {
             const pA = rawPercentages[a] || 0;
             const pB = rawPercentages[b] || 0;
@@ -354,7 +359,7 @@ export default function YapayZeka() {
             .filter(item => item.percentage >= THRESHOLD)
             .sort((a, b) => b.percentage - a.percentage);
 
-        return { recommendations, toplamGolOnerisi, msPercentages, altUstPercentages };
+        return { recommendations, toplamGolOnerisi, msPercentages, altUstPercentages, kgPercentages };
     };
 
     // İY/MS analiz fonksiyonu - Sadece 1/0, 2/0, 1/2, 2/1
@@ -518,7 +523,7 @@ export default function YapayZeka() {
             }));
 
             // Öneriler, gösterilen 10 maçtan hesaplanıyor
-            const { recommendations, toplamGolOnerisi, msPercentages, altUstPercentages } = analyzeBettingMarkets(topResults);
+            const { recommendations, toplamGolOnerisi, msPercentages, altUstPercentages, kgPercentages } = analyzeBettingMarkets(topResults);
 
             // İY/MS önerisi - gösterilen 10 maçtan
             const iymsRecommendation = analyzeIYMS(
@@ -528,7 +533,7 @@ export default function YapayZeka() {
             // En çok tekrarlanan skorlar - gösterilen 10 maçtan
             const topScores = calculateTopScores(topResults);
 
-            setResults({ matches: topResults, recommendations, iymsRecommendation, toplamGolOnerisi, msPercentages, altUstPercentages, topScores, totalAnalyzed: allMatches.length });
+            setResults({ matches: topResults, recommendations, iymsRecommendation, toplamGolOnerisi, msPercentages, altUstPercentages, kgPercentages, topScores, totalAnalyzed: allMatches.length });
             setShowResults(true);
         } catch (err) {
             console.error(err);
@@ -605,7 +610,7 @@ export default function YapayZeka() {
     }
 
     if (showResults) {
-        const { matches = [], recommendations = [], iymsRecommendation = null, toplamGolOnerisi = null, msPercentages = null, altUstPercentages = null, topScores = [], totalAnalyzed = 0 } = results || {};
+        const { matches = [], recommendations = [], iymsRecommendation = null, toplamGolOnerisi = null, msPercentages = null, altUstPercentages = null, kgPercentages = null, topScores = [], totalAnalyzed = 0 } = results || {};
 
         return (
             <div className="min-h-screen p-4 bg-[#333] text-white font-sans">
@@ -774,40 +779,17 @@ export default function YapayZeka() {
                                     </div>
                                 ))}
 
-                                {/* Yeni Eklenen MS Kartı */}
-                                {msPercentages && (
-                                    <div className="bg-[#333] p-3 rounded-lg border-2 border-[#006A4E] shadow-[0_0_10px_rgba(0,106,78,0.3)] basis-full md:col-span-2 lg:col-span-1">
-                                        <span className="text-[#FDB913] font-bold">Maç Sonucu</span>
-                                        <div className="grid grid-cols-3 gap-2 mt-2">
-                                            <div className={`text-center p-2 rounded ${msPercentages.ms1 >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">MS 1</div>
-                                                <div className="text-[#FDB913] font-bold">%{msPercentages.ms1}</div>
-                                            </div>
-                                            <div className={`text-center p-2 rounded ${msPercentages.ms0 >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">MS 0</div>
-                                                <div className="text-[#FDB913] font-bold">%{msPercentages.ms0}</div>
-                                            </div>
-                                            <div className={`text-center p-2 rounded ${msPercentages.ms2 >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">MS 2</div>
-                                                <div className="text-[#FDB913] font-bold">%{msPercentages.ms2}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Yeni Eklenen 2.5 Alt/Üst Kartı */}
-                                {altUstPercentages && (
-                                    <div className="bg-[#333] p-3 rounded-lg border-2 border-[#006A4E] shadow-[0_0_10px_rgba(0,106,78,0.3)] lg:col-span-1">
-                                        <span className="text-[#FDB913] font-bold">2.5 Gol</span>
-                                        <div className="grid grid-cols-2 gap-2 mt-2">
-                                            <div className={`text-center p-2 rounded ${altUstPercentages.ust >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">2.5 Üst</div>
-                                                <div className="text-[#FDB913] font-bold">%{altUstPercentages.ust}</div>
-                                            </div>
-                                            <div className={`text-center p-2 rounded ${altUstPercentages.alt >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">2.5 Alt</div>
-                                                <div className="text-[#FDB913] font-bold">%{altUstPercentages.alt}</div>
-                                            </div>
+                                {/* KG Var / KG Yok */}
+                                {kgPercentages && (
+                                    <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-[#006A4E] hover:border-[#FDB913] transition-all">
+                                        <span className="text-[#FDB913] font-bold text-xs sm:text-sm">KG Var / Yok</span>
+                                        <div className="grid grid-cols-2 gap-1 mt-2">
+                                            {[{ label: 'KG Var', val: kgPercentages.var }, { label: 'KG Yok', val: kgPercentages.yok }].map(({ label, val }) => (
+                                                <div key={label} className={`text-center p-1.5 rounded-lg ${val >= 60 ? 'bg-[#006A4E] border border-[#FDB913]/40' : 'bg-[#404040]'}`}>
+                                                    <div className="text-white font-black text-xs">{label}</div>
+                                                    <div className="text-[#FDB913] font-bold text-sm">%{val}</div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 )}

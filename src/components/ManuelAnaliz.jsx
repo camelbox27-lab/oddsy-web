@@ -210,14 +210,12 @@ export default function ManuelAnaliz() {
             rawPercentages[market] = totalMatches ? Math.round((count / totalMatches) * 100) : 0;
         });
 
-        const suppressedMarkets = new Set(['MS 1', 'MS 0', 'MS 2', 'MS 2.5 Üst', 'MS 2.5 Alt', 'MS 3.5 Üst', 'MS 1.5 Alt', 'MS 5.5 Üst']);
-        const cgPairs = [['KG Var', 'KG Yok']];
-        cgPairs.forEach(([a, b]) => {
-            const pA = rawPercentages[a] || 0;
-            const pB = rawPercentages[b] || 0;
-            if (pA >= pB) suppressedMarkets.add(b);
-            else suppressedMarkets.add(a);
-        });
+        const suppressedMarkets = new Set(['MS 1', 'MS 0', 'MS 2', 'MS 2.5 Üst', 'MS 2.5 Alt', 'MS 3.5 Üst', 'MS 1.5 Alt', 'MS 5.5 Üst', 'KG Var', 'KG Yok']);
+
+        const kgPercentages = {
+            var: totalMatches ? Math.round((marketStats['KG Var'] / totalMatches) * 100) : 0,
+            yok: totalMatches ? Math.round((marketStats['KG Yok'] / totalMatches) * 100) : 0
+        };
 
         return {
             recommendations: Object.entries(marketStats)
@@ -231,7 +229,8 @@ export default function ManuelAnaliz() {
                 .sort((a, b) => b.percentage - a.percentage),
             toplamGolOnerisi,
             msPercentages,
-            altUstPercentages
+            altUstPercentages,
+            kgPercentages
         };
     };
 
@@ -334,8 +333,9 @@ export default function ManuelAnaliz() {
             const toplamGolOnerisi = analysisResult?.toplamGolOnerisi || null;
             const msPercentages = analysisResult?.msPercentages || null;
             const altUstPercentages = analysisResult?.altUstPercentages || null;
+            const kgPercentages = analysisResult?.kgPercentages || null;
 
-            setResults({ matches: topResults, recommendations, toplamGolOnerisi, msPercentages, altUstPercentages, totalAnalyzed: allMatches.length });
+            setResults({ matches: topResults, recommendations, toplamGolOnerisi, msPercentages, altUstPercentages, kgPercentages, totalAnalyzed: allMatches.length });
             setShowResults(true);
         } catch (err) {
             console.error('ManuelAnaliz hata:', err);
@@ -372,7 +372,7 @@ export default function ManuelAnaliz() {
     }
 
     if (showResults) {
-        const { matches = [], recommendations = [], toplamGolOnerisi = null, msPercentages = null, altUstPercentages = null, totalAnalyzed = 0 } = results || {};
+        const { matches = [], recommendations = [], toplamGolOnerisi = null, msPercentages = null, altUstPercentages = null, kgPercentages = null, totalAnalyzed = 0 } = results || {};
 
         return (
             <div className="min-h-screen p-4 bg-[#333] text-white font-sans">
@@ -501,40 +501,47 @@ export default function ManuelAnaliz() {
                                     </div>
                                 ))}
 
-                                {/* Yeni Eklenen MS Kartı */}
+                                {/* Maç Sonucu */}
                                 {msPercentages && (
-                                    <div className="bg-[#333] p-3 rounded-lg border-2 border-[#006A4E] basis-full md:col-span-2 lg:col-span-1">
-                                        <span className="text-[#FDB913] font-bold">Maç Sonucu</span>
-                                        <div className="grid grid-cols-3 gap-2 mt-2">
-                                            <div className={`text-center p-2 rounded ${msPercentages.ms1 >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">MS 1</div>
-                                                <div className="text-[#FDB913] font-bold">%{msPercentages.ms1}</div>
-                                            </div>
-                                            <div className={`text-center p-2 rounded ${msPercentages.ms0 >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">MS 0</div>
-                                                <div className="text-[#FDB913] font-bold">%{msPercentages.ms0}</div>
-                                            </div>
-                                            <div className={`text-center p-2 rounded ${msPercentages.ms2 >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">MS 2</div>
-                                                <div className="text-[#FDB913] font-bold">%{msPercentages.ms2}</div>
-                                            </div>
+                                    <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-[#006A4E] hover:border-[#FDB913] transition-all">
+                                        <span className="text-[#FDB913] font-bold text-xs sm:text-sm">Maç Sonucu</span>
+                                        <div className="grid grid-cols-3 gap-1 mt-2">
+                                            {[{ label: 'MS 1', val: msPercentages.ms1 }, { label: 'MS 0', val: msPercentages.ms0 }, { label: 'MS 2', val: msPercentages.ms2 }].map(({ label, val }) => (
+                                                <div key={label} className={`text-center p-1.5 rounded-lg ${val >= 50 ? 'bg-[#006A4E] border border-[#FDB913]/40' : 'bg-[#404040]'}`}>
+                                                    <div className="text-white font-black text-xs">{label}</div>
+                                                    <div className="text-[#FDB913] font-bold text-sm">%{val}</div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Yeni Eklenen 2.5 Alt/Üst Kartı */}
+                                {/* 2.5 Alt / Üst */}
                                 {altUstPercentages && (
-                                    <div className="bg-[#333] p-3 rounded-lg border-2 border-[#006A4E] lg:col-span-1">
-                                        <span className="text-[#FDB913] font-bold">2.5 Gol</span>
-                                        <div className="grid grid-cols-2 gap-2 mt-2">
-                                            <div className={`text-center p-2 rounded ${altUstPercentages.ust >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">2.5 Üst</div>
-                                                <div className="text-[#FDB913] font-bold">%{altUstPercentages.ust}</div>
-                                            </div>
-                                            <div className={`text-center p-2 rounded ${altUstPercentages.alt >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
-                                                <div className="text-white font-black">2.5 Alt</div>
-                                                <div className="text-[#FDB913] font-bold">%{altUstPercentages.alt}</div>
-                                            </div>
+                                    <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-[#006A4E] hover:border-[#FDB913] transition-all">
+                                        <span className="text-[#FDB913] font-bold text-xs sm:text-sm">2.5 Gol</span>
+                                        <div className="grid grid-cols-2 gap-1 mt-2">
+                                            {[{ label: '2.5 Üst', val: altUstPercentages.ust }, { label: '2.5 Alt', val: altUstPercentages.alt }].map(({ label, val }) => (
+                                                <div key={label} className={`text-center p-1.5 rounded-lg ${val >= 60 ? 'bg-[#006A4E] border border-[#FDB913]/40' : 'bg-[#404040]'}`}>
+                                                    <div className="text-white font-black text-xs">{label}</div>
+                                                    <div className="text-[#FDB913] font-bold text-sm">%{val}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* KG Var / KG Yok */}
+                                {kgPercentages && (
+                                    <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-[#006A4E] hover:border-[#FDB913] transition-all">
+                                        <span className="text-[#FDB913] font-bold text-xs sm:text-sm">KG Var / Yok</span>
+                                        <div className="grid grid-cols-2 gap-1 mt-2">
+                                            {[{ label: 'KG Var', val: kgPercentages.var }, { label: 'KG Yok', val: kgPercentages.yok }].map(({ label, val }) => (
+                                                <div key={label} className={`text-center p-1.5 rounded-lg ${val >= 60 ? 'bg-[#006A4E] border border-[#FDB913]/40' : 'bg-[#404040]'}`}>
+                                                    <div className="text-white font-black text-xs">{label}</div>
+                                                    <div className="text-[#FDB913] font-bold text-sm">%{val}</div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
