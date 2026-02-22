@@ -13,6 +13,7 @@ export default defineConfig({
         sourcemap: false,
         minify: 'esbuild',
         rollupOptions: {
+            external: ['@capacitor/app', '@capacitor/push-notifications'],
             output: {
                 manualChunks: {
                     'vendor': ['react', 'react-dom'],
