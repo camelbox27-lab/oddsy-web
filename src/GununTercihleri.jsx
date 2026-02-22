@@ -52,8 +52,10 @@ function GununTercihleri({ userData }) {
     useEffect(() => {
         const q = query(collection(db, 'predictions'), where('categoryKey', '==', 4));
         const unsub = onSnapshot(q, (snap) => {
+            const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+            const todaySeconds = startOfToday.getTime() / 1000;
             let list = snap.docs.map(d => ({ id: d.id, ...d.data(), source: 'admin' }));
-            list = list.filter(item => !item.hiddenFromDaily);
+            list = list.filter(item => !item.hiddenFromDaily && (item.createdAt?.seconds || 0) >= todaySeconds);
             list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
             setFirestoreMatches(list);
             setFsLoading(false);
