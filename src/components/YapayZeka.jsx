@@ -104,6 +104,9 @@ export default function YapayZeka() {
     const [showFeatured, setShowFeatured] = useState(false);
     const [showReady, setShowReady] = useState(false);
     const [pendingFeaturedAnalysis, setPendingFeaturedAnalysis] = useState(false);
+    const [pendingReadyAnalysis, setPendingReadyAnalysis] = useState(false);
+    const [readyAnalysisLoading, setReadyAnalysisLoading] = useState(false);
+    const [selectedReadyMatch, setSelectedReadyMatch] = useState(null);
 
     // Güncel JSON dosyasını yükle
     useEffect(() => {
@@ -164,6 +167,14 @@ export default function YapayZeka() {
         setPendingFeaturedAnalysis(true);
     };
 
+    // Hazır Analiz maç seçildiğinde - sessiz mod, basit loading
+    const handleReadySelect = (match) => {
+        setShowReady(false);
+        setSelectedReadyMatch(match);
+        handleMatchSelect(String(match.Id));
+        setPendingReadyAnalysis(true);
+    };
+
     // Oran türü değiştiğinde oranları güncelle
     useEffect(() => {
         if (selectedMatch) {
@@ -183,9 +194,17 @@ export default function YapayZeka() {
     useEffect(() => {
         if (pendingFeaturedAnalysis && selectedMatch && (oran1 || oran0 || oran2)) {
             setPendingFeaturedAnalysis(false);
-            startAnalysis();
+            startAnalysis(false);
         }
     }, [pendingFeaturedAnalysis, selectedMatch, oran1, oran0, oran2]);
+
+    // Hazır analiz maç seçildikten sonra oranlar dolunca sessiz analiz başlat
+    useEffect(() => {
+        if (pendingReadyAnalysis && selectedMatch && (oran1 || oran0 || oran2)) {
+            setPendingReadyAnalysis(false);
+            startAnalysis(true);
+        }
+    }, [pendingReadyAnalysis, selectedMatch, oran1, oran0, oran2]);
 
     // Seçilen maça göre oran seçenekleri
     const getOddsOptions = (key) => {
@@ -422,7 +441,7 @@ export default function YapayZeka() {
             .map(([score, count]) => ({ score, count }));
     };
 
-    const startAnalysis = async () => {
+    const startAnalysis = async (silent = false) => {
         // Validasyon
         if (!oran1 && !oran0 && !oran2) {
             setError('Lütfen en az bir oran girin!');
@@ -430,14 +449,18 @@ export default function YapayZeka() {
         }
 
         setError('');
-        setAnalyzing(true);
         setResults([]);
         setShowResults(false);
 
-        const msgs = ["Sistem Hazırlanıyor...", "Tüm Ligler Taranıyor...", "Eşleşmeler Hazırlanıyor...", "Bahis Türleri Analiz Ediliyor..."];
-        for (let i = 0; i < msgs.length; i++) {
-            setLoadingMsg(msgs[i]);
-            await new Promise(r => setTimeout(r, 150));
+        if (silent) {
+            setReadyAnalysisLoading(true);
+        } else {
+            setAnalyzing(true);
+            const msgs = ["Sistem Hazırlanıyor...", "Tüm Ligler Taranıyor...", "Eşleşmeler Hazırlanıyor...", "Bahis Türleri Analiz Ediliyor..."];
+            for (let i = 0; i < msgs.length; i++) {
+                setLoadingMsg(msgs[i]);
+                await new Promise(r => setTimeout(r, 150));
+            }
         }
 
         // Oran key'leri
@@ -541,7 +564,11 @@ export default function YapayZeka() {
             setError('Veri işlenirken hata oluştu.');
         }
 
-        setAnalyzing(false);
+        if (silent) {
+            setReadyAnalysisLoading(false);
+        } else {
+            setAnalyzing(false);
+        }
     };
 
     const formatDate = (dateStr) => {
@@ -568,6 +595,33 @@ export default function YapayZeka() {
 
     const loadingMsgs = ["Sistem Hazırlanıyor...", "Tüm Ligler Taranıyor...", "Eşleşmeler Hazırlanıyor...", "Bahis Türleri Analiz Ediliyor..."];
     const loadingStep = loadingMsgs.indexOf(loadingMsg);
+
+    if (readyAnalysisLoading) {
+        const rm = selectedReadyMatch;
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#333]">
+                <div className="flex flex-col items-center gap-6 p-8 text-center">
+                    {rm && (
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="flex flex-col items-center gap-2">
+                                <img src={getTeamLogo(rm.Ev)} alt={rm.Ev} onError={handleLogoError} style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
+                                <span className="text-white font-bold text-sm">{rm.Ev}</span>
+                            </div>
+                            <span className="text-[#FDB913] font-black text-2xl">VS</span>
+                            <div className="flex flex-col items-center gap-2">
+                                <img src={getTeamLogo(rm.Dep)} alt={rm.Dep} onError={handleLogoError} style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
+                                <span className="text-white font-bold text-sm">{rm.Dep}</span>
+                            </div>
+                        </div>
+                    )}
+                    <div style={{ width: '40px', height: '40px', border: '3px solid #555', borderTopColor: '#FDB913', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <p className="text-[#FDB913] font-bold text-lg">Lütfen Bekleyiniz...</p>
+                    <p className="text-gray-400 text-sm">Analiz hazırlanıyor</p>
+                </div>
+                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+            </div>
+        );
+    }
 
     if (analyzing) {
         return (
@@ -922,7 +976,7 @@ export default function YapayZeka() {
                                 {guncelMatches.filter(m => m.Ready === 2).map(match => (
                                     <button
                                         key={match.Id}
-                                        onClick={() => handleFeaturedSelect(match)}
+                                        onClick={() => handleReadySelect(match)}
                                         className="flex items-center justify-between gap-4 bg-[#333] p-4 rounded-xl border border-[#555] hover:border-[#10B981] hover:shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-all cursor-pointer"
                                     >
                                         <div className="flex-1 flex flex-col items-center gap-2">
