@@ -316,8 +316,7 @@ export default function ManuelAnaliz() {
                 return new Date(b.Tarih) - new Date(a.Tarih);
             });
 
-            const formattedAll = allMatches.map(match => ({
-                ...match,
+            const topResults = allMatches.slice(0, 10).map(match => ({
                 evSahibi: match['Ev Sahibi'] || '-',
                 deplasman: match['Deplasman'] || '-',
                 ilkYari: formatScore(match['İlk Yarı Skor']),
@@ -326,21 +325,21 @@ export default function ManuelAnaliz() {
                 tarih: formatDate(match['Tarih']),
                 oran1: getOddsValue(match, oranKey1),
                 oran0: getOddsValue(match, oranKey0),
-                oran2: getOddsValue(match, oranKey2)
+                oran2: getOddsValue(match, oranKey2),
+                lig: match._ligAdi
             }));
 
-            // IY/MS filtresini kaldırdık, sadece ilk 10 maç dönülecek
-            const displayMatches = formattedAll.slice(0, 10);
-            const topResults = displayMatches;
-
-            // Analizler SADECE gösterilecek 10 maç üzerinden yapılır
-            const { recommendations, toplamGolOnerisi, msPercentages, altUstPercentages } = analyzeBettingMarkets(topResults);
+            const analysisResult = analyzeBettingMarkets(topResults);
+            const recommendations = analysisResult?.recommendations || [];
+            const toplamGolOnerisi = analysisResult?.toplamGolOnerisi || null;
+            const msPercentages = analysisResult?.msPercentages || null;
+            const altUstPercentages = analysisResult?.altUstPercentages || null;
 
             setResults({ matches: topResults, recommendations, toplamGolOnerisi, msPercentages, altUstPercentages, totalAnalyzed: allMatches.length });
             setShowResults(true);
         } catch (err) {
-            console.error(err);
-            setError('Veri işlenirken hata oluştu.');
+            console.error('ManuelAnaliz hata:', err);
+            setError('Hata: ' + (err?.message || String(err)));
         }
 
         setAnalyzing(false);
