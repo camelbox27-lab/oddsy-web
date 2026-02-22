@@ -474,13 +474,13 @@ html, body, #root, .app {
   display: none;
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  height: 62px;
-  background: var(--bg-card);
-  border-top: 1px solid var(--border);
+  height: 72px;
+  background: #0a0a12;
+  border-top: 1px solid rgba(255,215,0,0.18);
   z-index: 1100;
   align-items: center;
   justify-content: space-around;
-  padding: 0 4px;
+  padding: 0 2px;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .bottom-nav-btn {
@@ -488,33 +488,43 @@ html, body, #root, .app {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 5px;
   flex: 1;
   height: 100%;
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-secondary);
-  transition: color 0.2s;
-  padding: 0 2px;
+  color: rgba(255,215,0,0.38);
+  transition: color 0.15s;
+  padding: 0;
   min-width: 0;
 }
-.bottom-nav-btn.active { color: var(--gold); }
-.bottom-nav-btn-icon { font-size: 20px; line-height: 1; }
-.bottom-nav-btn-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 64px; }
+.bottom-nav-btn.active { color: #FFD700; }
+.bottom-nav-btn-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+.bottom-nav-btn-icon svg { width: 26px; height: 26px; }
+.bottom-nav-btn-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap; color: inherit; }
+.bottom-nav-center-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
 .bottom-nav-center {
-  width: 52px; height: 52px;
+  width: 54px; height: 54px;
   border-radius: 50%;
-  background: var(--gold);
-  color: #111;
-  font-size: 22px;
+  background: linear-gradient(145deg, #FFD700 0%, #c8960a 100%);
+  color: #0a0a12;
   display: flex; align-items: center; justify-content: center;
   border: none; cursor: pointer;
-  flex-shrink: 0;
-  box-shadow: 0 4px 15px rgba(255,215,0,0.4);
-  transition: transform 0.2s;
+  box-shadow: 0 0 18px rgba(255,215,0,0.45), 0 0 0 2px rgba(255,215,0,0.2);
+  transition: transform 0.15s;
+  margin-top: -14px;
 }
-.bottom-nav-center:active { transform: scale(0.93); }
+.bottom-nav-center:active { transform: scale(0.9); }
+.bottom-nav-center-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,215,0,0.6); }
 
 /* Hero Section */
 .hero-section {
@@ -1666,19 +1676,67 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
 
 
 
+const NAV_ICONS = {
+    kupon: (
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 5H3a1 1 0 0 0-1 1v4a1 1 0 0 1 0 2v4a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-4a1 1 0 0 1 0-2V6a1 1 0 0 0-1-1zm-1 6.5a2.5 2.5 0 0 0 0 3V15H4v-.5a2.5 2.5 0 0 0 0-3V7h16v.5z"/>
+            <circle cx="12" cy="12" r="1.5"/>
+            <path d="M9 9h1v6H9zM14 9h1v6h-1z" opacity="0.6"/>
+        </svg>
+    ),
+    iygol: (
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <rect x="2" y="3" width="20" height="18" rx="2" opacity="0.15"/>
+            <path d="M2 5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z" fill="none" stroke="currentColor" strokeWidth="1.8"/>
+            <path d="M2 8h20M2 16h20M8 5v14M16 5v14" stroke="currentColor" strokeWidth="1.4" opacity="0.7"/>
+            <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+        </svg>
+    ),
+    yzeka: (
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C8.5 2 6 4.5 6 7.5c0 1.5.5 2.8 1.4 3.8C6.5 12.2 6 13.3 6 14.5c0 2.5 2 4.5 4.5 4.5h3c2.5 0 4.5-2 4.5-4.5 0-1.2-.5-2.3-1.4-3.2C17.5 10.3 18 9 18 7.5 18 4.5 15.5 2 12 2z" opacity="0.9"/>
+            <circle cx="9.5" cy="8" r="1.2" fill="#0a0a12"/>
+            <circle cx="14.5" cy="8" r="1.2" fill="#0a0a12"/>
+            <path d="M9.5 11.5c0 0 .8 1.5 2.5 1.5s2.5-1.5 2.5-1.5" fill="none" stroke="#0a0a12" strokeWidth="1.3" strokeLinecap="round"/>
+            <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" strokeWidth="1.8"/>
+            <line x1="9" y1="22" x2="15" y2="22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+    ),
+    editor: (
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+            <path d="M15 13l4 4" stroke="#0a0a12" strokeWidth="1.5" strokeLinecap="round" opacity="0.8"/>
+            <circle cx="17" cy="17" r="3" fill="currentColor" opacity="0.9"/>
+            <path d="M16 17h2M17 16v2" stroke="#0a0a12" strokeWidth="1.3" strokeLinecap="round"/>
+        </svg>
+    ),
+    menu: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a12" strokeWidth="2.3" strokeLinecap="round">
+            <line x1="4" y1="7" x2="20" y2="7"/>
+            <line x1="4" y1="12" x2="20" y2="12"/>
+            <line x1="4" y1="17" x2="14" y2="17"/>
+        </svg>
+    ),
+};
+
 function BottomNav({ onNavigate, onMenuOpen, currentRoute }) {
     const items = [
-        { icon: '🤖', label: 'Yapay Zeka', route: 'yapay-zeka-analizleri' },
-        { icon: '✏️', label: 'Manuel', route: 'manuel-analiz' },
-        null, // center menu button
-        { icon: '⚽', label: 'İlk Yarı', route: 'ilk-yari-gol' },
-        { icon: '⭐', label: 'Tercihler', route: 'gunun-tercihleri' },
+        { icon: NAV_ICONS.kupon,  label: 'Kuponlar', route: 'gunun-tercihleri' },
+        { icon: NAV_ICONS.iygol,  label: 'İY Gol',   route: 'ilk-yari-gol' },
+        null,
+        { icon: NAV_ICONS.yzeka,  label: 'Y. Zeka',  route: 'yapay-zeka-analizleri' },
+        { icon: NAV_ICONS.editor, label: 'Editör',   route: 'manuel-analiz' },
     ];
     return (
         <nav className="bottom-nav">
             {items.map((item, i) =>
                 item === null ? (
-                    <button key="menu" className="bottom-nav-center" onClick={onMenuOpen}>☰</button>
+                    <div key="menu" className="bottom-nav-center-wrap">
+                        <button className="bottom-nav-center" onClick={onMenuOpen}>
+                            {NAV_ICONS.menu}
+                        </button>
+                        <span className="bottom-nav-center-label">Bülten</span>
+                    </div>
                 ) : (
                     <button
                         key={item.route}
@@ -1715,6 +1773,36 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
                                 <button className="hero-btn secondary" onClick={onLoginClick}>Giriş Yap</button>
                             </>
                         )}
+                    </div>
+                    {/* Store Download Buttons */}
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '14px', flexWrap: 'wrap' }}>
+                        <a
+                            href="https://github.com/camelbox27-lab/oddsy-web/releases/download/v1.0/Oddsy.apk"
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.75)', border: '1.5px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '9px 18px', textDecoration: 'none', backdropFilter: 'blur(10px)' }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M3.18 23a1 1 0 0 1-.68-1.71L15.29 8.5l-2.83-2.83L3.5 14.63a1 1 0 1 1-1.41-1.41L12.46 2.84a1 1 0 0 1 1.41 0l4.24 4.24a1 1 0 0 1 0 1.41L3.86 22.74A1 1 0 0 1 3.18 23z" fill="#ea4335"/>
+                                <path d="M2.5 2.09v19.82L14.09 12 2.5 2.09z" fill="#4285f4"/>
+                                <path d="M2.5 2.09L14.09 12l3.54-3.54-12-6.91a1 1 0 0 0-3.13.54z" fill="#34a853"/>
+                                <path d="M2.5 21.91l12-6.91-3.54-3.54L2.5 21.91z" fill="#fbbc05"/>
+                            </svg>
+                            <div style={{ textAlign: 'left' }}>
+                                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.5px', lineHeight: 1 }}>MOBİL UYGULAMA İNDİR</div>
+                                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.3 }}>Google Play</div>
+                            </div>
+                        </a>
+                        <button
+                            onClick={() => showAlert('App Store yakında sizlerle! 🍎', 'info')}
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.75)', border: '1.5px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '9px 18px', cursor: 'pointer', backdropFilter: 'blur(10px)' }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                            </svg>
+                            <div style={{ textAlign: 'left' }}>
+                                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.5px', lineHeight: 1 }}>ÇOK YAKINDA</div>
+                                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.3 }}>App Store</div>
+                            </div>
+                        </button>
                     </div>
                 </div>
             </div>

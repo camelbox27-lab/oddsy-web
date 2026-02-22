@@ -756,21 +756,6 @@ export default function YapayZeka() {
                                     </div>
                                 )}
 
-                                {/* İY/MS Kombinasyonları */}
-                                {iymsRecommendation?.allPercentages && (
-                                    <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-[#FDB913] shadow-[0_0_8px_rgba(253,185,19,0.2)]">
-                                        <span className="text-[#FDB913] font-bold text-xs sm:text-sm">İY/MS Kombinasyonları</span>
-                                        <div className="grid grid-cols-2 gap-1 mt-2">
-                                            {['1/0', '2/0', '1/2', '2/1'].map(combo => (
-                                                <div key={combo} className={`text-center p-1.5 rounded-lg ${iymsRecommendation.iyms === combo ? 'bg-[#006A4E] border border-[#FDB913]' : 'bg-[#404040]'}`}>
-                                                    <div className="text-white font-black text-xs">{combo}</div>
-                                                    <div className="text-[#FDB913] font-bold text-sm">%{iymsRecommendation.allPercentages[combo]}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
                                 {/* Diğer Öneriler - MS ve 2.5 dışındakiler */}
                                 {recommendations.filter(r => !['İlk Yarı KG Var', 'MS 1', 'MS 0', 'MS 2', 'MS 2.5 Üst', 'MS 2.5 Alt'].includes(r.market)).map((rec, i) => (
                                     <div
