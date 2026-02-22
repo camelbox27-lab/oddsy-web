@@ -1,3 +1,5 @@
+import { App as CapApp } from '@capacitor/app';
+import { PushNotifications } from '@capacitor/push-notifications';
 import {
     createUserWithEmailAndPassword,
     deleteUser,
@@ -466,6 +468,53 @@ html, body, #root, .app {
 .sidebar-divider { height: 1px; background: var(--border); margin: 20px 0; }
 
 .main-content { padding-top: 85px; padding-bottom: 0; min-height: calc(100vh - 85px); background: var(--bg-dark); }
+
+/* Bottom Navigation Bar */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 62px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  z-index: 1100;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.bottom-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1;
+  height: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+  padding: 0 2px;
+  min-width: 0;
+}
+.bottom-nav-btn.active { color: var(--gold); }
+.bottom-nav-btn-icon { font-size: 20px; line-height: 1; }
+.bottom-nav-btn-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 64px; }
+.bottom-nav-center {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #111;
+  font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(255,215,0,0.4);
+  transition: transform 0.2s;
+}
+.bottom-nav-center:active { transform: scale(0.93); }
 
 /* Hero Section */
 .hero-section {
@@ -1117,14 +1166,16 @@ html, body, #root, .app {
 /* Mobile Breakpoint */
 @media (max-width: 768px) {
   .header-nav { display: none; }
-  .menu-btn { display: flex !important; }
+  .menu-btn { display: none !important; }
+  .bottom-nav { display: flex; }
+  .main-content { padding-bottom: 70px; }
   .hero-title { font-size: 30px; padding: 0 10px; }
   .hero-subtitle { font-size: 14px; padding: 0 20px; }
   .logo { font-size: 24px; }
   .features-section { grid-template-columns: 1fr; }
-  .hero-buttons { 
-    flex-direction: column !important; 
-    width: 100%; 
+  .hero-buttons {
+    flex-direction: column !important;
+    width: 100%;
     padding: 0 20px;
     gap: 12px !important;
   }
@@ -1614,6 +1665,34 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
 }
 
 
+
+function BottomNav({ onNavigate, onMenuOpen, currentRoute }) {
+    const items = [
+        { icon: '🤖', label: 'Yapay Zeka', route: 'yapay-zeka-analizleri' },
+        { icon: '✏️', label: 'Manuel', route: 'manuel-analiz' },
+        null, // center menu button
+        { icon: '⚽', label: 'İlk Yarı', route: 'ilk-yari-gol' },
+        { icon: '⭐', label: 'Tercihler', route: 'gunun-tercihleri' },
+    ];
+    return (
+        <nav className="bottom-nav">
+            {items.map((item, i) =>
+                item === null ? (
+                    <button key="menu" className="bottom-nav-center" onClick={onMenuOpen}>☰</button>
+                ) : (
+                    <button
+                        key={item.route}
+                        className={`bottom-nav-btn${currentRoute === item.route ? ' active' : ''}`}
+                        onClick={() => onNavigate(item.route)}
+                    >
+                        <span className="bottom-nav-btn-icon">{item.icon}</span>
+                        <span className="bottom-nav-btn-label">{item.label}</span>
+                    </button>
+                )
+            )}
+        </nav>
+    );
+}
 
 function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
 
@@ -4086,6 +4165,36 @@ export default function App() {
         return () => clearInterval(interval);
     }, [user]);
 
+    // Push Notification kurulumu (sadece native Capacitor'da çalışır)
+    useEffect(() => {
+        if (!user) return;
+        const setupPush = async () => {
+            try {
+                const permResult = await PushNotifications.requestPermissions();
+                if (permResult.receive !== 'granted') return;
+                await PushNotifications.register();
+                const regListener = await PushNotifications.addListener('registration', async (token) => {
+                    try {
+                        await updateDoc(doc(db, 'users', user.uid), { fcmToken: token.value });
+                    } catch (_) {}
+                });
+                const actionListener = await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+                    const data = action.notification.data;
+                    if (data?.route) {
+                        setRoute(data.route);
+                        setRouteParams({});
+                    }
+                });
+                return () => {
+                    regListener.remove();
+                    actionListener.remove();
+                };
+            } catch (_) {}
+        };
+        const cleanup = setupPush();
+        return () => { cleanup.then(fn => fn && fn()); };
+    }, [user]);
+
     const navigate = useCallback((r, p = {}, push = true) => {
         if (r === 'about_modal') {
             setLegalType('about');
@@ -4109,6 +4218,34 @@ export default function App() {
     }, [user]);
     const showAlert = useCallback((m, t) => setAlert({ message: m, type: t }), []);
 
+    // Android geri tuşu yönetimi
+    useEffect(() => {
+        let backHandler;
+        try {
+            backHandler = CapApp.addListener('backButton', () => {
+                if (window.history.state && window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    CapApp.exitApp();
+                }
+            });
+        } catch (_) {}
+        const onPopState = (e) => {
+            if (e.state?.route) {
+                setRoute(e.state.route);
+                setRouteParams(e.state.params || {});
+            } else {
+                setRoute('home');
+                setRouteParams({});
+            }
+        };
+        window.addEventListener('popstate', onPopState);
+        return () => {
+            window.removeEventListener('popstate', onPopState);
+            if (backHandler?.remove) backHandler.remove();
+        };
+    }, []);
+
     if (loading && route !== 'auth' && route !== 'auth-action') return <div className="auth-loading-screen"><div className="spinner" /><h3>Oddsy Yükleniyor...</h3></div>;
 
     const render = () => {
@@ -4128,31 +4265,72 @@ export default function App() {
                 if (userData?.role === 'admin') {
                     const AdminPanel = () => {
                         const [adminView, setAdminView] = useState('content');
+                        const [notifTitle, setNotifTitle] = useState('');
+                        const [notifBody, setNotifBody] = useState('');
+                        const [notifRoute, setNotifRoute] = useState('');
+                        const [notifLoading, setNotifLoading] = useState(false);
+
+                        const sendNotification = async () => {
+                            if (!notifTitle.trim() || !notifBody.trim()) return;
+                            setNotifLoading(true);
+                            try {
+                                const resp = await fetch('/api/send-notification', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ title: notifTitle, body: notifBody, route: notifRoute, callerUid: user.uid }),
+                                });
+                                const result = await resp.json();
+                                if (!resp.ok) throw new Error(result.error || 'Hata');
+                                showAlert(`Bildirim gönderildi! (${result.sent} kullanıcı)`, 'success');
+                                setNotifTitle(''); setNotifBody(''); setNotifRoute('');
+                            } catch (e) {
+                                showAlert('Hata: ' + e.message, 'error');
+                            }
+                            setNotifLoading(false);
+                        };
 
                         return (
                             <div className="admin-route-wrapper" style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
                                 <button className="back-btn" onClick={() => navigate('home')}>Geri</button>
                                 <div className="admin-tab-buttons" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 20, marginBottom: 20 }}>
-                                    <button
-                                        className={`hero-btn secondary ${adminView === 'dashboard' ? 'active' : ''}`}
-                                        style={{ fontSize: '12px', padding: '10px 16px' }}
-                                        onClick={() => setAdminView('dashboard')}
-                                    >
-                                        Dashboard
-                                    </button>
-                                    <button
-                                        className={`hero-btn secondary ${adminView === 'content' ? 'active' : ''}`}
-                                        style={{ fontSize: '12px', padding: '10px 16px' }}
-                                        onClick={() => setAdminView('content')}
-                                    >
-                                        İçerik Yönetimi
-                                    </button>
+                                    <button className={`hero-btn secondary ${adminView === 'dashboard' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('dashboard')}>Dashboard</button>
+                                    <button className={`hero-btn secondary ${adminView === 'content' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('content')}>İçerik Yönetimi</button>
+                                    <button className={`hero-btn secondary ${adminView === 'bildirim' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('bildirim')}>🔔 Bildirim Gönder</button>
                                 </div>
                                 <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10 }}>
-                                    {adminView === 'dashboard' ? (
-                                        <AdminDashboard onBack={navigate} userData={userData} />
-                                    ) : (
-                                        <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />
+                                    {adminView === 'dashboard' && <AdminDashboard onBack={navigate} userData={userData} />}
+                                    {adminView === 'content' && <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />}
+                                    {adminView === 'bildirim' && (
+                                        <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                            <h3 style={{ color: 'var(--gold)', marginBottom: 8 }}>🔔 Push Bildirim Gönder</h3>
+                                            <input
+                                                placeholder="Başlık"
+                                                value={notifTitle}
+                                                onChange={e => setNotifTitle(e.target.value)}
+                                                style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: 14 }}
+                                            />
+                                            <textarea
+                                                placeholder="Mesaj"
+                                                value={notifBody}
+                                                onChange={e => setNotifBody(e.target.value)}
+                                                rows={3}
+                                                style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: 14, resize: 'vertical' }}
+                                            />
+                                            <input
+                                                placeholder="Yönlendirme (opsiyonel, örn: gunun-tercihleri)"
+                                                value={notifRoute}
+                                                onChange={e => setNotifRoute(e.target.value)}
+                                                style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: 14 }}
+                                            />
+                                            <button
+                                                className="hero-btn primary"
+                                                onClick={sendNotification}
+                                                disabled={notifLoading || !notifTitle.trim() || !notifBody.trim()}
+                                                style={{ opacity: notifLoading ? 0.6 : 1 }}
+                                            >
+                                                {notifLoading ? 'Gönderiliyor...' : '🚀 Tüm Kullanıcılara Gönder'}
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -4249,6 +4427,7 @@ export default function App() {
                 />
                 <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onNavigate={navigate} currentRoute={route} userData={userData} />
                 <main className="main-content">{render()}</main>
+                <BottomNav onNavigate={navigate} onMenuOpen={() => setSidebarOpen(true)} currentRoute={route} />
             </div>
         </ErrorBoundary>
     );
