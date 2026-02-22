@@ -152,9 +152,7 @@ export default function ManuelAnaliz() {
             }
         });
 
-        const tgMax = Math.max(tg_0_1, tg_2_3, tg_4_5, tg_6_plus);
         let toplamGolOnerisi = null;
-        const totalMatches = matches.length;
         if (totalMatches > 0) {
             const araliklar = [
                 { aralik: "0-1 Gol", count: tg_0_1 },
@@ -172,16 +170,16 @@ export default function ManuelAnaliz() {
 
             if (birinci.yuzde >= 50) {
                 guc = "guclu";
-                oneriText = `Toplam ${birinci.aralik}`;
+                oneriText = `${birinci.aralik}`;
             } else if (birinci.yuzde >= 35) {
                 guc = "normal";
-                oneriText = `Toplam ${birinci.aralik}`;
+                oneriText = `${birinci.aralik}`;
             } else if (birinci.yuzde - ikinci.yuzde <= 5) {
                 guc = "belirsiz";
-                oneriText = `Toplam ${birinci.aralik} / ${ikinci.aralik}`;
+                oneriText = `${birinci.aralik} / ${ikinci.aralik}`;
             } else {
                 guc = "normal";
-                oneriText = `Toplam ${birinci.aralik}`;
+                oneriText = `${birinci.aralik}`;
             }
 
             toplamGolOnerisi = {
@@ -194,14 +192,25 @@ export default function ManuelAnaliz() {
             };
         }
 
-        // Alt/Üst çakismasını önle: sadece biri gösterilecek
+        const msPercentages = {
+            ms1: totalMatches ? Math.round((marketStats['MS 1'] / totalMatches) * 100) : 0,
+            ms0: totalMatches ? Math.round((marketStats['MS 0'] / totalMatches) * 100) : 0,
+            ms2: totalMatches ? Math.round((marketStats['MS 2'] / totalMatches) * 100) : 0
+        };
+
+        const altUstPercentages = {
+            ust: totalMatches ? Math.round((marketStats['MS 2.5 Üst'] / totalMatches) * 100) : 0,
+            alt: totalMatches ? Math.round((marketStats['MS 2.5 Alt'] / totalMatches) * 100) : 0
+        };
+
         const rawPercentages = {};
         Object.entries(marketStats).forEach(([market, count]) => {
-            rawPercentages[market] = Math.round((count / totalMatches) * 100);
+            rawPercentages[market] = totalMatches ? Math.round((count / totalMatches) * 100) : 0;
         });
-        const altUstPairs = [['MS 2.5 Üst', 'MS 2.5 Alt'], ['KG Var', 'KG Yok']];
-        const suppressedMarkets = new Set();
-        altUstPairs.forEach(([a, b]) => {
+
+        const suppressedMarkets = new Set(['MS 1', 'MS 0', 'MS 2', 'MS 2.5 Üst', 'MS 2.5 Alt', 'MS 3.5 Üst', 'MS 1.5 Alt', 'MS 5.5 Üst']);
+        const cgPairs = [['KG Var', 'KG Yok']];
+        cgPairs.forEach(([a, b]) => {
             const pA = rawPercentages[a] || 0;
             const pB = rawPercentages[b] || 0;
             if (pA >= pB) suppressedMarkets.add(b);
@@ -214,34 +223,14 @@ export default function ManuelAnaliz() {
                 .map(([market, count]) => ({
                     market,
                     count,
-                    percentage: Math.round((count / totalMatches) * 100)
+                    percentage: rawPercentages[market]
                 }))
                 .filter(item => item.percentage >= 60)
                 .sort((a, b) => b.percentage - a.percentage),
-            toplamGolOnerisi
+            toplamGolOnerisi,
+            msPercentages,
+            altUstPercentages
         };
-    };
-
-    const analyzeIYMS = (matches) => {
-        if (!matches || matches.length === 0) return null;
-        const ALLOWED_IYMS = ['1/0', '2/0', '1/2', '2/1'];
-        const iymsStats = {};
-        matches.forEach(match => {
-            const iyms = match.iyms || match['İY/MS'] || '-';
-            const formatted = typeof iyms === 'string' ? iyms.trim() : String(iyms).trim();
-            if (ALLOWED_IYMS.includes(formatted)) {
-                iymsStats[formatted] = (iymsStats[formatted] || 0) + 1;
-            }
-        });
-        if (Object.keys(iymsStats).length === 0) return null;
-        let maxCount = 0;
-        let topIYMS = null;
-        Object.entries(iymsStats).forEach(([iyms, count]) => {
-            if (count > maxCount) { maxCount = count; topIYMS = iyms; }
-        });
-        if (!topIYMS) return null;
-        const percentage = Math.round((maxCount / matches.length) * 100);
-        return { iyms: topIYMS, count: maxCount, percentage, showPercentage: true };
     };
 
     const startAnalysis = async () => {
@@ -262,7 +251,7 @@ export default function ManuelAnaliz() {
         const msgs = ["Sistem Hazırlanıyor...", "Tüm Ligler Taranıyor...", "Oranlar Karşılaştırılıyor...", "Bahis Türleri Analiz Ediliyor..."];
         for (let i = 0; i < msgs.length; i++) {
             setLoadingMsg(msgs[i]);
-            await new Promise(r => setTimeout(r, 400));
+            await new Promise(r => setTimeout(r, 150));
         }
 
         const oranKey1 = oranTuru === 'acilis'
@@ -325,9 +314,8 @@ export default function ManuelAnaliz() {
                 return new Date(b.Tarih) - new Date(a.Tarih);
             });
 
-            const analysisMatches = allMatches;
-
-            const { recommendations, toplamGolOnerisi } = analyzeBettingMarkets(analysisMatches.map(match => ({
+            const formattedAll = allMatches.map(match => ({
+                ...match,
                 evSahibi: match['Ev Sahibi'] || '-',
                 deplasman: match['Deplasman'] || '-',
                 ilkYari: formatScore(match['İlk Yarı Skor']),
@@ -336,45 +324,17 @@ export default function ManuelAnaliz() {
                 tarih: formatDate(match['Tarih']),
                 oran1: getOddsValue(match, oranKey1),
                 oran0: getOddsValue(match, oranKey0),
-                oran2: getOddsValue(match, oranKey2),
-                lig: match._ligAdi
-            })));
-
-            // IY/MS: sadece izin verilen kombinasyonları ara, maçlarla tutarlı ol
-            const ALLOWED_IYMS = ['1/0', '2/0', '1/2', '2/1'];
-            const formattedAll = analysisMatches.map(m => ({
-                ...m,
-                _iymsFormatted: formatIYMS(m['İY/MS'])
-            }));
-            const allowedMatches = formattedAll.filter(m => ALLOWED_IYMS.includes(m._iymsFormatted));
-            const iymsRecommendation = analyzeIYMS(
-                allowedMatches.slice(0, 40).map(m => ({ ...m, iyms: m._iymsFormatted }))
-            );
-
-            let displayMatches;
-            if (iymsRecommendation && iymsRecommendation.iyms) {
-                displayMatches = formattedAll
-                    .filter(m => m._iymsFormatted === iymsRecommendation.iyms)
-                    .slice(0, 10);
-            } else {
-                displayMatches = formattedAll.slice(0, 10);
-            }
-
-            // Manuel analizde 10 maç göster
-            const topResults = displayMatches.map(match => ({
-                evSahibi: match['Ev Sahibi'] || '-',
-                deplasman: match['Deplasman'] || '-',
-                ilkYari: formatScore(match['İlk Yarı Skor']),
-                macSonucu: formatScore(match['Maç Sonucu Skor']),
-                iyms: formatIYMS(match['İY/MS']),
-                tarih: formatDate(match['Tarih']),
-                oran1: getOddsValue(match, oranKey1),
-                oran0: getOddsValue(match, oranKey0),
-                oran2: getOddsValue(match, oranKey2),
-                lig: match._ligAdi
+                oran2: getOddsValue(match, oranKey2)
             }));
 
-            setResults({ matches: topResults, recommendations, iymsRecommendation, toplamGolOnerisi, totalAnalyzed: analysisMatches.length });
+            // IY/MS filtresini kaldırdık, sadece ilk 10 maç dönülecek
+            const displayMatches = formattedAll.slice(0, 10);
+            const topResults = displayMatches;
+
+            // Analizler SADECE gösterilecek 10 maç üzerinden yapılır
+            const { recommendations, toplamGolOnerisi, msPercentages, altUstPercentages } = analyzeBettingMarkets(topResults);
+
+            setResults({ matches: topResults, recommendations, toplamGolOnerisi, msPercentages, altUstPercentages, totalAnalyzed: allMatches.length });
             setShowResults(true);
         } catch (err) {
             console.error(err);
@@ -398,14 +358,20 @@ export default function ManuelAnaliz() {
     if (analyzing) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-[#333] text-white">
-                <div className="text-6xl mb-6 animate-pulse">🔍</div>
-                <div className="text-2xl font-bold">{loadingMsg}</div>
+                <div className="text-6xl mb-6 animate-[pulse_1.5s_ease-in-out_infinite] scale-110 transition-all opacity-90 text-[#FDB913] drop-shadow-[0_0_15px_rgba(253,185,19,0.5)]">⚡</div>
+                <div className="text-2xl font-bold text-[#FDB913] mb-2">{loadingMsg}</div>
+                <div className="text-sm text-gray-400 mb-6">Lütfen bekleyin...</div>
+                <div className="flex gap-2">
+                    {[0, 1, 2, 3].map(i => (
+                        <div key={i} className={`w-3 h-3 rounded-full bg-[#FDB913] animate-bounce`} style={{ animationDelay: `${i * 0.15}s` }}></div>
+                    ))}
+                </div>
             </div>
         );
     }
 
     if (showResults) {
-        const { matches = [], recommendations = [], iymsRecommendation = null, toplamGolOnerisi = null, totalAnalyzed = 0 } = results || {};
+        const { matches = [], recommendations = [], toplamGolOnerisi = null, msPercentages = null, altUstPercentages = null, totalAnalyzed = 0 } = results || {};
 
         return (
             <div className="min-h-screen p-4 bg-[#333] text-white font-sans">
@@ -471,8 +437,8 @@ export default function ManuelAnaliz() {
                                 {recommendations.find(r => r.market === 'İlk Yarı KG Var') && (
                                     <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all">
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-red-400 font-bold text-xs sm:text-sm">İlk Yarı KG Var</span>
-                                            <span className="text-lg sm:text-xl font-black text-white">
+                                            <span className="text-red-400 font-bold text-[11px] sm:text-xs xl:text-sm whitespace-nowrap">İlk Yarı KG Var</span>
+                                            <span className="text-base sm:text-lg font-black text-white">
                                                 %{recommendations.find(r => r.market === 'İlk Yarı KG Var').percentage}
                                             </span>
                                         </div>
@@ -486,11 +452,11 @@ export default function ManuelAnaliz() {
                                 {toplamGolOnerisi && (
                                     <div className="bg-[#333] p-2 sm:p-3 rounded-lg border-2 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-red-400 font-bold text-xs sm:text-sm">Toplam Gol Önerisi</span>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-lg sm:text-xl font-black text-white">{toplamGolOnerisi.oneri}</span>
-                                                {toplamGolOnerisi.guc === 'guclu' && <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded">Güçlü</span>}
-                                                <span className="text-sm font-bold text-gray-300">%{toplamGolOnerisi.yuzde}</span>
+                                            <span className="text-red-400 font-bold text-[11px] sm:text-xs xl:text-sm whitespace-nowrap">Toplam Gol</span>
+                                            <div className="flex items-center gap-1 sm:gap-2">
+                                                <span className="text-sm sm:text-base md:text-lg font-black text-white whitespace-nowrap leading-none">{toplamGolOnerisi.oneri}</span>
+                                                {toplamGolOnerisi.guc === 'guclu' && <span className="text-[9px] sm:text-[10px] font-bold bg-red-500 text-white px-1 py-0.5 rounded">Güçlü</span>}
+                                                <span className="text-xs sm:text-sm font-bold text-gray-300">%{toplamGolOnerisi.yuzde}</span>
                                             </div>
                                         </div>
 
@@ -504,7 +470,7 @@ export default function ManuelAnaliz() {
                                                 return order[a.aralik] - order[b.aralik];
                                             }).map((item, idx) => (
                                                 <div key={idx} className="flex flex-col gap-1">
-                                                    <div className="flex justify-between text-[10px] sm:text-xs text-gray-400">
+                                                    <div className="flex justify-between text-[9px] sm:text-[10px] md:text-xs text-gray-400">
                                                         <span>{item.aralik}</span>
                                                         <span className={item.yuzde >= 35 ? "text-white font-bold" : ""}>%{item.yuzde}</span>
                                                     </div>
@@ -523,8 +489,8 @@ export default function ManuelAnaliz() {
                                 {recommendations.filter(r => r.market !== 'İlk Yarı KG Var').map((rec, i) => (
                                     <div key={i} className="bg-[#333] p-2 sm:p-3 rounded-lg border border-[#006A4E] hover:border-[#FDB913] hover:shadow-[0_0_10px_rgba(253,185,19,0.4)] transition-all">
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-white font-bold text-xs sm:text-sm">{rec.market}</span>
-                                            <span className={`text-lg sm:text-xl font-black ${rec.percentage >= 80 ? 'text-green-400' : rec.percentage >= 65 ? 'text-yellow-400' : 'text-orange-400'}`}>
+                                            <span className="text-white font-bold text-[11px] sm:text-xs xl:text-sm whitespace-nowrap">{rec.market}</span>
+                                            <span className={`text-base sm:text-lg font-black ${rec.percentage >= 80 ? 'text-green-400' : rec.percentage >= 65 ? 'text-yellow-400' : 'text-orange-400'}`}>
                                                 %{rec.percentage}
                                             </span>
                                         </div>
@@ -533,6 +499,44 @@ export default function ManuelAnaliz() {
                                         </div>
                                     </div>
                                 ))}
+
+                                {/* Yeni Eklenen MS Kartı */}
+                                {msPercentages && (
+                                    <div className="bg-[#333] p-3 rounded-lg border-2 border-[#006A4E] basis-full md:col-span-2 lg:col-span-1">
+                                        <span className="text-[#FDB913] font-bold">Maç Sonucu</span>
+                                        <div className="grid grid-cols-3 gap-2 mt-2">
+                                            <div className={`text-center p-2 rounded ${msPercentages.ms1 >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
+                                                <div className="text-white font-black">MS 1</div>
+                                                <div className="text-[#FDB913] font-bold">%{msPercentages.ms1}</div>
+                                            </div>
+                                            <div className={`text-center p-2 rounded ${msPercentages.ms0 >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
+                                                <div className="text-white font-black">MS 0</div>
+                                                <div className="text-[#FDB913] font-bold">%{msPercentages.ms0}</div>
+                                            </div>
+                                            <div className={`text-center p-2 rounded ${msPercentages.ms2 >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
+                                                <div className="text-white font-black">MS 2</div>
+                                                <div className="text-[#FDB913] font-bold">%{msPercentages.ms2}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Yeni Eklenen 2.5 Alt/Üst Kartı */}
+                                {altUstPercentages && (
+                                    <div className="bg-[#333] p-3 rounded-lg border-2 border-[#006A4E] lg:col-span-1">
+                                        <span className="text-[#FDB913] font-bold">2.5 Gol</span>
+                                        <div className="grid grid-cols-2 gap-2 mt-2">
+                                            <div className={`text-center p-2 rounded ${altUstPercentages.ust >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
+                                                <div className="text-white font-black">2.5 Üst</div>
+                                                <div className="text-[#FDB913] font-bold">%{altUstPercentages.ust}</div>
+                                            </div>
+                                            <div className={`text-center p-2 rounded ${altUstPercentages.alt >= 60 ? 'bg-[#006A4E]' : 'bg-[#404040]'}`}>
+                                                <div className="text-white font-black">2.5 Alt</div>
+                                                <div className="text-[#FDB913] font-bold">%{altUstPercentages.alt}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
