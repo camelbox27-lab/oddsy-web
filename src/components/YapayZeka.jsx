@@ -102,6 +102,7 @@ export default function YapayZeka() {
     const [selectedMatch, setSelectedMatch] = useState(null);
     const [matchLoading, setMatchLoading] = useState(true);
     const [showFeatured, setShowFeatured] = useState(false);
+    const [showReady, setShowReady] = useState(false);
     const [pendingFeaturedAnalysis, setPendingFeaturedAnalysis] = useState(false);
 
     // Güncel JSON dosyasını yükle
@@ -887,10 +888,19 @@ export default function YapayZeka() {
                     </div>
                 </div>
 
-                {/* Öne Çıkan Eşleşmeler Butonu */}
-                <div className="flex justify-end">
+                {/* Öne Çıkan Eşleşmeler + Hazır Analizler Butonları */}
+                <div className="flex justify-end gap-3">
                     <button
-                        onClick={() => setShowFeatured(!showFeatured)}
+                        onClick={() => { setShowReady(!showReady); setShowFeatured(false); }}
+                        className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${showReady
+                            ? 'bg-[#10B981] text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]'
+                            : 'bg-[#404040] text-[#10B981] border border-[#10B981] hover:bg-[#4a4a4a]'
+                            }`}
+                    >
+                        ⚡ HAZIR ANALİZLER
+                    </button>
+                    <button
+                        onClick={() => { setShowFeatured(!showFeatured); setShowReady(false); }}
                         className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${showFeatured
                             ? 'bg-[#FDB913] text-[#333] shadow-[0_0_15px_rgba(253,185,19,0.4)]'
                             : 'bg-[#404040] text-[#FDB913] border border-[#FDB913] hover:bg-[#4a4a4a]'
@@ -900,6 +910,38 @@ export default function YapayZeka() {
                         ÖNE ÇIKAN EŞLEŞMELER
                     </button>
                 </div>
+
+                {/* Hazır Analizler Kartları */}
+                {showReady && (
+                    <div className="bg-[#404040] p-4 rounded-xl border-2 border-[#10B981] space-y-3">
+                        <h3 className="text-[#10B981] font-bold text-center text-sm mb-3">
+                            ⚡ Hazır Analizler — Analiz için bir maç seçin
+                        </h3>
+                        {guncelMatches.filter(m => m.Ready === 2).length > 0 ? (
+                            <div className="flex flex-col gap-3">
+                                {guncelMatches.filter(m => m.Ready === 2).map(match => (
+                                    <button
+                                        key={match.Id}
+                                        onClick={() => handleFeaturedSelect(match)}
+                                        className="flex items-center justify-between gap-4 bg-[#333] p-4 rounded-xl border border-[#555] hover:border-[#10B981] hover:shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-all cursor-pointer"
+                                    >
+                                        <div className="flex-1 flex flex-col items-center gap-2">
+                                            <img src={getTeamLogo(match.Ev)} alt={match.Ev} onError={handleLogoError} style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
+                                            <span className="text-white font-bold text-sm text-center">{match.Ev}</span>
+                                        </div>
+                                        <span className="text-[#10B981] font-black text-lg">VS</span>
+                                        <div className="flex-1 flex flex-col items-center gap-2">
+                                            <img src={getTeamLogo(match.Dep)} alt={match.Dep} onError={handleLogoError} style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
+                                            <span className="text-white font-bold text-sm text-center">{match.Dep}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-400 text-center text-sm py-4">Bugün hazır analiz bulunmuyor.</p>
+                        )}
+                    </div>
+                )}
 
                 {/* Featured Maç Kartları */}
                 {showFeatured && (
