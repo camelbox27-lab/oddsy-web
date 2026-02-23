@@ -1,4 +1,7 @@
+api/index.py
 requirements.txt
 oddsy-data/
 web-version/
 .expo/
+bot/
+android/

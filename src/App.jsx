@@ -4559,10 +4559,11 @@ export default function App() {
                             if (!notifTitle.trim() || !notifBody.trim()) return;
                             setNotifLoading(true);
                             try {
+                                const idToken = await auth.currentUser.getIdToken(true);
                                 const resp = await fetch('/api/send-notification', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ title: notifTitle, body: notifBody, route: notifRoute, callerUid: user.uid }),
+                                    body: JSON.stringify({ title: notifTitle, body: notifBody, route: notifRoute, idToken }),
                                 });
                                 const result = await resp.json();
                                 if (!resp.ok) throw new Error(result.error || 'Hata');
