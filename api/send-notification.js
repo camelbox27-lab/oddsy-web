@@ -92,18 +92,10 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: e.message });
     }
 
-    // 2. OAuth token al
-    let accessToken;
-    try {
-        accessToken = await getOAuthToken(serviceAccount);
-    } catch (e) {
-        return res.status(500).json({ error: 'OAuth token alınamadı: ' + e.message });
-    }
-
-    // 3. Admin rolü kontrol et (Firestore REST)
+    // 2. Admin rolü kontrol et - kullanıcının kendi idToken'ı ile (service account quota kullanmaz)
     try {
         const r = await fetch(`${FIRESTORE_URL}/users/${uid}`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
+            headers: { Authorization: `Bearer ${idToken}` },
         });
         if (!r.ok) {
             const errText = await r.text();
@@ -116,6 +108,14 @@ export default async function handler(req, res) {
         }
     } catch (e) {
         return res.status(500).json({ error: 'Rol kontrolü başarısız: ' + e.message });
+    }
+
+    // 3. OAuth token al (FCM ve tüm kullanıcı tokenları için)
+    let accessToken;
+    try {
+        accessToken = await getOAuthToken(serviceAccount);
+    } catch (e) {
+        return res.status(500).json({ error: 'OAuth token alınamadı: ' + e.message });
     }
 
     // 4. FCM token'larını çek (Firestore REST)
