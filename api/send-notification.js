@@ -4,12 +4,21 @@ const PROJECT_ID = 'oddsy-778d7';
 const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 const FCM_URL = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
 
-// JWT payload'ı decode ederek UID al (imza doğrulama yok - güvenlik Firestore rol kontrolünde)
+function toBase64Url(input) {
+    const b64 = Buffer.isBuffer(input)
+        ? input.toString('base64')
+        : Buffer.from(input).toString('base64');
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+// JWT payload'ı decode ederek UID al
 function extractUidFromToken(idToken) {
     try {
         const parts = idToken.split('.');
         if (parts.length !== 3) throw new Error('Geçersiz JWT formatı');
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+        // base64url → base64 padding ekle
+        const padded = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
         if (!payload.sub) throw new Error('UID bulunamadı');
         return payload.sub;
     } catch (e) {
@@ -17,23 +26,24 @@ function extractUidFromToken(idToken) {
     }
 }
 
-// Service Account JSON'dan Manuel JWT ile Google OAuth token al
+// Service Account'tan Google OAuth token üret
 async function getOAuthToken(serviceAccount) {
     const now = Math.floor(Date.now() / 1000);
-    const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
-    const claimSet = Buffer.from(JSON.stringify({
+    const header = toBase64Url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+    const claimSet = toBase64Url(JSON.stringify({
         iss: serviceAccount.client_email,
         sub: serviceAccount.client_email,
         aud: 'https://oauth2.googleapis.com/token',
         iat: now,
         exp: now + 3600,
         scope: 'https://www.googleapis.com/auth/cloud-platform',
-    })).toString('base64url');
+    }));
 
     const signingInput = `${header}.${claimSet}`;
     const sign = createSign('RSA-SHA256');
     sign.update(signingInput);
-    const signature = sign.sign(serviceAccount.private_key, 'base64url');
+    const signatureBuffer = sign.sign(serviceAccount.private_key);
+    const signature = toBase64Url(signatureBuffer);
     const jwt = `${signingInput}.${signature}`;
 
     const resp = await fetch('https://oauth2.googleapis.com/token', {
@@ -43,9 +53,10 @@ async function getOAuthToken(serviceAccount) {
     });
     if (!resp.ok) {
         const text = await resp.text();
-        throw new Error(`OAuth ${resp.status}: ${text.substring(0, 200)}`);
+        throw new Error(`OAuth ${resp.status}: ${text.substring(0, 300)}`);
     }
     const data = await resp.json();
+    if (!data.access_token) throw new Error('access_token boş döndü');
     return data.access_token;
 }
 
@@ -68,7 +79,7 @@ export default async function handler(req, res) {
         const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
         if (!raw) throw new Error('FIREBASE_SERVICE_ACCOUNT env var eksik');
         serviceAccount = JSON.parse(raw);
-        if (!serviceAccount.private_key || !serviceAccount.client_email) throw new Error('Geçersiz service account JSON');
+        if (!serviceAccount.private_key || !serviceAccount.client_email) throw new Error('Geçersiz service account');
     } catch (e) {
         return res.status(500).json({ error: 'Service account hatası: ' + e.message });
     }
@@ -94,7 +105,10 @@ export default async function handler(req, res) {
         const r = await fetch(`${FIRESTORE_URL}/users/${uid}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (!r.ok) {
+            const errText = await r.text();
+            throw new Error(`HTTP ${r.status}: ${errText.substring(0, 200)}`);
+        }
         const doc = await r.json();
         const role = doc.fields?.role?.stringValue;
         if (role !== 'admin') {
