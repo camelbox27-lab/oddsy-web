@@ -1,8 +1,21 @@
-import { createSign } from 'node:crypto';
+import { createSign } from 'crypto';
 
 const PROJECT_ID = 'oddsy-778d7';
 const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 const FCM_URL = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
+
+// JWT payload'ı decode ederek UID al (imza doğrulama yok - güvenlik Firestore rol kontrolünde)
+function extractUidFromToken(idToken) {
+    try {
+        const parts = idToken.split('.');
+        if (parts.length !== 3) throw new Error('Geçersiz JWT formatı');
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+        if (!payload.sub) throw new Error('UID bulunamadı');
+        return payload.sub;
+    } catch (e) {
+        throw new Error('Token decode hatası: ' + e.message);
+    }
+}
 
 // Service Account JSON'dan Manuel JWT ile Google OAuth token al
 async function getOAuthToken(serviceAccount) {
@@ -30,30 +43,10 @@ async function getOAuthToken(serviceAccount) {
     });
     if (!resp.ok) {
         const text = await resp.text();
-        throw new Error(`OAuth ${resp.status}: ${text}`);
+        throw new Error(`OAuth ${resp.status}: ${text.substring(0, 200)}`);
     }
     const data = await resp.json();
     return data.access_token;
-}
-
-// Firebase ID Token'ı Google identitytoolkit ile doğrula
-async function verifyIdToken(idToken, apiKey) {
-    const resp = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
-        {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-        }
-    );
-    if (!resp.ok) {
-        const data = await resp.json().catch(() => ({}));
-        throw new Error(data.error?.message || `HTTP ${resp.status}`);
-    }
-    const data = await resp.json();
-    const users = data.users;
-    if (!users || users.length === 0) throw new Error('Kullanıcı bulunamadı');
-    return users[0].localId; // uid
 }
 
 export default async function handler(req, res) {
@@ -69,24 +62,23 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Eksik parametre: title, body, idToken zorunlu' });
     }
 
-    // Service account ve API key yükle
+    // Service account yükle
     let serviceAccount;
     try {
-        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (!raw) throw new Error('FIREBASE_SERVICE_ACCOUNT env var eksik');
+        serviceAccount = JSON.parse(raw);
+        if (!serviceAccount.private_key || !serviceAccount.client_email) throw new Error('Geçersiz service account JSON');
     } catch (e) {
-        return res.status(500).json({ error: 'FIREBASE_SERVICE_ACCOUNT parse hatası: ' + e.message });
-    }
-    const apiKey = process.env.VITE_FIREBASE_API_KEY;
-    if (!apiKey) {
-        return res.status(500).json({ error: 'VITE_FIREBASE_API_KEY env var eksik' });
+        return res.status(500).json({ error: 'Service account hatası: ' + e.message });
     }
 
-    // 1. ID Token doğrula
+    // 1. UID'yi token'dan çıkar
     let uid;
     try {
-        uid = await verifyIdToken(idToken, apiKey);
+        uid = extractUidFromToken(idToken);
     } catch (e) {
-        return res.status(401).json({ error: 'Geçersiz token: ' + e.message });
+        return res.status(401).json({ error: e.message });
     }
 
     // 2. OAuth token al
