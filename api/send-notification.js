@@ -108,7 +108,7 @@ export default async function handler(req, res) {
     // 2. Admin email kontrolü (Firestore yok, quota yok)
     const adminEmail = process.env.ADMIN_EMAIL;
     if (!adminEmail) return res.status(500).json({ error: 'ADMIN_EMAIL env var eksik' });
-    if (verifiedEmail !== adminEmail) {
+    if (verifiedEmail !== adminEmail.trim()) {
         return res.status(403).json({ error: `Yetkisiz (${verifiedEmail})` });
     }
 
