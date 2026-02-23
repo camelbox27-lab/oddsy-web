@@ -4554,10 +4554,12 @@ export default function App() {
                         const [notifBody, setNotifBody] = useState('');
                         const [notifRoute, setNotifRoute] = useState('');
                         const [notifLoading, setNotifLoading] = useState(false);
+                        const [notifMsg, setNotifMsg] = useState(null); // { text, type }
 
                         const sendNotification = async () => {
                             if (!notifTitle.trim() || !notifBody.trim()) return;
                             setNotifLoading(true);
+                            setNotifMsg(null);
                             try {
                                 const idToken = await auth.currentUser.getIdToken(true);
                                 const resp = await fetch('/api/send-notification', {
@@ -4569,13 +4571,13 @@ export default function App() {
                                 try { result = await resp.json(); } catch { result = {}; }
                                 if (!resp.ok) throw new Error(result.error || `HTTP ${resp.status}`);
                                 if (result.sent > 0) {
-                                    showAlert(`✅ Bildirim gönderildi! ${result.sent}/${result.total} kullanıcı`, 'success');
+                                    setNotifMsg({ text: `✅ Gönderildi! ${result.sent}/${result.total} kullanıcı`, type: 'success' });
+                                    setNotifTitle(''); setNotifBody(''); setNotifRoute('');
                                 } else {
-                                    showAlert(`⚠️ Gönderildi ama alıcı yok (${result.message || 'FCM tokeni olan kullanıcı bulunamadı'})`, 'info');
+                                    setNotifMsg({ text: `⚠️ Alıcı yok (${result.message || 'FCM tokeni olan kullanıcı bulunamadı'})`, type: 'warning' });
                                 }
-                                setNotifTitle(''); setNotifBody(''); setNotifRoute('');
                             } catch (e) {
-                                showAlert('❌ Hata: ' + e.message, 'error');
+                                setNotifMsg({ text: '❌ Hata: ' + e.message, type: 'error' });
                             }
                             setNotifLoading(false);
                         };
@@ -4621,6 +4623,20 @@ export default function App() {
                                             >
                                                 {notifLoading ? 'Gönderiliyor...' : '🚀 Tüm Kullanıcılara Gönder'}
                                             </button>
+                                            {notifMsg && (
+                                                <div style={{
+                                                    padding: '10px 14px',
+                                                    borderRadius: 8,
+                                                    fontSize: 13,
+                                                    fontWeight: 600,
+                                                    wordBreak: 'break-word',
+                                                    background: notifMsg.type === 'success' ? 'rgba(74,222,128,0.15)' : notifMsg.type === 'warning' ? 'rgba(251,191,36,0.15)' : 'rgba(248,113,113,0.15)',
+                                                    color: notifMsg.type === 'success' ? '#4ade80' : notifMsg.type === 'warning' ? '#fbbf24' : '#f87171',
+                                                    border: `1px solid ${notifMsg.type === 'success' ? '#4ade80' : notifMsg.type === 'warning' ? '#fbbf24' : '#f87171'}`,
+                                                }}>
+                                                    {notifMsg.text}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
