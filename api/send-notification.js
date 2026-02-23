@@ -84,30 +84,32 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Service account hatası: ' + e.message });
     }
 
-    // 1. UID'yi token'dan çıkar
-    let uid;
+    // 1. idToken'ı identitytoolkit ile doğrula - Firestore quota kullanmaz
+    const apiKey = process.env.VITE_FIREBASE_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'VITE_FIREBASE_API_KEY eksik' });
+
+    let verifiedEmail;
     try {
-        uid = extractUidFromToken(idToken);
+        const r = await fetch(
+            `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }) }
+        );
+        if (!r.ok) {
+            const e = await r.json().catch(() => ({}));
+            throw new Error(e.error?.message || `HTTP ${r.status}`);
+        }
+        const data = await r.json();
+        if (!data.users?.[0]) throw new Error('Kullanıcı bulunamadı');
+        verifiedEmail = data.users[0].email;
     } catch (e) {
-        return res.status(401).json({ error: e.message });
+        return res.status(401).json({ error: 'Token doğrulama başarısız: ' + e.message });
     }
 
-    // 2. Admin rolü kontrol et - kullanıcının kendi idToken'ı ile (service account quota kullanmaz)
-    try {
-        const r = await fetch(`${FIRESTORE_URL}/users/${uid}`, {
-            headers: { Authorization: `Bearer ${idToken}` },
-        });
-        if (!r.ok) {
-            const errText = await r.text();
-            throw new Error(`HTTP ${r.status}: ${errText.substring(0, 200)}`);
-        }
-        const doc = await r.json();
-        const role = doc.fields?.role?.stringValue;
-        if (role !== 'admin') {
-            return res.status(403).json({ error: `Yetkisiz (rol: ${role || 'yok'})` });
-        }
-    } catch (e) {
-        return res.status(500).json({ error: 'Rol kontrolü başarısız: ' + e.message });
+    // 2. Admin email kontrolü (Firestore yok, quota yok)
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) return res.status(500).json({ error: 'ADMIN_EMAIL env var eksik' });
+    if (verifiedEmail !== adminEmail) {
+        return res.status(403).json({ error: `Yetkisiz (${verifiedEmail})` });
     }
 
     // 3. OAuth token al (FCM ve tüm kullanıcı tokenları için)
