@@ -1711,12 +1711,20 @@ const NAV_ICONS = {
     ),
     yzeka: (
         <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C8.5 2 6 4.5 6 7.5c0 1.5.5 2.8 1.4 3.8C6.5 12.2 6 13.3 6 14.5c0 2.5 2 4.5 4.5 4.5h3c2.5 0 4.5-2 4.5-4.5 0-1.2-.5-2.3-1.4-3.2C17.5 10.3 18 9 18 7.5 18 4.5 15.5 2 12 2z" opacity="0.9"/>
-            <circle cx="9.5" cy="8" r="1.2" fill="#0a0a12"/>
-            <circle cx="14.5" cy="8" r="1.2" fill="#0a0a12"/>
-            <path d="M9.5 11.5c0 0 .8 1.5 2.5 1.5s2.5-1.5 2.5-1.5" fill="none" stroke="#0a0a12" strokeWidth="1.3" strokeLinecap="round"/>
-            <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" strokeWidth="1.8"/>
-            <line x1="9" y1="22" x2="15" y2="22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <rect x="5" y="5" width="14" height="14" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8"/>
+            <rect x="8" y="8" width="8" height="8" rx="1.5" opacity="0.9"/>
+            <line x1="8" y1="2" x2="8" y2="5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="16" y1="2" x2="16" y2="5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="8" y1="19" x2="8" y2="22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="16" y1="19" x2="16" y2="22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="2" y1="8" x2="5" y2="8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="2" y1="12" x2="5" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="2" y1="16" x2="5" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="19" y1="8" x2="22" y2="8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="19" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="19" y1="16" x2="22" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
         </svg>
     ),
     editor: (
@@ -1738,7 +1746,7 @@ const NAV_ICONS = {
 
 function BottomNav({ onNavigate, onMenuOpen, currentRoute }) {
     const items = [
-        { icon: NAV_ICONS.kupon,  label: 'Kuponlar', route: 'gunun-tercihleri' },
+        { icon: NAV_ICONS.kupon,  label: 'Kuponlar', route: 'coupons' },
         { icon: NAV_ICONS.iygol,  label: 'İY Gol',   route: 'ilk-yari-gol' },
         null,
         { icon: NAV_ICONS.yzeka,  label: 'Y. Zeka',  route: 'yapay-zeka-analizleri' },
@@ -2182,6 +2190,35 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
 
 function ProfileScreen({ user, userData, onBack, showAlert }) {
     const [resending, setResending] = useState(false);
+    const [notifStatus, setNotifStatus] = useState(null); // 'enabled' | 'disabled' | 'loading'
+
+    const handleEnableNotifications = async () => {
+        if (!isNative() || !PushNotifications) {
+            showAlert('Bu özellik sadece Android uygulamasında kullanılabilir.', 'info');
+            return;
+        }
+        setNotifStatus('loading');
+        try {
+            const permResult = await PushNotifications.requestPermissions();
+            if (permResult.receive === 'granted') {
+                await PushNotifications.register();
+                const regListener = await PushNotifications.addListener('registration', async (token) => {
+                    try {
+                        await updateDoc(doc(db, 'users', user.uid), { fcmToken: token.value });
+                        regListener.remove();
+                    } catch (_) {}
+                });
+                setNotifStatus('enabled');
+                showAlert('Bildirimler etkinleştirildi!', 'success');
+            } else {
+                setNotifStatus('disabled');
+                showAlert('Bildirim izni verilmedi. Ayarlardan etkinleştirebilirsiniz.', 'error');
+            }
+        } catch (err) {
+            setNotifStatus('disabled');
+            showAlert('Hata: ' + err.message, 'error');
+        }
+    };
 
     const handleLogout = async () => {
         try {
@@ -2250,6 +2287,28 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
             {userData?.role === 'admin' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('admin')}>Admin Paneli</button>}
             {userData?.role === 'editor' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('editor')}>Editör Paneli</button>}
             {userData?.role === 'moderator' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('moderator')}>Moderatör Paneli</button>}
+
+            {isNative() && (
+                <div style={{ marginTop: 24, padding: '16px', background: 'rgba(255,255,255,0.04)', borderRadius: 12, border: '1px solid #333' }}>
+                    <div style={{ color: '#aaa', fontSize: 12, marginBottom: 10, fontWeight: 'bold', letterSpacing: 0.5 }}>🔔 BİLDİRİM AYARLARI</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <div style={{ color: 'var(--text-primary)', fontSize: 14 }}>Push Bildirimler</div>
+                            <div style={{ color: userData?.fcmToken ? '#4ade80' : '#f87171', fontSize: 12, marginTop: 2 }}>
+                                {userData?.fcmToken ? '✓ Etkin' : '✗ Devre dışı'}
+                            </div>
+                        </div>
+                        <button
+                            className="hero-btn secondary"
+                            style={{ fontSize: 12, padding: '8px 16px', opacity: notifStatus === 'loading' ? 0.6 : 1 }}
+                            onClick={handleEnableNotifications}
+                            disabled={notifStatus === 'loading'}
+                        >
+                            {notifStatus === 'loading' ? 'Yükleniyor...' : userData?.fcmToken ? '🔄 Yenile' : '🔔 Etkinleştir'}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <button className="logout-btn" onClick={handleLogout}>Çıkış Yap</button>
         </div>
@@ -3271,9 +3330,69 @@ function AdminScreen({ onBack, showAlert, userData }) {
     const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 6, status: 'pending', analysis: '', cardHomeAvg: '', cardAwayAvg: '', refereeInfo: '', cornerHomeAvg: '', cornerAwayAvg: '', cornerGenAvg: '' });
     const [couponData, setCouponData] = useState({ type: 'Günün Banko Kuponu', matches: [{ home: '', away: '', prediction: '', odds: '' }] });
     const [notification, setNotification] = useState({ title: '', body: '' });
+    const [adminCoupons, setAdminCoupons] = useState([]);
+    const [editingCouponId, setEditingCouponId] = useState(null);
+    const [editCouponData, setEditCouponData] = useState(null);
 
     const handleAddMatchToCoupon = () => {
         setCouponData({ ...couponData, matches: [...couponData.matches, { home: '', away: '', prediction: '', odds: '' }] });
+    };
+
+    // Kupon düzenleme: adminCoupons'ı yükle
+    useEffect(() => {
+        if (view !== 'editCoupon') return;
+        getDocs(query(collection(db, 'coupons'))).then(snap => {
+            const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            list.sort((a, b) => {
+                const ta = a.createdAt?.toMillis?.() || 0;
+                const tb = b.createdAt?.toMillis?.() || 0;
+                return tb - ta;
+            });
+            setAdminCoupons(list);
+        }).catch(() => {});
+    }, [view]);
+
+    const handleStartEditCoupon = (coupon) => {
+        setEditingCouponId(coupon.id);
+        setEditCouponData({
+            type: coupon.type,
+            matches: coupon.matches || [{ home: '', away: '', prediction: '', odds: '' }],
+        });
+    };
+
+    const handleUpdateEditMatch = (index, field, value) => {
+        setEditCouponData(prev => {
+            const newMatches = [...prev.matches];
+            newMatches[index] = { ...newMatches[index], [field]: value };
+            return { ...prev, matches: newMatches };
+        });
+    };
+
+    const handleSaveEditCoupon = async (e) => {
+        e.preventDefault();
+        if (!editingCouponId || !editCouponData) return;
+        setLoading(true);
+        try {
+            const safeParse = (v) => {
+                if (!v) return 1;
+                const cleaned = v.toString().replace(',', '.');
+                const parsed = parseFloat(cleaned);
+                return isNaN(parsed) ? 1 : parsed;
+            };
+            const totalOdds = editCouponData.matches.reduce((acc, curr) => acc * safeParse(curr.odds), 1).toFixed(2);
+            await updateDoc(doc(db, 'coupons', editingCouponId), { ...editCouponData, totalOdds });
+            showAlert('Kupon güncellendi!', 'success');
+            // Listeyi yenile
+            getDocs(query(collection(db, 'coupons'))).then(snap => {
+                const list = snap.docs.map(d2 => ({ id: d2.id, ...d2.data() }));
+                list.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+                setAdminCoupons(list);
+            });
+            setEditingCouponId(null);
+            setEditCouponData(null);
+        } catch (err) {
+            showAlert('Hata: ' + err.message, 'error');
+        } finally { setLoading(false); }
     };
 
     const handleUpdateCouponMatch = (index, field, value) => {
@@ -3402,6 +3521,7 @@ function AdminScreen({ onBack, showAlert, userData }) {
                     <div className="admin-sidebar-buttons" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <button className={`hero-btn secondary ${view === 'addMatch' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addMatch')}>Tahmin Ekle</button>
                         <button className={`hero-btn secondary ${view === 'addCoupon' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addCoupon')}>Kupon Ekle</button>
+                        <button className={`hero-btn secondary ${view === 'editCoupon' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%', borderColor: '#f59e0b' }} onClick={() => { setView('editCoupon'); setEditingCouponId(null); setEditCouponData(null); }}>✏️ Kupon Düzenle</button>
                     </div>
                 </div>
 
@@ -3487,6 +3607,57 @@ function AdminScreen({ onBack, showAlert, userData }) {
                             <div className="form-group" style={{ marginBottom: 15 }}><label className="form-label" style={{ fontSize: 10 }}>Başlık</label><input className="form-input" style={{ padding: 8, fontSize: 12 }} value={notification.title} onChange={e => setNotification({ ...notification, title: e.target.value })} /></div>
                             <div className="form-group" style={{ marginBottom: 15 }}><label className="form-label" style={{ fontSize: 10 }}>Mesaj</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="3" value={notification.body} onChange={e => setNotification({ ...notification, body: e.target.value })} /></div>
                             <button className="submit-btn" disabled={loading} style={{ padding: 10, fontSize: 13 }}>Gönder</button>
+                        </form>
+                    )}
+
+                    {view === 'editCoupon' && !editingCouponId && (
+                        <div>
+                            <h3 style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 12 }}>✏️ Düzenlenecek Kuponu Seç</h3>
+                            {adminCoupons.length === 0 && <div style={{ color: '#aaa', fontSize: 13 }}>Henüz kupon yok.</div>}
+                            {adminCoupons.map(c => (
+                                <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#2a2a2a', borderRadius: 8, padding: '10px 12px', marginBottom: 8, border: '1px solid #444' }}>
+                                    <div>
+                                        <div style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 'bold' }}>{c.type}</div>
+                                        <div style={{ color: '#aaa', fontSize: 11 }}>{c.matches?.length || 0} maç • Oran: {c.totalOdds || '-'}</div>
+                                    </div>
+                                    <button className="hero-btn secondary" style={{ fontSize: 11, padding: '6px 12px' }} onClick={() => handleStartEditCoupon(c)}>Düzenle</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {view === 'editCoupon' && editingCouponId && editCouponData && (
+                        <form onSubmit={handleSaveEditCoupon}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 15 }}>
+                                <button type="button" className="hero-btn secondary" style={{ fontSize: 11, padding: '6px 12px' }} onClick={() => { setEditingCouponId(null); setEditCouponData(null); }}>← Geri</button>
+                                <h3 style={{ color: 'var(--gold)', fontSize: 13, margin: 0 }}>Kuponu Düzenle</h3>
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 15 }}>
+                                <label className="form-label" style={{ fontSize: 10 }}>Kupon Türü</label>
+                                <select className="form-input" style={{ padding: 8, fontSize: 12 }} value={editCouponData.type} onChange={e => setEditCouponData({ ...editCouponData, type: e.target.value })}>
+                                    {COUPON_TYPES.map(t => <option key={t.id} value={t.dbName}>{t.dbName}</option>)}
+                                </select>
+                            </div>
+                            {editCouponData.matches.map((m, i) => (
+                                <div key={i} style={{ border: '2px solid #f59e0b', padding: 12, borderRadius: 10, marginBottom: 12, background: '#3a3a3a' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                        <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 'bold' }}>Maç {i + 1}</span>
+                                        {editCouponData.matches.length > 1 && (
+                                            <button type="button" style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 13 }} onClick={() => setEditCouponData(prev => ({ ...prev, matches: prev.matches.filter((_, idx) => idx !== i) }))}>✕ Sil</button>
+                                        )}
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                                        <input placeholder="Ev Sahibi" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.home} onChange={e => handleUpdateEditMatch(i, 'home', e.target.value)} />
+                                        <input placeholder="Deplasman" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.away} onChange={e => handleUpdateEditMatch(i, 'away', e.target.value)} />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                        <input placeholder="Tahmin" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.prediction} onChange={e => handleUpdateEditMatch(i, 'prediction', e.target.value)} />
+                                        <input placeholder="Oran (1.50)" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.odds} onChange={e => handleUpdateEditMatch(i, 'odds', e.target.value)} />
+                                    </div>
+                                </div>
+                            ))}
+                            <button type="button" className="hero-btn secondary" onClick={() => setEditCouponData(prev => ({ ...prev, matches: [...prev.matches, { home: '', away: '', prediction: '', odds: '' }] }))} style={{ width: '100%', marginBottom: 12, padding: 10, fontSize: 12 }}>+ Maç Ekle</button>
+                            <button className="submit-btn" disabled={loading} style={{ padding: 10, fontSize: 13, background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>💾 Kuponu Güncelle</button>
                         </form>
                     )}
                 </div>
