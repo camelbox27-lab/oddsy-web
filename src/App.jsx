@@ -4565,12 +4565,17 @@ export default function App() {
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ title: notifTitle, body: notifBody, route: notifRoute, idToken }),
                                 });
-                                const result = await resp.json();
-                                if (!resp.ok) throw new Error(result.error || 'Hata');
-                                showAlert(`Bildirim gönderildi! (${result.sent} kullanıcı)`, 'success');
+                                let result;
+                                try { result = await resp.json(); } catch { result = {}; }
+                                if (!resp.ok) throw new Error(result.error || `HTTP ${resp.status}`);
+                                if (result.sent > 0) {
+                                    showAlert(`✅ Bildirim gönderildi! ${result.sent}/${result.total} kullanıcı`, 'success');
+                                } else {
+                                    showAlert(`⚠️ Gönderildi ama alıcı yok (${result.message || 'FCM tokeni olan kullanıcı bulunamadı'})`, 'info');
+                                }
                                 setNotifTitle(''); setNotifBody(''); setNotifRoute('');
                             } catch (e) {
-                                showAlert('Hata: ' + e.message, 'error');
+                                showAlert('❌ Hata: ' + e.message, 'error');
                             }
                             setNotifLoading(false);
                         };

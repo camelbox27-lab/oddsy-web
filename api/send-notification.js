@@ -1,60 +1,32 @@
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { initializeApp, cert, getApps, getApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
-let app;
-let credential;
-if (!getApps().length) {
-    try {
+const PROJECT_ID = 'oddsy-778d7';
+const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+const FCM_URL = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
+
+// Modül seviyesinde uygulama ve credential
+let firebaseApp = null;
+let serviceAccountCredential = null;
+
+function initFirebase() {
+    if (getApps().length === 0) {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-        credential = cert(serviceAccount);
-        app = initializeApp({ credential });
-    } catch (e) {
-        console.error('Firebase Admin init failed:', e.message);
-    }
-} else {
-    app = getApps()[0];
-    credential = app.options.credential;
-}
-
-const PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'oddsy-778d7';
-const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
-
-async function getAccessToken() {
-    const token = await credential.getAccessToken();
-    return token.access_token;
-}
-
-async function firestoreGet(path, accessToken) {
-    const res = await fetch(`${FIRESTORE_BASE}/${path}`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-    });
-    if (!res.ok) throw new Error(`Firestore GET failed: ${res.status}`);
-    return res.json();
-}
-
-async function firestoreQuery(collectionPath, filters, accessToken) {
-    const body = {
-        structuredQuery: {
-            from: [{ collectionId: collectionPath }],
-            where: {
-                fieldFilter: {
-                    field: { fieldPath: filters.field },
-                    op: filters.op,
-                    value: filters.value,
-                }
-            }
+        serviceAccountCredential = cert(serviceAccount);
+        firebaseApp = initializeApp({ credential: serviceAccountCredential });
+    } else {
+        firebaseApp = getApp();
+        // credential'ı tekrar oluştur (modül sıcak başlatmada kaybolabilir)
+        if (!serviceAccountCredential) {
+            const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+            serviceAccountCredential = cert(serviceAccount);
         }
-    };
-    const res = await fetch(`${FIRESTORE_BASE}:runQuery`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-    });
-    if (!res.ok) throw new Error(`Firestore query failed: ${res.status}`);
-    return res.json();
+    }
+}
+
+async function getOAuthToken() {
+    const token = await serviceAccountCredential.getAccessToken();
+    return token.access_token;
 }
 
 export default async function handler(req, res) {
@@ -65,86 +37,97 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    if (!app) return res.status(500).json({ error: 'Firebase Admin başlatılamadı.' });
-
     const { title, body, route, idToken } = req.body || {};
     if (!title || !body || !idToken) {
         return res.status(400).json({ error: 'Eksik parametre: title, body, idToken zorunlu' });
     }
 
-    // 1. Token doğrula
+    // Firebase başlat
+    try {
+        initFirebase();
+    } catch (e) {
+        return res.status(500).json({ error: 'Firebase başlatılamadı: ' + e.message });
+    }
+
+    // 1. ID Token doğrula
     let uid;
     try {
-        const decoded = await getAuth().verifyIdToken(idToken);
+        const decoded = await getAuth(firebaseApp).verifyIdToken(idToken);
         uid = decoded.uid;
     } catch (e) {
         return res.status(401).json({ error: 'Geçersiz token: ' + e.message });
     }
 
-    // 2. Firestore REST ile admin kontrolü
+    // 2. OAuth token al
     let accessToken;
     try {
-        accessToken = await getAccessToken();
+        accessToken = await getOAuthToken();
     } catch (e) {
-        return res.status(500).json({ error: 'Access token alınamadı: ' + e.message });
+        return res.status(500).json({ error: 'OAuth token alınamadı: ' + e.message });
     }
 
+    // 3. Admin rolü kontrol et (Firestore REST)
     try {
-        const userDoc = await firestoreGet(`users/${uid}`, accessToken);
-        const role = userDoc.fields?.role?.stringValue;
+        const r = await fetch(`${FIRESTORE_URL}/users/${uid}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const doc = await r.json();
+        const role = doc.fields?.role?.stringValue;
         if (role !== 'admin') {
-            return res.status(403).json({ error: 'Yetkisiz' });
+            return res.status(403).json({ error: `Yetkisiz (rol: ${role || 'yok'})` });
         }
     } catch (e) {
-        return res.status(500).json({ error: 'Yetki kontrolü başarısız: ' + e.message });
+        return res.status(500).json({ error: 'Rol kontrolü başarısız: ' + e.message });
     }
 
-    // 3. FCM token'ları Firestore REST ile çek
+    // 4. FCM token'larını çek (Firestore REST - tüm users, client'ta filtrele)
     let tokens = [];
     try {
-        const results = await firestoreQuery('users', {
-            field: 'fcmToken',
-            op: 'IS_NOT_NULL',
-            value: { nullValue: 'NULL_VALUE' },
-        }, accessToken);
-
-        tokens = results
-            .filter(r => r.document)
-            .map(r => r.document.fields?.fcmToken?.stringValue)
-            .filter(Boolean);
+        let nextPageToken = null;
+        do {
+            const url = `${FIRESTORE_URL}/users?pageSize=300${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`;
+            const r = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            const data = await r.json();
+            if (data.documents) {
+                data.documents.forEach(d => {
+                    const token = d.fields?.fcmToken?.stringValue;
+                    if (token) tokens.push(token);
+                });
+            }
+            nextPageToken = data.nextPageToken || null;
+        } while (nextPageToken);
     } catch (e) {
         return res.status(500).json({ error: 'Token listesi alınamadı: ' + e.message });
     }
 
     if (tokens.length === 0) {
-        return res.status(200).json({ sent: 0, message: 'Bildirim alacak kullanıcı yok' });
+        return res.status(200).json({ sent: 0, message: 'FCM tokeni olan kullanıcı yok' });
     }
 
-    // 4. FCM ile bildirim gönder (FCM HTTP v1 REST API)
-    try {
-        const fcmResults = await Promise.allSettled(
-            tokens.map(token =>
-                fetch(`https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json',
+    // 5. FCM ile bildirim gönder
+    let sent = 0, failed = 0;
+    const results = await Promise.allSettled(
+        tokens.map(token =>
+            fetch(FCM_URL, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: {
+                        token,
+                        notification: { title, body },
+                        ...(route ? { data: { route } } : {}),
                     },
-                    body: JSON.stringify({
-                        message: {
-                            token,
-                            notification: { title, body },
-                            data: route ? { route } : {},
-                        }
-                    }),
-                })
-            )
-        );
+                }),
+            })
+        )
+    );
+    sent = results.filter(r => r.status === 'fulfilled').length;
+    failed = results.filter(r => r.status === 'rejected').length;
 
-        const sent = fcmResults.filter(r => r.status === 'fulfilled').length;
-        const failed = fcmResults.filter(r => r.status === 'rejected').length;
-        return res.status(200).json({ sent, failed });
-    } catch (e) {
-        return res.status(500).json({ error: 'Bildirim gönderilemedi: ' + e.message });
-    }
+    return res.status(200).json({ sent, failed, total: tokens.length });
 }
