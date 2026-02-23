@@ -3004,11 +3004,16 @@ function EditorScreen({ onBack, showAlert, userData }) {
             const u = auth.currentUser;
             if (!u) throw new Error('Oturum kapalı');
 
-            const submitFn = httpsCallable(functions, 'submitPrediction');
-            await submitFn({ ...matchData, isPremium: matchData.isPremium || false });
+            await addDoc(collection(db, 'predictions'), {
+                ...matchData,
+                isPremium: matchData.isPremium || false,
+                authorId: u.uid,
+                authorEmail: u.email,
+                createdAt: serverTimestamp(),
+                status: matchData.status || 'pending',
+            });
 
             showAlert('Editör tahmini eklendi!', 'success');
-            // Form alanlarını temizle
             setMatchData({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 8, status: 'pending', analysis: '', isPremium: false });
         } catch (err) {
             console.error('Match Save Error:', err);
