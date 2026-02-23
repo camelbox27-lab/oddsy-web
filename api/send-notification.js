@@ -3,6 +3,7 @@ import { createSign } from 'crypto';
 const PROJECT_ID = 'oddsy-778d7';
 const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 const FCM_URL = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
+const RTDB_URL = process.env.VITE_FIREBASE_DATABASE_URL || `https://${PROJECT_ID}-default-rtdb.firebaseio.com`;
 
 function toBase64Url(input) {
     const b64 = Buffer.isBuffer(input)
@@ -120,23 +121,18 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'OAuth token alınamadı: ' + e.message });
     }
 
-    // 4. FCM token'larını çek (Firestore REST)
+    // 4. FCM token'larını RTDB'den çek (Firestore quota kullanmaz)
     let tokens = [];
     try {
-        let nextPageToken = null;
-        do {
-            const url = `${FIRESTORE_URL}/users?pageSize=300${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`;
-            const r = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            const data = await r.json();
-            if (data.documents) {
-                data.documents.forEach(d => {
-                    const token = d.fields?.fcmToken?.stringValue;
-                    if (token) tokens.push(token);
-                });
-            }
-            nextPageToken = data.nextPageToken || null;
-        } while (nextPageToken);
+        const rtdbUrl = RTDB_URL.replace(/\/$/, '');
+        const r = await fetch(`${rtdbUrl}/fcmTokens.json`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!r.ok) throw new Error(`RTDB HTTP ${r.status}`);
+        const data = await r.json();
+        if (data && typeof data === 'object') {
+            tokens = Object.values(data).filter(t => typeof t === 'string' && t.length > 10);
+        }
     } catch (e) {
         return res.status(500).json({ error: 'Token listesi alınamadı: ' + e.message });
     }

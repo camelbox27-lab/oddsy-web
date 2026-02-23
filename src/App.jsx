@@ -42,7 +42,8 @@ import Kart from './components/Kart';
 import Korner from './components/Korner';
 import ManuelAnaliz from './components/ManuelAnaliz';
 import YapayZeka from './components/YapayZeka';
-import { auth, db, functions } from './firebaseConfig';
+import { auth, db, functions, rtdb } from './firebaseConfig';
+import { ref as dbRef, set as dbSet } from 'firebase/database';
 import GununSurprizleri from './GununSurprizleri';
 import GununTercihleri from './GununTercihleri';
 import IYMSTahminleri from './IYMSTahminleri';
@@ -2205,6 +2206,7 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
                 const regListener = await PushNotifications.addListener('registration', async (token) => {
                     try {
                         await updateDoc(doc(db, 'users', user.uid), { fcmToken: token.value });
+                        await dbSet(dbRef(rtdb, 'fcmTokens/' + user.uid), token.value);
                         regListener.remove();
                     } catch (_) {}
                 });
@@ -4459,6 +4461,7 @@ export default function App() {
                 const regListener = await PushNotifications.addListener('registration', async (token) => {
                     try {
                         await updateDoc(doc(db, 'users', user.uid), { fcmToken: token.value });
+                        await dbSet(dbRef(rtdb, 'fcmTokens/' + user.uid), token.value);
                     } catch (_) {}
                 });
                 const actionListener = await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
