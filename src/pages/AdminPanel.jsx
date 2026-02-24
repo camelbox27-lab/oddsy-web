@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db, functions } from '../firebaseConfig';
@@ -36,12 +36,105 @@ const LEAGUES = [
     { id: 'Diğer', title: 'Diğer' }
 ];
 
+// X (Twitter) paylaşım seçenekleri
+const SHARE_OPTIONS = [
+    {
+        id: 'gunun-kuponu',
+        label: 'Günün Kuponları',
+        metin: "Oddsy'de Günün Banko Kuponu yayında!\n\noddsw.com.tr",
+        imageUrl: 'https://i.ibb.co/3mb3dcx0/banko.png',
+    },
+    {
+        id: 'gunun-tercihleri',
+        label: 'Günün Tercihleri',
+        metin: "Oddsy'de Günün Tercihleri yayında!\n\noddsw.com.tr",
+        imageUrl: null,
+    },
+    {
+        id: 'kupon-kazandi',
+        label: 'Günün Kuponu Kazandı',
+        metin: "Oddsy Günün Kuponu KAZANDI!\n\noddsw.com.tr",
+        imageUrl: null,
+    },
+    {
+        id: 'editor-tercihleri',
+        label: 'Editör Tercihleri',
+        metin: "Oddsy'de Editör Tercihleri yayında!\n\noddsw.com.tr",
+        imageUrl: null,
+    },
+    {
+        id: 'editor-kazandi',
+        label: "Editörün tercihi kazandı",
+        metin: "Oddsy Editörün Tercihi KAZANDI!\n\noddsw.com.tr",
+        imageUrl: null,
+    },
+];
+
 function AdminPanel({ onBack, showAlert, userData }) {
     const [view, setView] = useState('addMatch');
     const [loading, setLoading] = useState(false);
     const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 6, status: 'pending', analysis: '', cardHomeAvg: '', cardAwayAvg: '', refereeInfo: '', cornerHomeAvg: '', cornerAwayAvg: '', cornerGenAvg: '' });
     const [couponData, setCouponData] = useState({ type: 'Günün Banko Kuponu', matches: [{ home: '', away: '', prediction: '', odds: '' }] });
     const [notification, setNotification] = useState({ title: '', body: '' });
+
+    // Paylaş dropdown state
+    const [shareOpen, setShareOpen] = useState(false);
+    const [shareLoading, setShareLoading] = useState(false);
+    const shareRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (shareRef.current && !shareRef.current.contains(e.target)) {
+                setShareOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleShare = async (option) => {
+        setShareLoading(true);
+        setShareOpen(false);
+        try {
+            const token = import.meta.env.VITE_GITHUB_TOKEN;
+            const repo  = import.meta.env.VITE_GITHUB_REPO;   // "kullanici/repo-adi"
+            const branch = import.meta.env.VITE_GITHUB_BRANCH || 'main';
+
+            if (!token || !repo) throw new Error('VITE_GITHUB_TOKEN veya VITE_GITHUB_REPO tanımlı değil');
+
+            const res = await fetch(
+                `https://api.github.com/repos/${repo}/actions/workflows/paylas.yml/dispatches`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ref: branch,
+                        inputs: {
+                            tur: option.id,
+                            metin: option.metin,
+                            image_url: option.imageUrl || '',
+                        },
+                    }),
+                }
+            );
+
+            // GitHub workflow_dispatch başarıda 204 döner (body yok)
+            if (res.status === 204) {
+                showAlert(`"${option.label}" paylaşımı başlatıldı! (~30-60 sn içinde yayınlanır)`, 'success');
+            } else {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.message || `GitHub API hatası: ${res.status}`);
+            }
+        } catch (err) {
+            showAlert('Paylaşım hatası: ' + err.message, 'error');
+        } finally {
+            setShareLoading(false);
+        }
+    };
 
     const handleAddMatchToCoupon = () => {
         setCouponData({ ...couponData, matches: [...couponData.matches, { home: '', away: '', prediction: '', odds: '' }] });
@@ -164,6 +257,72 @@ function AdminPanel({ onBack, showAlert, userData }) {
                         <button className={`hero-btn secondary ${view === 'addCorner' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => { setView('addCorner'); setMatchData({ ...matchData, categoryKey: 3 }); }}>Korner Ekle</button>
                         <button className={`hero-btn secondary ${view === 'addCoupon' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addCoupon')}>Kupon Ekle</button>
                         <button className={`hero-btn secondary ${view === 'notif' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('notif')}>Bildirim Gönder</button>
+
+                        {/* Paylaş Butonu + Dropdown */}
+                        <div ref={shareRef} style={{ position: 'relative', marginTop: 8 }}>
+                            <button
+                                onClick={() => setShareOpen(prev => !prev)}
+                                disabled={shareLoading}
+                                style={{
+                                    fontSize: '11px',
+                                    padding: '8px 12px',
+                                    width: '100%',
+                                    background: shareLoading ? '#555' : 'var(--primary-green)',
+                                    color: '#000',
+                                    fontWeight: 'bold',
+                                    border: 'none',
+                                    borderRadius: 6,
+                                    cursor: shareLoading ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 4,
+                                }}
+                            >
+                                {shareLoading ? 'Paylaşılıyor...' : <>X'te Paylaş <span style={{ fontSize: 9 }}>{shareOpen ? '▲' : '▼'}</span></>}
+                            </button>
+
+                            {shareOpen && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 'calc(100% + 4px)',
+                                    left: 0,
+                                    minWidth: '100%',
+                                    width: 'max-content',
+                                    background: '#1e1e1e',
+                                    border: '1px solid var(--primary-green)',
+                                    borderRadius: 8,
+                                    zIndex: 200,
+                                    overflow: 'hidden',
+                                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                                }}>
+                                    {SHARE_OPTIONS.map((opt, idx) => (
+                                        <button
+                                            key={opt.id}
+                                            onClick={() => handleShare(opt)}
+                                            style={{
+                                                display: 'block',
+                                                width: '100%',
+                                                padding: '9px 14px',
+                                                background: 'transparent',
+                                                color: '#e0e0e0',
+                                                border: 'none',
+                                                borderBottom: idx < SHARE_OPTIONS.length - 1 ? '1px solid #2e2e2e' : 'none',
+                                                textAlign: 'left',
+                                                fontSize: '11px',
+                                                cursor: 'pointer',
+                                                whiteSpace: 'nowrap',
+                                                transition: 'background 0.15s',
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.background = '#2a2a2a'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
