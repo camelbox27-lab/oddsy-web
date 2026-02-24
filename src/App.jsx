@@ -4558,6 +4558,47 @@ export default function App() {
                         const [notifRoute, setNotifRoute] = useState('');
                         const [notifLoading, setNotifLoading] = useState(false);
                         const [notifMsg, setNotifMsg] = useState(null); // { text, type }
+                        const [shareLoading, setShareLoading] = useState(null); // option id
+
+                        const SHARE_OPTIONS = [
+                            { id: 'gunun-kuponu',      label: 'Günün Kuponları',        metin: "Oddsy'de Günün Banko Kuponu yayında!\n\noddsw.com.tr", imageUrl: 'https://i.ibb.co/3mb3dcx0/banko.png' },
+                            { id: 'gunun-tercihleri',  label: 'Günün Tercihleri',       metin: "Oddsy'de Günün Tercihleri yayında!\n\noddsw.com.tr",   imageUrl: null },
+                            { id: 'kupon-kazandi',     label: 'Günün Kuponu Kazandı',   metin: "Oddsy Günün Kuponu KAZANDI!\n\noddsw.com.tr",           imageUrl: null },
+                            { id: 'editor-tercihleri', label: 'Editör Tercihleri',      metin: "Oddsy'de Editör Tercihleri yayında!\n\noddsw.com.tr",   imageUrl: null },
+                            { id: 'editor-kazandi',    label: "Editörün tercihi kazandı", metin: "Oddsy Editörün Tercihi KAZANDI!\n\noddsw.com.tr",     imageUrl: null },
+                        ];
+
+                        const handleShare = async (option) => {
+                            setShareLoading(option.id);
+                            try {
+                                const token  = import.meta.env.VITE_GITHUB_TOKEN;
+                                const repo   = import.meta.env.VITE_GITHUB_REPO;
+                                const branch = import.meta.env.VITE_GITHUB_BRANCH || 'main';
+                                if (!token || !repo) throw new Error('VITE_GITHUB_TOKEN veya VITE_GITHUB_REPO tanımlı değil');
+                                const res = await fetch(
+                                    `https://api.github.com/repos/${repo}/actions/workflows/paylas.yml/dispatches`,
+                                    {
+                                        method: 'POST',
+                                        headers: {
+                                            'Authorization': `Bearer ${token}`,
+                                            'Accept': 'application/vnd.github.v3+json',
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ ref: branch, inputs: { tur: option.id, metin: option.metin, image_url: option.imageUrl || '' } }),
+                                    }
+                                );
+                                if (res.status === 204) {
+                                    showAlert(`"${option.label}" paylaşımı başlatıldı! (~30-60 sn içinde yayınlanır)`, 'success');
+                                } else {
+                                    const data = await res.json().catch(() => ({}));
+                                    throw new Error(data.message || `GitHub API hatası: ${res.status}`);
+                                }
+                            } catch (err) {
+                                showAlert('Paylaşım hatası: ' + err.message, 'error');
+                            } finally {
+                                setShareLoading(null);
+                            }
+                        };
 
                         const sendNotification = async () => {
                             if (!notifTitle.trim() || !notifBody.trim()) return;
@@ -4592,10 +4633,39 @@ export default function App() {
                                     <button className={`hero-btn secondary ${adminView === 'dashboard' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('dashboard')}>Dashboard</button>
                                     <button className={`hero-btn secondary ${adminView === 'content' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('content')}>İçerik Yönetimi</button>
                                     <button className={`hero-btn secondary ${adminView === 'bildirim' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('bildirim')}>🔔 Bildirim Gönder</button>
+                                    <button className={`hero-btn secondary ${adminView === 'paylas' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('paylas')}>𝕏 Paylaş</button>
                                 </div>
                                 <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10 }}>
                                     {adminView === 'dashboard' && <AdminDashboard onBack={navigate} userData={userData} />}
                                     {adminView === 'content' && <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />}
+                                    {adminView === 'paylas' && (
+                                        <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                            <h3 style={{ color: 'var(--gold)', marginBottom: 8 }}>𝕏 X'te Paylaş</h3>
+                                            <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 4 }}>Seçtiğin içerik ~30-60 saniye içinde X hesabında yayınlanır.</p>
+                                            {SHARE_OPTIONS.map(opt => (
+                                                <button
+                                                    key={opt.id}
+                                                    onClick={() => handleShare(opt)}
+                                                    disabled={shareLoading !== null}
+                                                    style={{
+                                                        padding: '12px 16px',
+                                                        borderRadius: 8,
+                                                        border: '1px solid var(--primary-green)',
+                                                        background: shareLoading === opt.id ? 'var(--primary-green)' : 'transparent',
+                                                        color: shareLoading === opt.id ? '#000' : 'var(--text-primary)',
+                                                        fontSize: 13,
+                                                        fontWeight: 600,
+                                                        cursor: shareLoading !== null ? 'not-allowed' : 'pointer',
+                                                        textAlign: 'left',
+                                                        opacity: shareLoading !== null && shareLoading !== opt.id ? 0.5 : 1,
+                                                        transition: 'all 0.2s',
+                                                    }}
+                                                >
+                                                    {shareLoading === opt.id ? '⏳ Paylaşılıyor...' : `↗ ${opt.label}`}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                     {adminView === 'bildirim' && (
                                         <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                                             <h3 style={{ color: 'var(--gold)', marginBottom: 8 }}>🔔 Push Bildirim Gönder</h3>
