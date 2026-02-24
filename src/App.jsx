@@ -4561,11 +4561,11 @@ export default function App() {
                         const [shareLoading, setShareLoading] = useState(null); // option id
 
                         const SHARE_OPTIONS = [
-                            { id: 'gunun-kuponu',      label: 'Günün Kuponları',        metin: "Oddsy'de Günün Banko Kuponu yayında!\n\noddsw.com.tr", imageUrl: null },
-                            { id: 'gunun-tercihleri',  label: 'Günün Tercihleri',       metin: "Oddsy'de Günün Tercihleri yayında!\n\noddsw.com.tr",   imageUrl: null },
-                            { id: 'kupon-kazandi',     label: 'Günün Kuponu Kazandı',   metin: "Oddsy Günün Kuponu KAZANDI!\n\noddsw.com.tr",           imageUrl: null },
-                            { id: 'editor-tercihleri', label: 'Editör Tercihleri',      metin: "Oddsy'de Editör Tercihleri yayında!\n\noddsw.com.tr",   imageUrl: null },
-                            { id: 'editor-kazandi',    label: "Editörün tercihi kazandı", metin: "Oddsy Editörün Tercihi KAZANDI!\n\noddsw.com.tr",     imageUrl: null },
+                            { id: 'gunun-kuponu',      label: 'Günün Kuponları',        metin: "Oddsy'de Günün Banko Kuponu yayında!\n\noddsy.com.tr", imageUrl: null },
+                            { id: 'gunun-tercihleri',  label: 'Günün Tercihleri',       metin: "Oddsy'de Günün Tercihleri yayında!\n\noddsy.com.tr",   imageUrl: null },
+                            { id: 'kupon-kazandi',     label: 'Günün Kuponu Kazandı',   metin: "Oddsy Günün Kuponu KAZANDI!\n\noddsy.com.tr",           imageUrl: null },
+                            { id: 'editor-tercihleri', label: 'Editör Tercihleri',      metin: "Oddsy'de Editör Tercihleri yayında!\n\noddsy.com.tr",   imageUrl: null },
+                            { id: 'editor-kazandi',    label: "Editörün tercihi kazandı", metin: "Oddsy Editörün Tercihi KAZANDI!\n\noddsy.com.tr",     imageUrl: null },
                         ];
 
                         const handleShare = async (option) => {
