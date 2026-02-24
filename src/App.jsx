@@ -4633,15 +4633,15 @@ export default function App() {
                                     <button className={`hero-btn secondary ${adminView === 'dashboard' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('dashboard')}>Dashboard</button>
                                     <button className={`hero-btn secondary ${adminView === 'content' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('content')}>İçerik Yönetimi</button>
                                     <button className={`hero-btn secondary ${adminView === 'bildirim' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('bildirim')}>🔔 Bildirim Gönder</button>
-                                    <button className={`hero-btn secondary ${adminView === 'paylas' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('paylas')}>𝕏 Paylaş</button>
+                                    <button className={`hero-btn secondary ${adminView === 'paylas' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '10px 16px' }} onClick={() => setAdminView('paylas')}>📢 Paylaş</button>
                                 </div>
                                 <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10 }}>
                                     {adminView === 'dashboard' && <AdminDashboard onBack={navigate} userData={userData} />}
                                     {adminView === 'content' && <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />}
                                     {adminView === 'paylas' && (
                                         <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                            <h3 style={{ color: 'var(--gold)', marginBottom: 8 }}>𝕏 X'te Paylaş</h3>
-                                            <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 4 }}>Seçtiğin içerik ~30-60 saniye içinde X hesabında yayınlanır.</p>
+                                            <h3 style={{ color: 'var(--gold)', marginBottom: 8 }}>📢 X & Telegram'da Paylaş</h3>
+                                            <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 4 }}>Seçtiğin içerik ~30-60 saniye içinde X ve Telegram'da yayınlanır.</p>
                                             {SHARE_OPTIONS.map(opt => (
                                                 <button
                                                     key={opt.id}
