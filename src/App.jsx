@@ -53,6 +53,11 @@ import { getNextUserId, ensureUserDisplayId } from './utils/userId';
 import { debounce, throttle, listenerRegistry, connectionMonitor } from './utils/performanceUtils';
 import { dataCache } from './utils/cache';
 
+// ======= BAKIM MODU =======
+// true yapınca site bakım ekranı gösterir, login dahil her şey kapanır
+const MAINTENANCE_MODE = true;
+// ===========================
+
 const VIP_TRIAL_DAYS = 0;
 
 // Firebase email action link ayarları — linke tıklayınca oddsy.com.tr/auth/action sayfası açılır
@@ -325,6 +330,49 @@ html, body, #root, .app {
   justify-content: center;
   background: var(--bg-dark);
   color: var(--gold);
+}
+
+.maintenance-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px;
+  pointer-events: all;
+}
+.maintenance-overlay h1 {
+  font-size: 32px;
+  font-weight: 800;
+  color: #FDB913;
+  margin: 0 0 14px 0;
+  text-shadow: 0 2px 20px rgba(253,185,19,0.3);
+}
+.maintenance-overlay .maintenance-divider {
+  width: 60px;
+  height: 3px;
+  background: #FDB913;
+  border-radius: 2px;
+  margin: 0 auto 20px auto;
+  opacity: 0.6;
+}
+.maintenance-overlay p {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #fff;
+  max-width: 440px;
+  margin: 0 0 8px 0;
+}
+.maintenance-overlay .maintenance-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 24px;
 }
 
 .app {
@@ -4794,6 +4842,15 @@ export default function App() {
     return (
         <ErrorBoundary>
             <div className={`app${!appBannerDismissed ? ' banner-visible' : ''}`}>
+                {MAINTENANCE_MODE && (
+                    <div className="maintenance-overlay">
+                        <h1>Bakımdayız!</h1>
+                        <div className="maintenance-divider" />
+                        <p>Yeniliklerle dolu yeni versiyonumuz için<br />son hazırlıkları yapıyoruz.</p>
+                        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', marginTop: 6 }}>Çok yakında geri döneceğiz.</p>
+                        <p className="maintenance-sub">oddsy.com.tr</p>
+                    </div>
+                )}
                 {alert && <Alert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
                 {legalType && <LegalModal type={legalType} onClose={() => setLegalType(null)} />}
                 {!appBannerDismissed && (
