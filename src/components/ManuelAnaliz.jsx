@@ -1,6 +1,7 @@
 import { ArrowLeft, Search, Star, Trophy, Zap, Edit3 } from 'lucide-react';
 import { useState } from 'react';
 import { getTeamLogo, handleLogoError } from '../helper';
+import IddaaAnaliz from './IddaaAnaliz';
 
 // Lig listesi - YapayZeka ile aynı
 const LEAGUES = [
@@ -74,7 +75,7 @@ const formatDate = (dateStr) => {
     }
 };
 
-export default function ManuelAnaliz() {
+function ManuelBet365Analiz() {
     const [evSahibi, setEvSahibi] = useState('');
     const [deplasman, setDeplasman] = useState('');
     const [oranTuru, setOranTuru] = useState('acilis');
@@ -748,6 +749,109 @@ export default function ManuelAnaliz() {
                     >
                         <Search size={24} />
                         MANUEL ANALİZİ BAŞLAT
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function Bet365Logo() {
+    return (
+        <div className="flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 bg-[#0E764C] rounded-3xl shadow-lg" style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+            <div className="flex items-baseline">
+                <span className="text-white font-black text-3xl sm:text-4xl tracking-tight" style={{ fontFamily: 'Arial Black, sans-serif' }}>bet</span>
+                <span className="text-[#FFDD00] font-black text-3xl sm:text-4xl tracking-tight" style={{ fontFamily: 'Arial Black, sans-serif' }}>365</span>
+            </div>
+        </div>
+    );
+}
+
+function IddaaLogo() {
+    return (
+        <img
+            src="https://i.ibb.co/FL9BKnKv/app-icon-v2.png"
+            alt="iddaa.com"
+            className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl shadow-lg object-contain"
+            style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+        />
+    );
+}
+
+export default function ManuelAnaliz() {
+    const [selected, setSelected] = useState(null);
+
+    if (selected === 'bet365') {
+        return (
+            <div className="min-h-screen bg-[#333]">
+                <div className="px-4 pt-4">
+                    <button
+                        onClick={() => setSelected(null)}
+                        className="flex items-center gap-2 bg-[#404040] px-4 py-2 rounded-lg border border-[#FDB913] text-[#FDB913] hover:bg-[#4a4a4a] transition-all text-sm font-bold"
+                    >
+                        <ArrowLeft size={16} />
+                        Analiz Seçimine Dön
+                    </button>
+                </div>
+                <ManuelBet365Analiz />
+            </div>
+        );
+    }
+
+    if (selected === 'iddaa') {
+        return (
+            <div className="min-h-screen bg-[#333]">
+                <div className="px-4 pt-4">
+                    <button
+                        onClick={() => setSelected(null)}
+                        className="flex items-center gap-2 bg-[#404040] px-4 py-2 rounded-lg border border-[#FDB913] text-[#FDB913] hover:bg-[#4a4a4a] transition-all text-sm font-bold"
+                    >
+                        <ArrowLeft size={16} />
+                        Analiz Seçimine Dön
+                    </button>
+                </div>
+                <IddaaAnaliz manual={true} />
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen p-4 bg-[#333] text-white font-sans flex flex-col items-center justify-center">
+            <div className="max-w-2xl mx-auto w-full space-y-8">
+                <div className="text-center mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-black text-[#FDB913] mb-2">MANUEL ANALİZ YAP</h1>
+                    <p className="text-gray-400 text-sm sm:text-base">Hangi platform üzerinden manuel analiz yapmak istiyorsunuz?</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                    {/* Bet365 Butonu */}
+                    <button
+                        onClick={() => setSelected('bet365')}
+                        className="group bg-[#404040] hover:bg-[#4a4a4a] p-6 rounded-2xl border-2 border-[#0E764C] hover:border-[#FFDD00] transition-all flex items-center gap-6 shadow-lg hover:shadow-[0_0_25px_rgba(14,118,76,0.5)]"
+                    >
+                        <Bet365Logo />
+                        <div className="flex-1 text-left">
+                            <h2 className="text-lg sm:text-xl font-black text-white mb-2">Bet365 Manuel Analiz</h2>
+                            <p className="text-gray-400 text-xs sm:text-sm mb-3">Bet365 oranlarını manuel girerek analiz yapın</p>
+                            <div className="inline-block bg-[#0E764C] group-hover:bg-[#FFDD00] group-hover:text-[#0E764C] text-white px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all">
+                                Bet365 oran analizi yapmak için tıklayınız →
+                            </div>
+                        </div>
+                    </button>
+
+                    {/* İddaa Butonu */}
+                    <button
+                        onClick={() => setSelected('iddaa')}
+                        className="group bg-[#404040] hover:bg-[#4a4a4a] p-6 rounded-2xl border-2 border-[#FFDD00] hover:border-[#0E764C] transition-all flex items-center gap-6 shadow-lg hover:shadow-[0_0_25px_rgba(255,221,0,0.5)]"
+                    >
+                        <IddaaLogo />
+                        <div className="flex-1 text-left">
+                            <h2 className="text-lg sm:text-xl font-black text-white mb-2">İddaa Manuel Analiz</h2>
+                            <p className="text-gray-400 text-xs sm:text-sm mb-3">İddaa oranlarını manuel girerek analiz yapın</p>
+                            <div className="inline-block bg-[#FFDD00] group-hover:bg-[#0E764C] group-hover:text-[#FFDD00] text-[#0E764C] px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all">
+                                İddaa oran analizi yapmak için tıklayınız →
+                            </div>
+                        </div>
                     </button>
                 </div>
             </div>
