@@ -56,7 +56,7 @@ import { dataCache } from './utils/cache';
 
 // ======= BAKIM MODU =======
 // true yapınca site bakım ekranı gösterir, login dahil her şey kapanır
-const MAINTENANCE_MODE = true;
+const MAINTENANCE_MODE = false;
 const isLocalDevelopment = () => {
     if (typeof window === 'undefined') return false;
     const host = window.location.hostname;
