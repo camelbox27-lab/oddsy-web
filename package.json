@@ -11,6 +11,11 @@
         "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0"
     },
     "dependencies": {
+        "@capacitor/android": "^8.1.0",
+        "@capacitor/app": "^8.0.1",
+        "@capacitor/cli": "^8.1.0",
+        "@capacitor/core": "^8.1.0",
+        "@capacitor/push-notifications": "^8.0.1",
         "@sentry/react": "^10.36.0",
         "@supabase/supabase-js": "^2.39.0",
         "@tanstack/react-query": "^5.90.20",
@@ -22,14 +27,17 @@
         "lucide-react": "^0.562.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
+        "react-is": "^19.2.6",
         "react-lazy-load-image-component": "^1.6.3",
         "react-router-dom": "^7.13.0",
+        "recharts": "^3.8.1",
         "sql.js": "^1.10.3",
         "sweetalert2": "^11.26.17",
         "xlsx": "^0.18.5",
         "zustand": "^5.0.10"
     },
     "devDependencies": {
+        "@capacitor/assets": "^3.0.5",
         "@types/react": "^18.2.0",
         "@types/react-dom": "^18.2.0",
         "@vitejs/plugin-react": "^4.0.0",

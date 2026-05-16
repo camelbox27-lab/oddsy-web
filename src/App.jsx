@@ -41,6 +41,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Kart from './components/Kart';
 import Korner from './components/Korner';
 import ManuelAnaliz from './components/ManuelAnaliz';
+import OranAnaliz from './components/OranAnaliz';
 import YapayZeka from './components/YapayZeka';
 import { auth, db, functions, rtdb } from './firebaseConfig';
 import { ref as dbRef, set as dbSet } from 'firebase/database';
@@ -56,6 +57,11 @@ import { dataCache } from './utils/cache';
 // ======= BAKIM MODU =======
 // true yapınca site bakım ekranı gösterir, login dahil her şey kapanır
 const MAINTENANCE_MODE = true;
+const isLocalDevelopment = () => {
+    if (typeof window === 'undefined') return false;
+    const host = window.location.hostname;
+    return import.meta.env.DEV || host === 'localhost' || host === '127.0.0.1';
+};
 // ===========================
 
 const VIP_TRIAL_DAYS = 0;
@@ -1390,7 +1396,7 @@ const Icons = {
 
 // CONSTANTS
 const MENU_ITEMS = [
-    { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: '🤖', color: "#FFD700", route: 'yapay-zeka-analizleri' },
+{ id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: '🤖', color: "#FFD700", route: 'yapay-zeka-analizleri' },
     { id: 'cat_manuel_analiz', title: "MANUEL ANALİZ YAP", key: 33, icon: '✏️', color: "#FFD700", route: 'manuel-analiz' },
     { id: 'cat_1', title: "ILK YARI GOL LISTESI", key: 0, icon: '⚽', color: "#10B981", route: 'ilk-yari-gol' },
     { id: 'cat_coupons_new', title: "GÜNÜN KUPONLARI", key: 20, icon: '🎫', color: "#f87171", route: 'coupons' },
@@ -1417,6 +1423,22 @@ const LEAGUES = [
     { id: 'Bundesliga', title: 'Bundesliga', desc: 'Gol Şöleni & Hücum Futbolu', image: 'https://i.ibb.co/fzrPDNQp/germany-bundesliga-64x64-football-logos-cc.png' },
     { id: 'Ligue 1', title: 'Ligue 1', desc: 'Yetenek Fabrikası & Atletizm', image: 'https://i.ibb.co/cXSXDS45/france-ligue-1-64x64-football-logos-cc.png' },
 ];
+
+const ROUTE_PATHS = {
+    home: '/',
+    'auth-action': '/auth/action',
+};
+
+const getRouteFromPathname = (pathname) => {
+    if (pathname === '/auth/action') {
+        const p = new URLSearchParams(window.location.search);
+        if (p.get('mode') && p.get('oobCode')) return 'auth-action';
+    }
+
+    return 'home';
+};
+
+const getPathForRoute = (route) => ROUTE_PATHS[route] || '/';
 
 // LEGAL TEXTS
 const LEGAL_TEXTS = {
@@ -1609,7 +1631,7 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
     ];
 
     const bottomRowCategories = [
-        { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZLERİ", key: 10, route: 'yapay-zeka-analizleri' },
+{ id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZLERİ", key: 10, route: 'yapay-zeka-analizleri' },
         { id: 'cat_manuel_analiz_top', title: "MANUEL ANALİZ", key: 33, route: 'manuel-analiz' },
         { id: 'cat_kart_analiz_top', title: "KART ANALİZİ", key: 31, route: 'kart-analizi' },
         { id: 'cat_korner_analiz_top', title: "KORNER ANALİZİ", key: 32, route: 'korner-analizi' },
@@ -1834,7 +1856,7 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
                 <div className="hero-content" style={{ paddingTop: '160px' }}>
                     <h1 className="hero-title">Oddsy ile Akıllı Futbol Tahminleri</h1>
                     <p className="hero-subtitle">Yapay zeka oran analiz sistemiyle güçlendirilmiş, günün öne çıkan karşılaşmalarını sizin için sadeleştiren yeni nesil tahmin platformu.</p>
-                    <div className="hero-buttons" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+<div className="hero-buttons" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {user ? (
                             <div style={{ padding: '8px 20px', background: 'rgba(0,0,0,0.6)', borderRadius: '15px', border: '1px solid var(--gold)', backdropFilter: 'blur(10px)' }}>
                                 <h2 style={{ color: 'var(--gold)', fontWeight: '800', fontSize: '18px', margin: 0 }}>
@@ -3801,14 +3823,11 @@ function CouponScreen({ onBack, showAlert, userData }) {
                 <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15, maxWidth: 600, margin: '0 auto' }}>
                     {couponTypes.map(type => {
                         const typeCoupons = coupons.filter(c => c.type === type.dbName);
-                        // En son eklenen kuponu göster, tercihen sonucu belli olmayan
                         const latestCoupon = typeCoupons[0];
-
                         return (
                             <div key={type.id} className="menu-selection-card" onClick={() => setSelectedType(type)}>
                                 <img src={type.image} style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt={type.name} />
                                 <h3 style={{ color: type.color, fontSize: 18, marginBottom: 10 }}>{type.name}</h3>
-                                {/* İstatistikler kaldırıldı, sadece kart ismi ve görsel kalacak */}
                                 {!latestCoupon && (
                                     <div style={{ marginTop: 15, padding: 10, fontSize: 12, color: '#666' }}>Henüz kupon eklenmedi</div>
                                 )}
@@ -4328,13 +4347,14 @@ const Skeleton = ({ type }) => {
 };
 
 export default function App() {
+    const showMaintenanceOverlay = MAINTENANCE_MODE && !isLocalDevelopment();
 
     const [route, setRoute] = useState(() => {
         if (window.location.pathname === '/auth/action') {
             const p = new URLSearchParams(window.location.search);
             if (p.get('mode') && p.get('oobCode')) return 'auth-action';
         }
-        return 'home';
+        return getRouteFromPathname(window.location.pathname);
     });
     const [routeParams, setRouteParams] = useState(() => {
         if (window.location.pathname === '/auth/action') {
@@ -4478,11 +4498,11 @@ export default function App() {
 
         // İlk yüklemede mevcut route'u tarihe işle
         if (!window.history.state) {
-            window.history.replaceState({ route: 'home', params: {} }, '');
+            window.history.replaceState({ route, params: routeParams }, '', getPathForRoute(route));
         }
 
         return () => window.removeEventListener('popstate', handlePopState);
-    }, []);
+    }, [route, routeParams]);
 
     // Çevrimiçi kullanıcı takibi: lastActive'i her 2 dakikada güncelle
     useEffect(() => {
@@ -4540,7 +4560,7 @@ export default function App() {
 
         // Eğer geri butonu ile gelmediysek tarihe ekle
         if (push !== false) {
-            window.history.pushState({ route: r, params: p }, '');
+            window.history.pushState({ route: r, params: p }, '', getPathForRoute(r));
         }
 
         // Menü ziyaret analitik takibi
@@ -4801,7 +4821,8 @@ export default function App() {
                     <Korner onBack={() => navigate('home')} />
                 </VipGate>
             );
-            case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')} />;
+case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')} />;
+            case 'oran-analiz': return <OranAnaliz onBack={() => navigate('home')} defaultSource={routeParams?.defaultSource || null} />;
             case 'ilk-yari-gol': return (
                 <div style={{ paddingTop: '20px' }}>
                     <div className="category-header">
@@ -4842,7 +4863,7 @@ export default function App() {
     return (
         <ErrorBoundary>
             <div className={`app${!appBannerDismissed ? ' banner-visible' : ''}`}>
-                {MAINTENANCE_MODE && (
+                {showMaintenanceOverlay && (
                     <div className="maintenance-overlay">
                         <h1>Bakımdayız!</h1>
                         <div className="maintenance-divider" />
