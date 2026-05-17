@@ -1266,7 +1266,42 @@ export const getTeamLogo = (teamName) => {
         'paphos fc': 'paphos-fc', 'paphos': 'paphos-fc',
         'viborg ff': 'viborg-ff', 'viborg': 'viborg-ff',
         'union saint-gilloise': 'union-saint-gilloise', 'union st-gilloise': 'union-saint-gilloise',
-        'standard liege': 'standard-liege', 'standard liège': 'standard-liege'
+        'standard liege': 'standard-liege', 'standard liège': 'standard-liege',
+        'brighton & hove albion': 'brighton-hove-albion', 'brighton &amp; hove albion': 'brighton-hove-albion',
+        'spvgg greuther fürth': 'spvgg-greuther-furth', 'spvgg greuther furth': 'spvgg-greuther-furth', 'greuther fürth': 'spvgg-greuther-furth',
+        'fortuna düsseldorf': 'fortuna-dusseldorf', 'fortuna dusseldorf': 'fortuna-dusseldorf',
+        'preußen münster': 'preussen-munster', 'preussen munster': 'preussen-munster',
+        'sønderjyske fodbold': 'sonderjyske-fodbold', 'sonderjyske fodbold': 'sonderjyske-fodbold',
+        'västerås sk': 'vasteras-sk', 'vasteras sk': 'vasteras-sk',
+        'djurgårdens if dff': 'djurgardens-if-dff', 'djurgardens if dff': 'djurgardens-if-dff',
+        'piteå if': 'pitea-if', 'pitea if': 'pitea-if',
+        'gençlerbirliği': 'genclerbirligi',
+        'atlético madrid': 'atletico-madrid', 'atletico de madrid': 'atletico-madrid',
+        'deportivo alavés': 'deportivo-alaves', 'deportivo alaves': 'deportivo-alaves', 'alaves': 'deportivo-alaves',
+        'brøndby if': 'brondby-if', 'brondby if': 'brondby-if',
+        'fc nordsjælland': 'fc-nordsjaelland', 'fc nordsjaelland': 'fc-nordsjaelland', 'nordsjaelland': 'fc-nordsjaelland',
+        'fc københavn': 'fc-kobenhavn', 'fc kobenhavn': 'fc-kobenhavn',
+        'mjällby aif': 'mjallby-aif', 'bk häcken': 'bk-hacken',
+        'união de leiria': 'uniao-de-leiria', 'uniao de leiria': 'uniao-de-leiria',
+        'leixões sc': 'leixoes-sc', 'leixoes sc': 'leixoes-sc',
+        'sg dynamo dresden': 'sg-dynamo-dresden', 'dynamo dresden': 'sg-dynamo-dresden',
+        '1. fc magdeburg': '1-fc-magdeburg', 'magdeburg': '1-fc-magdeburg',
+        'sc paderborn 07': 'sc-paderborn-07', 'paderborn': 'sc-paderborn-07',
+        'sv 07 elversberg': 'sv-07-elversberg', 'elversberg': 'sv-07-elversberg',
+        'darmstadt 98': 'darmstadt-98', 'sv darmstadt 98': 'darmstadt-98',
+        'arminia bielefeld': 'arminia-bielefeld', 'a. bielefeld': 'arminia-bielefeld',
+        'hertha bsc': 'hertha-bsc', 'hertha': 'hertha-bsc',
+        'holstein kiel': 'holstein-kiel', 'h. kiel': 'holstein-kiel',
+        'fc schalke 04': 'fc-schalke-04', 'schalke': 'fc-schalke-04', 'schalke 04': 'fc-schalke-04',
+        'eintracht braunschweig': 'eintracht-braunschweig',
+        'hannover 96': 'hannover-96', 'hannover': 'hannover-96',
+        '1. fc nürnberg': '1-fc-nurnberg', 'nürnberg': '1-fc-nurnberg', 'nurnberg': '1-fc-nurnberg',
+        'karlsruher sc': 'karlsruher-sc', 'karlsruher': 'karlsruher-sc',
+        'vfl bochum 1848': 'vfl-bochum-1848', 'bochum': 'vfl-bochum-1848',
+        '1. fc kaiserslautern': '1-fc-kaiserslautern',
+        'fk austria wien': 'fk-austria-wien', 'austria wien': 'fk-austria-wien',
+        'sk rapid wien': 'sk-rapid-wien', 'rapid wien': 'sk-rapid-wien',
+        'bayer leverkusen': 'bayer-leverkusen'
     };
 
     // specialCases'te ara - orijinal, expanded ve nokta temizlenmiş versiyonlarla
@@ -1350,36 +1385,23 @@ export const getTeamLogo = (teamName) => {
         }
 
         // 6. BULANIK ESLESME (Levenshtein mesafesi - son çare)
-        // Sadece 5+ karakter isimler için, mesafe <= 2
+        // Sadece kelime bazında, mesafe <= 1 ve kelime en az 5 karakter
         for (const norm of allNormalized) {
             if (norm.length >= 5) {
-                let bestMatch = null;
-                let bestDist = 3; // max mesafe 2
+                const normWords = norm.split('-').filter(w => w.length >= 5);
                 for (const logo of ALL_TEAM_LOGOS) {
-                    // Logo'nun her kelimesini veya tamamını karşılaştır
-                    const dist = levenshtein(norm, logo);
-                    if (dist < bestDist) {
-                        bestDist = dist;
-                        bestMatch = logo;
-                    }
-                    // Logo kelimelerini de dene
                     const logoWords = logo.split('-');
                     for (const lw of logoWords) {
-                        if (lw.length >= 4) {
-                            const normWords = norm.split('-');
+                        if (lw.length >= 5) {
                             for (const nw of normWords) {
-                                if (nw.length >= 4) {
-                                    const wd = levenshtein(nw, lw);
-                                    if (wd <= 1 && nw.length >= 5) {
-                                        // Kelime seviyesinde çok yakın eşleşme
-                                        return `/logos/${logo}.png`;
-                                    }
+                                const wd = levenshtein(nw, lw);
+                                if (wd <= 1) {
+                                    return `/logos/${logo}.png`;
                                 }
                             }
                         }
                     }
                 }
-                if (bestMatch) return `/logos/${bestMatch}.png`;
             }
         }
     } catch (e) {
@@ -1424,48 +1446,9 @@ const _showLogoInitials = (img, teamName) => {
 // Sayfa genelinde cache - aynı takım için API'yi tekrar çağırmaz
 const _logoCache = {};
 
-export const handleLogoError = async (e) => {
+export const handleLogoError = (e) => {
     const img = e.target;
     const teamName = img.alt || 'Team';
-
-    // İkinci kez hata verirse (external logo da yüklenemediyse) → initials göster
-    if (img.dataset.logoHandled) {
-        _showLogoInitials(img, teamName);
-        return;
-    }
-    img.dataset.logoHandled = 'true';
-
-    // Cache'de varsa direkt kullan
-    if (_logoCache[teamName] === null) {
-        _showLogoInitials(img, teamName);
-        return;
-    }
-    if (_logoCache[teamName]) {
-        if (img.parentNode) img.src = _logoCache[teamName];
-        return;
-    }
-
-    // TheSportsDB ücretsiz API'den logo çekmeyi dene
-    try {
-        const ctrl = new AbortController();
-        const timeoutId = setTimeout(() => ctrl.abort(), 4000);
-        const resp = await fetch(
-            `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`,
-            { signal: ctrl.signal }
-        );
-        clearTimeout(timeoutId);
-        if (resp.ok) {
-            const data = await resp.json();
-            if (data.teams && data.teams[0] && data.teams[0].strBadge) {
-                const logoUrl = data.teams[0].strBadge;
-                _logoCache[teamName] = logoUrl;
-                if (img.parentNode) img.src = logoUrl;
-                return;
-            }
-        }
-    } catch (_) { /* API erişilemedi veya timeout - initials'a düş */ }
-
-    _logoCache[teamName] = null; // "bulunamadı" olarak işaretle
     _showLogoInitials(img, teamName);
 };
 
