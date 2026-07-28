@@ -1,8 +1,8 @@
 import { ArrowLeft, Search, Star, Trophy, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getTeamLogo, handleLogoError } from '../helper';
-const BET365_DAILY_URL = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/guncel_json/bet365/gunlukmaclar.json';
-const IDDAA_DAILY_URL = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/guncel_json/iddaa/gunlukmaclar.json';
+const BET365_DAILY_URL = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/bet365/gunlukmaclar.json';
+const IDDAA_DAILY_URL = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/iddaa/gunluk/gunlukmaclar.json';
 
 async function fetchRemoteJson(url) {
     const response = await fetch(url);
@@ -303,7 +303,7 @@ function YapayZekaIddaa({ onBack }) {
         setResults(null);
 
         try {
-            const response = await fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/oran%20data/iddaagecmis.json');
+            const response = await fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/iddaa/gecmis/iddaagecmis.json');
             if (!response.ok) throw new Error('İddaa verisi yüklenemedi.');
             const text = await response.text();
             const data = JSON.parse(text.replace(/:\s*NaN/g, ': null').replace(/:\s*-NaN/g, ': null'));
@@ -1143,7 +1143,7 @@ export default function YapayZeka() {
             const inputOran2 = normalizeOdds(oran2);
 
             if (isIddaaSource) {
-                const response = await fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/oran%20data/iddaagecmis.json');
+                const response = await fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/iddaa/gecmis/iddaagecmis.json');
                 if (!response.ok) throw new Error('İddaa backend analizi çalışmadı.');
                 const text = await response.text();
                 const iddaaData = JSON.parse(text.replace(/:\s*NaN/g, ': null').replace(/:\s*-NaN/g, ': null'));

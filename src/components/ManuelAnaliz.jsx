@@ -1,7 +1,7 @@
 import { ArrowLeft, Search, Star, Trophy, Zap, Edit3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getTeamLogo, handleLogoError } from '../helper';
-const iddaaGecmisUrl = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/oran%20data/iddaagecmis.json';
+const iddaaGecmisUrl = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/iddaa/gecmis/iddaagecmis.json';
 
 // Lig listesi - YapayZeka ile aynı
 const LEAGUES = [
@@ -98,7 +98,7 @@ function ManuelIddaa({ onBack }) {
     useEffect(() => {
         const load = async () => {
             try {
-                const res = await fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/guncel_json/bet365/gunlukmaclar.json');
+                const res = await fetch('https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/bet365/gunlukmaclar.json');
                 if (res.ok) {
                     const text = await res.text();
                     const data = JSON.parse(text.replace(/:\s*NaN/g, ': null').replace(/:\s*-NaN/g, ': null'));

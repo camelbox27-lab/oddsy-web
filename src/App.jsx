@@ -14,6 +14,7 @@ import {
     sendEmailVerification,
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
+    signInWithPopup,
     signOut,
     updateProfile
 } from 'firebase/auth';
@@ -43,7 +44,7 @@ import Korner from './components/Korner';
 import ManuelAnaliz from './components/ManuelAnaliz';
 import OranAnaliz from './components/OranAnaliz';
 import YapayZeka from './components/YapayZeka';
-import { auth, db, functions, rtdb } from './firebaseConfig';
+import { auth, db, functions, googleProvider, rtdb } from './firebaseConfig';
 import { ref as dbRef, set as dbSet } from 'firebase/database';
 import GununSurprizleri from './GununSurprizleri';
 import GununTercihleri from './GununTercihleri';
@@ -1217,7 +1218,7 @@ html, body, #root, .app {
     100% { transform: scale(1); opacity: 0.8; }
 }
 
-.alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 10px; font-size: 14px; font-weight: 700; z-index: 2000; }
+.alert { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 10px; font-size: 14px; font-weight: 700; z-index: 3500; box-shadow: 0 8px 25px rgba(0,0,0,0.4); max-width: 90vw; text-align: center; }
 .alert.success { background: var(--success); color: var(--primary-green-dark); }
 .alert.error { background: var(--error); color: #fff; }
 
@@ -1398,6 +1399,7 @@ const Icons = {
 const MENU_ITEMS = [
 { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZ BOTU", key: 10, icon: '🤖', color: "#FFD700", route: 'yapay-zeka-analizleri' },
     { id: 'cat_manuel_analiz', title: "MANUEL ANALİZ YAP", key: 33, icon: '✏️', color: "#FFD700", route: 'manuel-analiz' },
+    { id: 'cat_oran_analiz', title: "ORAN ANALİZ", key: 34, icon: '📊', color: "#60a5fa", route: 'oran-analiz' },
     { id: 'cat_1', title: "ILK YARI GOL LISTESI", key: 0, icon: '⚽', color: "#10B981", route: 'ilk-yari-gol' },
     { id: 'cat_coupons_new', title: "GÜNÜN KUPONLARI", key: 20, icon: '🎫', color: "#f87171", route: 'coupons' },
     { id: 'cat_kart_analiz', title: "KART ANALİZ BOTU", key: 31, icon: '🟨', color: "#FFD700", route: 'kart-analizi' },
@@ -1427,18 +1429,90 @@ const LEAGUES = [
 const ROUTE_PATHS = {
     home: '/',
     'auth-action': '/auth/action',
+    'oran-analiz': '/oran-analiz',
+    'manuel-analiz': '/manuel-analiz',
+    'kart-analizi': '/kart-analizi',
+    'korner-analizi': '/korner-analizi',
+    'yapay-zeka-analizleri': '/yapay-zeka-analizleri',
+    'iy-ms-tahminleri': '/iy-ms-tahminleri',
+    'ilk-yari-gol': '/ilk-yari-gol-listesi',
+    coupons: '/gunun-kuponlari',
+    'gunun-tercihleri': '/gunun-tercihleri',
+    'gunun-surprizleri': '/gunun-surprizleri',
+    'dropping-odds': '/orani-dusen-maclar',
+    abonelik: '/abonelik',
+    profile: '/profilim',
+    auth: '/giris',
+    admin: '/admin',
+    editor: '/editor',
+    moderator: '/moderator',
 };
+
+// path -> route (ROUTE_PATHS'in tersi, ilk eşleşen route kazanır)
+const PATH_TO_ROUTE = Object.entries(ROUTE_PATHS).reduce((acc, [routeName, path]) => {
+    if (!(path in acc)) acc[path] = routeName;
+    return acc;
+}, {});
 
 const getRouteFromPathname = (pathname) => {
     if (pathname === '/auth/action') {
         const p = new URLSearchParams(window.location.search);
         if (p.get('mode') && p.get('oobCode')) return 'auth-action';
+        return 'home';
     }
-
-    return 'home';
+    return PATH_TO_ROUTE[pathname] || 'home';
 };
 
 const getPathForRoute = (route) => ROUTE_PATHS[route] || '/';
+
+const SITE_TITLE = 'Oddsy - Akıllı Futbol Tahminleri';
+const SITE_DESCRIPTION = 'Oddsy ile yapay zeka destekli oran analiziyle güçlendirilmiş futbol tahminleri. Günlük bülten maçlarını filtrele, geçmiş verilerle karşılaştır, akıllı tahminlere ulaş.';
+
+// Her route için title + meta description + OG description (SEO ve sosyal medya paylaşım kartları için)
+const ROUTE_META = {
+    home: { title: SITE_TITLE, description: SITE_DESCRIPTION },
+    'oran-analiz': { title: 'Oran Analiz | Oddsy', description: 'Günlük bülten maçlarını geçmiş verilerle birebir eşleştiren oran analiz aracı. Filtrele, karşılaştır, sonucu gör.' },
+    'manuel-analiz': { title: 'Manuel Analiz | Oddsy', description: 'Maç istatistiklerini kendi kriterlerinize göre analiz edin, manuel tahmin oluşturun.' },
+    'kart-analizi': { title: 'Kart Analizi | Oddsy', description: 'Takımların sarı/kırmızı kart istatistiklerine dayalı kart analiz botu.' },
+    'korner-analizi': { title: 'Korner Analizi | Oddsy', description: 'Korner istatistiklerine dayalı yapay zeka destekli korner analiz botu.' },
+    'yapay-zeka-analizleri': { title: 'Yapay Zeka Analizleri | Oddsy', description: 'Yapay zeka algoritmalarıyla oluşturulan günlük maç analizleri ve tahminler.' },
+    'iy-ms-tahminleri': { title: 'İY / MS Tahminleri | Oddsy', description: 'İlk yarı / maç sonu kombinasyon tahminleri, güncel bülten maçları üzerinden.' },
+    'ilk-yari-gol': { title: 'İlk Yarı Gol Listesi | Oddsy', description: 'İlk yarıda gol beklentisi yüksek maçların listesi ve analizleri.' },
+    coupons: { title: 'Günün Kuponları | Oddsy', description: 'Banko, ideal ve sürpriz kupon önerileri günlük olarak burada.' },
+    'gunun-tercihleri': { title: 'Günün Tercihleri | Oddsy', description: 'Editör ekibinin günün öne çıkan maçları için tercihleri ve yorumları.' },
+    'gunun-surprizleri': { title: 'Günün Sürprizleri | Oddsy', description: 'Yüksek oranlı, sürpriz sonuç beklentisi olan günün maçları.' },
+    'dropping-odds': { title: 'Oranı Düşen Maçlar | Oddsy', description: 'Bahis oranı hızla düşen, piyasa hareketliliği yüksek maçların takibi.' },
+    category: { title: 'Kategori | Oddsy', description: SITE_DESCRIPTION },
+    abonelik: { title: 'Abonelik Planları | Oddsy', description: 'Oddsy VIP abonelik planları ve premium analiz özellikleri.' },
+    profile: { title: 'Profilim | Oddsy', description: SITE_DESCRIPTION },
+    auth: { title: 'Giriş Yap | Oddsy', description: 'Oddsy hesabınıza giriş yapın veya yeni hesap oluşturun.' },
+    admin: { title: 'Admin Paneli | Oddsy', description: SITE_DESCRIPTION },
+    editor: { title: 'Editör Paneli | Oddsy', description: SITE_DESCRIPTION },
+    moderator: { title: 'Moderatör Paneli | Oddsy', description: SITE_DESCRIPTION },
+};
+
+const setMetaContent = (selector, content) => {
+    const el = document.querySelector(selector);
+    if (el) el.setAttribute('content', content);
+};
+
+// Route değişince title, meta description, OG/Twitter açıklamalarını ve canonical'ı senkron tutar
+const syncSeoTags = (route) => {
+    if (typeof document === 'undefined') return;
+    const meta = ROUTE_META[route] || { title: SITE_TITLE, description: SITE_DESCRIPTION };
+
+    document.title = meta.title;
+    setMetaContent('meta[name="description"]', meta.description);
+    setMetaContent('meta[property="og:title"]', meta.title);
+    setMetaContent('meta[property="og:description"]', meta.description);
+    setMetaContent('meta[name="twitter:title"]', meta.title);
+    setMetaContent('meta[name="twitter:description"]', meta.description);
+
+    const canonicalUrl = 'https://oddsy.com.tr' + getPathForRoute(route);
+    const canonicalEl = document.querySelector('link[rel="canonical"]');
+    if (canonicalEl) canonicalEl.setAttribute('href', canonicalUrl);
+    setMetaContent('meta[property="og:url"]', canonicalUrl);
+};
 
 // LEGAL TEXTS
 const LEGAL_TEXTS = {
@@ -1633,12 +1707,13 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
     const bottomRowCategories = [
 { id: 'cat_ai_new', title: "YAPAY ZEKA ANALİZLERİ", key: 10, route: 'yapay-zeka-analizleri' },
         { id: 'cat_manuel_analiz_top', title: "MANUEL ANALİZ", key: 33, route: 'manuel-analiz' },
+        { id: 'cat_oran_analiz_top', title: "ORAN ANALİZ", key: 34, route: 'oran-analiz' },
         { id: 'cat_kart_analiz_top', title: "KART ANALİZİ", key: 31, route: 'kart-analizi' },
         { id: 'cat_korner_analiz_top', title: "KORNER ANALİZİ", key: 32, route: 'korner-analizi' },
     ];
 
     const handleCategoryClick = (cat) => {
-        if (['coupons', 'yapay-zeka-analizleri', 'manuel-analiz', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'ilk-yari-gol', 'dropping-odds', 'abonelik'].includes(cat.route)) {
+        if (['coupons', 'yapay-zeka-analizleri', 'manuel-analiz', 'oran-analiz', 'kart-analizi', 'korner-analizi', 'iy-ms-tahminleri', 'ilk-yari-gol', 'dropping-odds', 'abonelik'].includes(cat.route)) {
             onNavigate(cat.route, cat);
         } else {
             const menuItem = MENU_ITEMS.find(m => m.key === cat.key);
@@ -2085,11 +2160,37 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
         } catch (err) {
             console.error('Firebase Auth Hatası:', err.code, err.message);
             let msg = 'İşlem sırasında bir hata oluştu.';
-            if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') msg = 'Kullanıcı adı/email veya şifre hatalı. Kayıtlı değilseniz önce Kaydolun.';
+            if (err.code === 'auth/user-not-found') msg = 'Bu kullanıcı adı/email ile kayıtlı bir hesap bulunamadı. Kayıtlı değilseniz önce Kaydolun.';
+            else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') msg = 'Şifreniz hatalı. Lütfen tekrar deneyin veya "Şifremi Unuttum" ile yeni şifre oluşturun.';
+            else if (err.code === 'auth/invalid-email') msg = 'Geçersiz email formatı.';
+            else if (err.code === 'auth/too-many-requests') msg = 'Çok fazla başarısız deneme yapıldı. Lütfen bir süre bekleyip tekrar deneyin veya şifrenizi sıfırlayın.';
+            else if (err.code === 'auth/user-disabled') msg = 'Bu hesap devre dışı bırakılmış. Destek ile iletişime geçin.';
             else if (err.code === 'auth/email-already-in-use') msg = 'Bu email zaten kullanımda.';
             else if (err.code === 'auth/weak-password') msg = 'Şifre çok zayıf.';
             else msg = err.message;
             showAlert(msg, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        try {
+            await signInWithPopup(auth, googleProvider);
+            showAlert('Giriş başarılı!', 'success');
+            onBack();
+        } catch (err) {
+            if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+                // Kullanıcı pencereyi kendi kapattı, hata gösterme
+            } else if (err.code === 'auth/account-exists-with-different-credential') {
+                showAlert('Bu email adresi zaten farklı bir yöntemle kayıtlı. Email/şifre ile giriş yapmayı deneyin.', 'error');
+            } else if (err.code === 'auth/popup-blocked') {
+                showAlert('Tarayıcınız açılır pencereyi engelledi. Lütfen popup izni verip tekrar deneyin.', 'error');
+            } else {
+                console.error('Google Auth Hatası:', err.code, err.message);
+                showAlert('Google ile giriş yapılamadı. Lütfen tekrar deneyin.', 'error');
+            }
         } finally {
             setLoading(false);
         }
@@ -2211,6 +2312,29 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
             <div className="auth-card">
                 <button className="back-btn" onClick={onBack}>{Icons.back} Geri</button>
                 <h1 style={{ marginBottom: 20 }}>{isLogin ? 'Giriş Yap' : 'Kayıt Ol'}</h1>
+                <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                    style={{
+                        width: '100%', padding: '12px', borderRadius: 10, background: '#fff', border: '1px solid var(--border)',
+                        color: '#1a1a1a', fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 18, opacity: loading ? 0.6 : 1
+                    }}
+                >
+                    <svg width="18" height="18" viewBox="0 0 18 18">
+                        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z" />
+                        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.98v2.33A9 9 0 0 0 9 18z" />
+                        <path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.98A9 9 0 0 0 0 9c0 1.45.35 2.83.98 4.05l2.99-2.33z" />
+                        <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59A8.9 8.9 0 0 0 9 0 9 9 0 0 0 .98 4.95l2.99 2.33C4.68 5.16 6.66 3.58 9 3.58z" />
+                    </svg>
+                    Google ile {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 18px' }}>
+                    <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                    <span style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>veya e-posta ile</span>
+                    <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                </div>
                 <form onSubmit={handleSubmit}>
                     {!isLogin && (
                         <div className="form-group">
@@ -4349,13 +4473,7 @@ const Skeleton = ({ type }) => {
 export default function App() {
     const showMaintenanceOverlay = MAINTENANCE_MODE && !isLocalDevelopment();
 
-    const [route, setRoute] = useState(() => {
-        if (window.location.pathname === '/auth/action') {
-            const p = new URLSearchParams(window.location.search);
-            if (p.get('mode') && p.get('oobCode')) return 'auth-action';
-        }
-        return getRouteFromPathname(window.location.pathname);
-    });
+    const [route, setRoute] = useState(() => getRouteFromPathname(window.location.pathname));
     const [routeParams, setRouteParams] = useState(() => {
         if (window.location.pathname === '/auth/action') {
             const p = new URLSearchParams(window.location.search);
@@ -4370,6 +4488,8 @@ export default function App() {
     const [userData, setUserData] = useState(null);
     const [alert, setAlert] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => { syncSeoTags(route); }, [route]);
     const [legalType, setLegalType] = useState(null);
     const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
     const [appBannerDismissed, setAppBannerDismissed] = useState(() => sessionStorage.getItem('appBannerDismissed') === '1');
@@ -4608,7 +4728,7 @@ export default function App() {
         // Giriş gerektiren sayfalar - kullanıcı giriş yapmamışsa auth ekranını göster
         const publicRoutes = ['home', 'auth', 'auth-action', 'abonelik', 'performance-summary',
             'dropping-odds', 'category', 'ilk-yari-gol', 'iy-ms-tahminleri',
-            'gunun-surprizleri', 'gunun-tercihleri'];
+            'gunun-surprizleri', 'gunun-tercihleri', 'oran-analiz'];
         if (!user && !publicRoutes.includes(route)) {
             return <AuthScreen onBack={() => navigate('home')} showAlert={showAlert} initialIsLogin={true} />;
         }
@@ -4822,7 +4942,7 @@ export default function App() {
                 </VipGate>
             );
 case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')} />;
-            case 'oran-analiz': return <OranAnaliz onBack={() => navigate('home')} defaultSource={routeParams?.defaultSource || null} />;
+            case 'oran-analiz': return <OranAnaliz onBack={() => navigate('home')} defaultSource={routeParams?.defaultSource || null} user={user} />;
             case 'ilk-yari-gol': return (
                 <div style={{ paddingTop: '20px' }}>
                     <div className="category-header">
