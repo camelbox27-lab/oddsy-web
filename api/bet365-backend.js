@@ -1,11 +1,11 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import pkg from 'pg';
 const { Pool } = pkg;
 
 const NEON_DSN = process.env.NEON_DSN || 'postgresql://neondb_owner:npg_pBvPtI2fy5Le@ep-holy-smoke-alg1bxgp.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require';
 const TABLE = 'bet365_maclar';
-const FRONTEND_JSON = path.join(process.cwd(), 'oddsy-data', 'bet365', 'gunlukmaclar.json');
+// Gunluk bulten GitHub'daki oddsy-data reposundan okunur (oddsy-data klasoru .vercelignore'da,
+// yani Vercel'e yuklenmiyor; ayrica boylece veri guncellemesi icin yeni deploy gerekmiyor).
+const FRONTEND_JSON_URL = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/bet365/gunlukmaclar.json';
 
 const pool = new Pool({ connectionString: NEON_DSN, max: 5 });
 
@@ -83,8 +83,9 @@ export default async function handler(req, res) {
 
     try {
         if (req.method === 'GET') {
-            const raw = await readFile(FRONTEND_JSON, 'utf8');
-            const data = JSON.parse(raw);
+            const response = await fetch(FRONTEND_JSON_URL, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`Gunluk bulten indirilemedi (HTTP ${response.status})`);
+            const data = await response.json();
             res.status(200).json({ data, totalRows: data.length, source: 'gunlukmaclar.json' });
             return;
         }
