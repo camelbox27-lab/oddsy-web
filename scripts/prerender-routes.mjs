@@ -205,10 +205,19 @@ async function main() {
         return;
     }
 
+    // Playwright'ın Chromium'u kurulu değilse (örn. Vercel build ortamında npx playwright
+    // install hiç çalıştırılmadıysa) hemen vazgeç - browser.launch() burada takılıp
+    // build'i sonsuza kadar bekletmesin.
+    let browser;
+    try {
+        browser = await chromium.launch({ headless: true, timeout: 15000 });
+    } catch (err) {
+        console.warn('[prerender-routes] Chromium başlatılamadı, prerender atlanıyor (meta etiketleri zaten doğru, sadece #root boş kalacak):', err.message);
+        return;
+    }
+
     console.log(`[prerender-routes] Statik sunucu başlatılıyor: ${BASE_URL}`);
     const server = await startServer();
-
-    const browser = await chromium.launch({ headless: true });
 
     let successCount = 0;
     let failCount = 0;
@@ -236,7 +245,12 @@ async function main() {
     console.log(`[prerender-routes] Tamamlandı: ${successCount} başarılı, ${failCount} atlandı. Süre: ${elapsedSec}s`);
 }
 
-main().catch(err => {
-    // Prerender build'i asla kırmasın - hata olsa bile process 0 ile çıkar.
-    console.error('[prerender-routes] Beklenmeyen hata, build kırılmıyor:', err);
-});
+main()
+    .catch(err => {
+        // Prerender build'i asla kırmasın - hata olsa bile devam edilir.
+        console.error('[prerender-routes] Beklenmeyen hata, build kırılmıyor:', err);
+    })
+    .finally(() => {
+        // Açık kalan handle'lar (server, browser) olsa bile process'in kesin sonlanmasını garantile.
+        process.exit(0);
+    });
