@@ -17,7 +17,7 @@ const MENU_ITEMS = [
 ];
 
 const COUPON_TYPES = [
-    { id: 'banko', name: 'Banko Kupon', dbName: 'Günün Banko Kuponu', color: 'var(--gold)', image: 'https://i.ibb.co/3mb3dcx0/banko.png', desc: 'Günün en güvenilir tahminleri' },
+    { id: 'banko', name: 'Banko Kupon', dbName: 'Günün Banko Kuponu', color: 'var(--gold-text)', image: 'https://i.ibb.co/3mb3dcx0/banko.png', desc: 'Günün en güvenilir tahminleri' },
     { id: 'ideal', name: 'İdeal Kupon', dbName: 'Günün İdeal Kuponu', color: '#4ade80', image: 'https://i.ibb.co/LFNHb81/ideal.png', desc: 'Dengeli oran ve güven kombinasyonu' },
     { id: 'surpriz', name: 'Sürpriz Kupon', dbName: 'Günün Sürpriz Kuponu', color: '#f87171', image: 'https://i.ibb.co/JFWTPs0y/s-priz.png', desc: 'Yüksek oranlı cesur tahminler' }
 ];
@@ -41,31 +41,31 @@ const SHARE_OPTIONS = [
     {
         id: 'gunun-kuponu',
         label: 'Günün Kuponları',
-        metin: "Oddsy'de Günün Banko Kuponu yayında!\n\noddsw.com.tr",
+        metin: "Wondiyo'de Günün Banko Kuponu yayında!\n\nwondiyo.com.tr",
         imageUrl: 'https://i.ibb.co/3mb3dcx0/banko.png',
     },
     {
         id: 'gunun-tercihleri',
         label: 'Günün Tercihleri',
-        metin: "Oddsy'de Günün Tercihleri yayında!\n\noddsw.com.tr",
+        metin: "Wondiyo'de Günün Tercihleri yayında!\n\nwondiyo.com.tr",
         imageUrl: null,
     },
     {
         id: 'kupon-kazandi',
         label: 'Günün Kuponu Kazandı',
-        metin: "Oddsy Günün Kuponu KAZANDI!\n\noddsw.com.tr",
+        metin: "Wondiyo Günün Kuponu KAZANDI!\n\nwondiyo.com.tr",
         imageUrl: null,
     },
     {
         id: 'editor-tercihleri',
         label: 'Editör Tercihleri',
-        metin: "Oddsy'de Editör Tercihleri yayında!\n\noddsw.com.tr",
+        metin: "Wondiyo'de Editör Tercihleri yayında!\n\nwondiyo.com.tr",
         imageUrl: null,
     },
     {
         id: 'editor-kazandi',
         label: "Editörün tercihi kazandı",
-        metin: "Oddsy Editörün Tercihi KAZANDI!\n\noddsw.com.tr",
+        metin: "Wondiyo Editörün Tercihi KAZANDI!\n\nwondiyo.com.tr",
         imageUrl: null,
     },
 ];
@@ -250,7 +250,7 @@ function AdminPanel({ onBack, showAlert, userData }) {
             <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, marginTop: 20 }}>
                 {/* Sol Taraf - Input Listesi */}
                 <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10, height: 'fit-content' }}>
-                    <h3 style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 15, textAlign: 'center' }}>INPUT</h3>
+                    <h3 style={{ color: 'var(--gold-text)', fontSize: 14, marginBottom: 15, textAlign: 'center' }}>INPUT</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <button className={`hero-btn secondary ${view === 'addMatch' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addMatch')}>Tahmin Ekle</button>
                         <button className={`hero-btn secondary ${view === 'addCard' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => { setView('addCard'); setMatchData({ ...matchData, categoryKey: 3 }); }}>Kart Ekle</button>
@@ -352,7 +352,7 @@ function AdminPanel({ onBack, showAlert, userData }) {
                                 <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Maç Analizi</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="2" value={matchData.analysis} onChange={e => setMatchData({ ...matchData, analysis: e.target.value })} placeholder="Bu maç için analizini buraya yaz..." /></div>
                                 <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                                     <input type="checkbox" id="premium-check-admin" checked={matchData.isPremium} onChange={e => setMatchData({ ...matchData, isPremium: e.target.checked })} />
-                                    <label htmlFor="premium-check-admin" style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 'bold' }}>⭐ Premium Tahmin Olarak İşaretle</label>
+                                    <label htmlFor="premium-check-admin" style={{ color: 'var(--gold-text)', fontSize: 12, fontWeight: 'bold' }}>⭐ Premium Tahmin Olarak İşaretle</label>
                                 </div>
 
                                 {view === 'addCard' && (

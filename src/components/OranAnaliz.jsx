@@ -5,6 +5,24 @@ import { collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from 
 const SONUC_ONCE = ['lig', 'tarih', 'ev', 'dep', 'iyskor', 'msskor'];
 const GIZLI = new Set(['Id', 'BitmisMac', 'MatchCode', '_gunTarihi']);
 
+// Referans maci belirleyen kimlik kolonlari: bunlar sadece ustte sabitlenecek maci secer,
+// gecmis maclarda ARANMAZ (Besiktas secilince gecmiste Besiktas aranmasin diye).
+const REFERANS_KOLONLAR = new Set(['Lig', 'Tarih', 'Ev', 'Dep', 'IYSkor', 'MSSkor']);
+
+// Referans mac secilip henuz oran kolonu secilmediginde varsayilan olarak aranan ana oranlar.
+// Sadece acilis oranlari (A) kullaniliyor: 6 orani birebir tutturmak neredeyse hic sonuc
+// dondurmuyor, 3 acilis orani ise anlamli bir liste veriyor.
+const VARSAYILAN_ORANLAR = ['MS1 A', 'MS0 A', 'MS2 A'];
+
+// Referans basligindan acilip kapatilabilen ana oran kriterleri.
+// 122 kolonun tamami degil; en cok kullanilan maç sonucu / IY / alt-ust / KG oranlari.
+const ORAN_KOLONLAR = [
+    'MS1 A', 'MS0 A', 'MS2 A',
+    'IY1 A', 'IY0 A', 'IY2 A',
+    'ALT25 A', 'UST25 A', 'ALT15 A', 'UST15 A', 'ALT35 A', 'UST35 A',
+    'KGVAR A', 'KGYOK A',
+];
+
 // Günlük maç kolon adı (büyük) -> DB kolon adı (küçük)
 const GUNLUK_TO_DB = {
     'Lig': 'lig', 'Tarih': 'tarih', 'Ev': 'ev', 'Dep': 'dep',
@@ -165,26 +183,53 @@ export default function OranAnaliz({ onBack, user }) {
         );
     }, [gunlukRows, gunlukFiltre]);
 
-    // Neon'a gönderilecek filtreler: Tarih/Skor hariç tüm seçilen kolonlar (Lig/Ev/Dep dahil, oran kolonları dahil)
+    // Neon'a gönderilecek filtreler: SADECE oran kolonları.
+    // Lig/Ev/Dep/Tarih/Skor referans maçın kimliğidir, geçmişte aranmaz.
     const neonFiltreler = useMemo(() => {
         const f = {};
         Object.entries(gunlukFiltre).forEach(([k, v]) => {
-            if (v === '' || ['Tarih', 'IYSkor', 'MSSkor'].includes(k)) return;
+            if (v === '' || REFERANS_KOLONLAR.has(k)) return;
             f[k] = v;
         });
         return f;
     }, [gunlukFiltre]);
 
+    // Referans maç seçildi mi: Ev veya Dep seçilmişse evet
+    const referansSecildi = useMemo(
+        () => Boolean(gunlukFiltre['Ev'] || gunlukFiltre['Dep']),
+        [gunlukFiltre]
+    );
+
     // Filtrelere uyan ilk günlük maç: geçmiş eşleşmeler tablosunun üstünde sabit referans satırı olarak gösterilir
     const referansMac = useMemo(() => {
-        if (!Object.keys(neonFiltreler).length) return null;
+        if (!referansSecildi && !Object.keys(neonFiltreler).length) return null;
         return filtreliGunlukRows[0] || null;
-    }, [filtreliGunlukRows, neonFiltreler]);
+    }, [filtreliGunlukRows, referansSecildi, neonFiltreler]);
+
+    // Geçmiş maçlarda aranacak nihai oran kriterleri.
+    // Kullanıcı oran kolonu seçtiyse onlar aranır; sadece maç seçtiyse
+    // referans maçın ana oranları (MS1/MS0/MS2) otomatik aranır.
+    const aramaFiltreleri = useMemo(() => {
+        if (Object.keys(neonFiltreler).length) return neonFiltreler;
+        if (!referansMac) return {};
+        const f = {};
+        VARSAYILAN_ORANLAR.forEach(k => {
+            const v = referansMac[k];
+            if (v != null && v !== '' && v !== '-') f[k] = String(v);
+        });
+        return f;
+    }, [neonFiltreler, referansMac]);
+
+    // Sorgu efekti icin stabil anahtar (obje referansi her render degisiyor)
+    const aramaAnahtari = useMemo(
+        () => JSON.stringify(Object.entries(aramaFiltreleri).sort()),
+        [aramaFiltreleri]
+    );
 
     // Neon sorgusu
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
-        if (!Object.keys(neonFiltreler).length) {
+        if (!Object.keys(aramaFiltreleri).length) {
             setEslesmeler([]);
             setTotalMatches(0);
             setSorguError('');
@@ -197,7 +242,7 @@ export default function OranAnaliz({ onBack, user }) {
                 const r = await fetch('/api/bet365-backend', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filters: neonFiltreler }),
+                    body: JSON.stringify({ filters: aramaFiltreleri }),
                 });
                 if (!r.ok) throw new Error('Backend hatası.');
                 const d = await r.json();
@@ -211,7 +256,8 @@ export default function OranAnaliz({ onBack, user }) {
                 setSorguLoading(false);
             }
         }, 400);
-    }, [neonFiltreler]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [aramaAnahtari]);
 
     // Geçmiş tablo kolonları
     const gecmisKolonlar = useMemo(() => {
@@ -275,7 +321,7 @@ export default function OranAnaliz({ onBack, user }) {
             {/* Başlık */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, padding: '10px 16px', borderBottom: '1px solid var(--border)' }}>
                 <button className="category-back-btn" onClick={onBack}>←</button>
-                <h1 style={{ color: 'var(--gold)', fontSize: 22, fontWeight: 900 }}>Bet365 Oran Analizi</h1>
+                <h1 style={{ color: 'var(--primary-green)', fontSize: 22, fontWeight: 900 }}>Bet365 Oran Analizi</h1>
 
                 {/* Kayıtlı filtre kısayolları (opsiyonel, sadece giriş yapmış kullanıcılar için) */}
                 {uid && kaydedilenFiltreler.length > 0 && (
@@ -285,7 +331,7 @@ export default function OranAnaliz({ onBack, user }) {
                             background: 'var(--bg-card)', border: '1px solid var(--border)',
                         }}>
                             <span>⭐</span>
-                            <span style={{ color: 'var(--gold)', fontWeight: 700, fontSize: 13 }}>Kayıtlı Filtrelerim</span>
+                            <span style={{ color: 'var(--primary-green)', fontWeight: 700, fontSize: 13 }}>Kayıtlı Filtrelerim</span>
                             <span style={{ color: 'var(--text-secondary)', fontSize: 10 }}>{filtrePanelAcik ? '▲' : '▼'}</span>
                         </button>
 
@@ -295,7 +341,7 @@ export default function OranAnaliz({ onBack, user }) {
                                 {kaydedilenFiltreler.map(kf => (
                                     <div key={kf.id} style={{ display: 'flex', alignItems: 'center', padding: '6px 14px', gap: 8, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                                         <button onClick={() => { setGunlukFiltre(kf.degerler || {}); setFiltrePanelAcik(false); }} style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                                            <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: 12 }}>{kf.isim}</div>
+                                            <div style={{ color: 'var(--primary-green)', fontWeight: 700, fontSize: 12 }}>{kf.isim}</div>
                                             <div style={{ color: 'var(--text-secondary)', fontSize: 10 }}>{(kf.kolonlar || []).join(' · ')}</div>
                                         </button>
                                         <button onClick={() => filtreSil(kf.id)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 16, cursor: 'pointer' }}>×</button>
@@ -308,12 +354,12 @@ export default function OranAnaliz({ onBack, user }) {
 
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
                     {aktifSayi > 0 && uid && (
-                        <button onClick={() => setKaydetModal(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
+                        <button onClick={() => setKaydetModal(true)} style={{ padding: '8px 16px', borderRadius: 999, background: 'none', border: '1px solid var(--primary-green)', color: 'var(--primary-green)', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
                             ⭐ Kaydet
                         </button>
                     )}
                     {aktifSayi > 0 && (
-                        <button onClick={temizle} style={{ padding: '8px 16px', borderRadius: 999, background: 'var(--primary-green)', color: 'var(--gold)', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
+                        <button onClick={temizle} style={{ padding: '8px 16px', borderRadius: 999, background: 'var(--primary-green)', color: 'var(--on-green)', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
                             Temizle
                         </button>
                     )}
@@ -324,13 +370,13 @@ export default function OranAnaliz({ onBack, user }) {
             {kaydetModal && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, width: 320, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        <div style={{ color: 'var(--gold)', fontWeight: 800, fontSize: 16 }}>Filtreyi Kaydet</div>
+                        <div style={{ color: 'var(--primary-green)', fontWeight: 800, fontSize: 16 }}>Filtreyi Kaydet</div>
                         <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{Object.entries(gunlukFiltre).filter(([, v]) => v !== '').map(([k, v]) => `${k}=${v}`).join(' · ')}</div>
                         <input autoFocus value={kaydetIsim} onChange={e => setKaydetIsim(e.target.value)} onKeyDown={e => e.key === 'Enter' && filtreKaydet()}
                             placeholder="Filtre adı" style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--bg-dark)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: 13, outline: 'none' }} />
                         <div style={{ display: 'flex', gap: 8 }}>
                             <button onClick={() => { setKaydetModal(false); setKaydetIsim(''); }} style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'none', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>İptal</button>
-                            <button onClick={filtreKaydet} disabled={!kaydetIsim.trim()} style={{ flex: 1, padding: '8px', borderRadius: 8, background: kaydetIsim.trim() ? 'var(--primary-green)' : 'var(--bg-dark)', border: 'none', color: 'var(--gold)', fontWeight: 700, cursor: kaydetIsim.trim() ? 'pointer' : 'not-allowed', fontSize: 13, opacity: kaydetIsim.trim() ? 1 : 0.5 }}>Kaydet</button>
+                            <button onClick={filtreKaydet} disabled={!kaydetIsim.trim()} style={{ flex: 1, padding: '8px', borderRadius: 8, background: kaydetIsim.trim() ? 'var(--primary-green)' : 'var(--bg-dark)', border: 'none', color: 'var(--on-green)', fontWeight: 700, cursor: kaydetIsim.trim() ? 'pointer' : 'not-allowed', fontSize: 13, opacity: kaydetIsim.trim() ? 1 : 0.5 }}>Kaydet</button>
                         </div>
                     </div>
                 </div>
@@ -339,11 +385,11 @@ export default function OranAnaliz({ onBack, user }) {
             {gunlukError && <div style={{ color: 'var(--error)', padding: '12px 16px', flexShrink: 0 }}>{gunlukError}</div>}
             {gunlukLoading && <div style={{ padding: '20px 16px', color: 'var(--text-secondary)', flexShrink: 0 }}>Yükleniyor...</div>}
 
-            {/* GÜNLÜK MAÇLAR TABLOSU - filtre seçilmemişken tam ekran, kolon başlıklarında Excel-tarzı dropdown filtreler */}
-            {!gunlukLoading && Object.keys(neonFiltreler).length === 0 && (
+            {/* GÜNLÜK MAÇLAR TABLOSU - referans maç seçilmemişken tam ekran, kolon başlıklarında Excel-tarzı dropdown filtreler */}
+            {!gunlukLoading && !referansMac && (
                 <div style={{ background: 'var(--bg-card)', overflow: 'hidden', flex: 1, width: '100%', display: 'flex', flexDirection: 'column', borderBottom: '2px solid var(--border)' }}>
                     <div style={{ padding: '6px 14px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: 'var(--bg-card)' }}>
-                        <span style={{ color: 'var(--gold)', fontWeight: 800 }}>Günlük Maçlar</span>
+                        <span style={{ color: 'var(--primary-green)', fontWeight: 800 }}>Günlük Maçlar</span>
                         <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{filtreliGunlukRows.length} / {gunlukRows.length} maç</span>
                         <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>· Kolon başlıklarındaki dropdown'lardan filtre seç</span>
                     </div>
@@ -352,10 +398,10 @@ export default function OranAnaliz({ onBack, user }) {
                             <thead>
                                 <tr>
                                     {gunlukKolonlar.map(k => (
-                                        <th key={k} style={{ background: gunlukFiltre[k] ? 'rgba(255,200,0,0.15)' : 'var(--primary-green-dark)', padding: '4px 6px', textAlign: 'center', borderBottom: '1px solid var(--border)', borderLeft: '1px solid var(--border)', whiteSpace: 'nowrap', verticalAlign: 'top', position: 'sticky', top: 0, zIndex: 2 }}>
-                                            <div style={{ color: gunlukFiltre[k] ? 'var(--gold)' : 'var(--text-secondary)', fontSize: 11, fontWeight: 800, marginBottom: 3 }}>{k}</div>
+                                        <th key={k} style={{ background: gunlukFiltre[k] ? 'var(--gold)' : 'var(--primary-green-dark)', padding: '4px 6px', textAlign: 'center', borderBottom: '1px solid var(--border)', borderLeft: '1px solid var(--border)', whiteSpace: 'nowrap', verticalAlign: 'top', position: 'sticky', top: 0, zIndex: 2 }}>
+                                            <div style={{ color: gunlukFiltre[k] ? 'var(--on-gold)' : '#FFFFFF', fontSize: 11, fontWeight: 800, marginBottom: 3 }}>{k}</div>
                                             <select value={gunlukFiltre[k] || ''} onChange={e => setGunlukFiltre(prev => ({ ...prev, [k]: e.target.value }))}
-                                                style={{ width: '100%', minWidth: 55, background: 'var(--bg-dark)', color: gunlukFiltre[k] ? 'var(--gold)' : 'var(--text-secondary)', border: gunlukFiltre[k] ? '1px solid var(--gold)' : '1px solid var(--border)', borderRadius: 4, padding: '2px 3px', fontSize: 10, outline: 'none', cursor: 'pointer' }}>
+                                                style={{ width: '100%', minWidth: 55, background: 'var(--bg-dark)', color: gunlukFiltre[k] ? 'var(--primary-green)' : 'var(--text-secondary)', border: gunlukFiltre[k] ? '1px solid var(--gold)' : '1px solid var(--border)', borderRadius: 4, padding: '2px 3px', fontSize: 10, outline: 'none', cursor: 'pointer' }}>
                                                 <option value="">Tümü</option>
                                                 {(gunlukSecenekler[k] || []).map(v => <option key={v} value={v}>{v}</option>)}
                                             </select>
@@ -369,7 +415,7 @@ export default function OranAnaliz({ onBack, user }) {
                                         {gunlukKolonlar.map(k => {
                                             let val = row[k];
                                             if (k === 'Tarih' && typeof val === 'number') val = new Date(val).toLocaleDateString('tr-TR');
-                                            return <td key={k} style={{ padding: '5px 8px', textAlign: 'center', borderBottom: '1px solid var(--border)', borderLeft: '1px solid var(--border)', color: gunlukFiltre[k] ? 'var(--gold)' : 'var(--text-primary)', fontWeight: gunlukFiltre[k] ? 700 : 400, fontSize: 11, whiteSpace: 'nowrap' }}>{val != null ? String(val) : '-'}</td>;
+                                            return <td key={k} style={{ padding: '5px 8px', textAlign: 'center', borderBottom: '1px solid var(--border)', borderLeft: '1px solid var(--border)', color: gunlukFiltre[k] ? 'var(--primary-green)' : 'var(--text-primary)', fontWeight: gunlukFiltre[k] ? 700 : 400, fontSize: 11, whiteSpace: 'nowrap' }}>{val != null ? String(val) : '-'}</td>;
                                         })}
                                     </tr>
                                 ))}
@@ -379,17 +425,65 @@ export default function OranAnaliz({ onBack, user }) {
                 </div>
             )}
 
-            {/* GEÇMİŞ EŞLEŞMELER TABLOSU - filtre seçilince altta görünür */}
-            {!gunlukLoading && (sorguLoading || Object.keys(neonFiltreler).length > 0) && (
+            {/* GEÇMİŞ EŞLEŞMELER TABLOSU - referans maç seçilince görünür */}
+            {!gunlukLoading && (sorguLoading || referansMac) && (
                 <div style={{ background: 'var(--bg-card)', overflow: 'hidden', flex: 1, width: '100%', display: 'flex', flexDirection: 'column' }}>
+                    {/* REFERANS MAÇ BAŞLIĞI - seçilen maç ve aranan oranlar */}
+                    {referansMac && (
+                        <div style={{ padding: '8px 14px', borderBottom: '2px solid var(--gold)', background: 'rgba(200,217,46,0.18)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, flexWrap: 'wrap' }}>
+                            <span style={{ background: 'var(--gold)', color: 'var(--on-gold)', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 900, letterSpacing: 0.5 }}>REFERANS MAÇ</span>
+                            <span style={{ color: 'var(--primary-green-dark)', fontWeight: 800, fontSize: 14 }}>
+                                {String(referansMac['Ev'] ?? '-')} <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>vs</span> {String(referansMac['Dep'] ?? '-')}
+                            </span>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: 11 }}>{String(referansMac['Lig'] ?? '')}</span>
+                            <button onClick={() => setGunlukFiltre({})} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: 'none', border: '1px solid var(--primary-green)', color: 'var(--primary-green)', cursor: 'pointer', fontWeight: 700 }}>
+                                Maç Değiştir
+                            </button>
+                        </div>
+                    )}
+
+                    {/* ARANAN ORANLAR - referans maçın hangi oranlarıyla arama yapıldığı, buradan değiştirilebilir */}
+                    {referansMac && (
+                        <div style={{ padding: '6px 14px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap', background: 'rgba(255,255,255,0.02)' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }}>Aranan oranlar:</span>
+                            {ORAN_KOLONLAR.filter(k => referansMac[k] != null && referansMac[k] !== '' && referansMac[k] !== '-').map(k => {
+                                const aktif = Object.prototype.hasOwnProperty.call(aramaFiltreleri, k);
+                                return (
+                                    <button key={k} onClick={() => setGunlukFiltre(prev => {
+                                        const next = { ...prev };
+                                        // Halen varsayilan modda (elle secim yok) ise once varsayilanlari sabitle,
+                                        // boylece bir chip kapatilinca digerleri korunur.
+                                        if (!Object.keys(next).some(x => !REFERANS_KOLONLAR.has(x))) {
+                                            VARSAYILAN_ORANLAR.forEach(d => {
+                                                if (referansMac[d] != null) next[d] = String(referansMac[d]);
+                                            });
+                                        }
+                                        // Bu oran kriterini ac/kapat
+                                        if (next[k]) delete next[k];
+                                        else next[k] = String(referansMac[k]);
+                                        return next;
+                                    })}
+                                        style={{
+                                            fontSize: 10, padding: '2px 8px', borderRadius: 999, cursor: 'pointer', fontWeight: 700,
+                                            background: aktif ? 'var(--primary-green)' : 'none',
+                                            border: aktif ? '1px solid var(--gold)' : '1px solid var(--border)',
+                                            color: aktif ? 'var(--primary-green)' : 'var(--text-secondary)',
+                                        }}>
+                                        {k}={String(referansMac[k])}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
                     <div style={{ padding: '6px 14px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                        <span style={{ color: 'var(--gold)', fontWeight: 800 }}>Geçmiş Eşleşmeler</span>
+                        <span style={{ color: 'var(--primary-green)', fontWeight: 800 }}>Geçmiş Eşleşmeler</span>
                         {Object.values(gecmisFiltre).some(v => v) && (
                             <button onClick={() => setGecmisFiltre({})} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'none', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                                 Filtreyi Temizle
                             </button>
                         )}
-                        <div style={{ marginLeft: 'auto', background: 'var(--primary-green)', color: 'var(--gold)', padding: '3px 12px', borderRadius: 999, fontWeight: 800, fontSize: 13 }}>
+                        <div style={{ marginLeft: 'auto', background: 'var(--primary-green)', color: 'var(--on-green)', padding: '3px 12px', borderRadius: 999, fontWeight: 800, fontSize: 13 }}>
                             {sorguLoading ? '...' : `${filtreliEslesmeler.length} / ${totalMatches} eşleşme`}
                         </div>
                     </div>
@@ -399,9 +493,9 @@ export default function OranAnaliz({ onBack, user }) {
                                 <tr>
                                     {gecmisKolonlar.map(col => (
                                         <th key={col} style={{ background: 'var(--primary-green-dark)', padding: '4px 6px', textAlign: 'left', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', verticalAlign: 'top', position: 'sticky', top: 0, zIndex: 2 }}>
-                                            <div style={{ color: 'var(--gold)', fontSize: 10, fontWeight: 800, marginBottom: 3 }}>{ETIKET[col] || col}</div>
+                                            <div style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 800, marginBottom: 3 }}>{ETIKET[col] || col}</div>
                                             <select value={gecmisFiltre[col] || ''} onChange={e => setGecmisFiltre(prev => ({ ...prev, [col]: e.target.value }))}
-                                                style={{ width: '100%', minWidth: 55, background: 'var(--bg-dark)', color: gecmisFiltre[col] ? 'var(--gold)' : 'var(--text-secondary)', border: gecmisFiltre[col] ? '1px solid var(--gold)' : '1px solid var(--border)', borderRadius: 4, padding: '2px 3px', fontSize: 10, outline: 'none', cursor: 'pointer' }}>
+                                                style={{ width: '100%', minWidth: 55, background: 'var(--bg-dark)', color: gecmisFiltre[col] ? 'var(--primary-green)' : 'var(--text-secondary)', border: gecmisFiltre[col] ? '1px solid var(--gold)' : '1px solid var(--border)', borderRadius: 4, padding: '2px 3px', fontSize: 10, outline: 'none', cursor: 'pointer' }}>
                                                 <option value="">Tümü</option>
                                                 {(gecmisSecenekler[col] || []).map(v => <option key={v} value={v}>{v}</option>)}
                                             </select>
@@ -410,14 +504,14 @@ export default function OranAnaliz({ onBack, user }) {
                                 </tr>
                                 {/* REFERANS MAÇ - filtreye uyan günlük maç, başlıkların hemen altında sabit altın satır */}
                                 {referansMac && (
-                                    <tr style={{ background: 'rgba(255,200,0,0.12)', borderBottom: '2px solid var(--gold)', position: 'sticky', top: 44, zIndex: 1 }}>
+                                    <tr style={{ background: 'rgba(200,217,46,0.22)', borderBottom: '2px solid var(--gold)', position: 'sticky', top: 44, zIndex: 1 }}>
                                         {gecmisKolonlar.map(col => {
                                             const gunlukKey = Object.entries(GUNLUK_TO_DB).find(([, v]) => v === col)?.[0];
                                             let val = gunlukKey ? referansMac[gunlukKey] : undefined;
                                             if (val === undefined) val = referansMac[col];
                                             if (col === 'tarih' && typeof val === 'number') val = new Date(val).toLocaleDateString('tr-TR');
                                             return (
-                                                <td key={col} style={{ padding: '6px 8px', fontSize: 11, whiteSpace: 'nowrap', borderBottom: '2px solid var(--gold)', color: 'var(--gold)', fontWeight: 800, textAlign: 'center' }}>
+                                                <td key={col} style={{ padding: '6px 8px', fontSize: 11, whiteSpace: 'nowrap', borderBottom: '2px solid var(--primary-green)', color: 'var(--primary-green)', fontWeight: 800, textAlign: 'center' }}>
                                                     {val != null && val !== '' ? String(val) : '-'}
                                                 </td>
                                             );
@@ -430,15 +524,20 @@ export default function OranAnaliz({ onBack, user }) {
                                     <tr><td colSpan={gecmisKolonlar.length} style={{ padding: 20, color: 'var(--text-secondary)', textAlign: 'center' }}>Aranıyor...</td></tr>
                                 ) : sorguError ? (
                                     <tr><td colSpan={gecmisKolonlar.length} style={{ padding: 20, color: 'var(--error)', textAlign: 'center' }}>{sorguError}</td></tr>
+                                ) : !Object.keys(aramaFiltreleri).length ? (
+                                    <tr><td colSpan={gecmisKolonlar.length} style={{ padding: 20, color: 'var(--text-secondary)', textAlign: 'center' }}>
+                                        Arama için yukarıdaki "Aranan oranlar" satırından en az bir oran seçin.
+                                    </td></tr>
                                 ) : eslesmeler.length === 0 ? (
                                     <tr><td colSpan={gecmisKolonlar.length} style={{ padding: 20, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                                        Eşleşen geçmiş maç bulunamadı.
+                                        Bu oranlarla eşleşen geçmiş maç bulunamadı. Yukarıdaki "Aranan oranlar"
+                                        satırından bazı kriterleri kapatarak aramayı genişletebilirsiniz.
                                     </td></tr>
                                 ) : (
                                     filtreliEslesmeler.slice(0, gosterilen).map((row, i) => (
                                         <tr key={i} style={{ background: i % 2 === 0 ? 'var(--bg-dark)' : 'rgba(255,255,255,0.02)' }}>
                                             {gecmisKolonlar.map(col => (
-                                                <td key={col} style={{ padding: '6px 8px', fontSize: 12, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)', color: (col === 'msskor' || col === 'iyskor') ? 'var(--gold)' : 'var(--text-primary)', fontWeight: (col === 'msskor' || col === 'iyskor') ? 800 : 400 }}>
+                                                <td key={col} style={{ padding: '6px 8px', fontSize: 12, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)', color: (col === 'msskor' || col === 'iyskor') ? 'var(--primary-green-dark)' : 'var(--text-primary)', fontWeight: (col === 'msskor' || col === 'iyskor') ? 800 : 400 }}>
                                                     {row[col] != null ? String(row[col]) : '-'}
                                                 </td>
                                             ))}
@@ -449,7 +548,7 @@ export default function OranAnaliz({ onBack, user }) {
                         </table>
                         {filtreliEslesmeler.length > gosterilen && (
                             <div style={{ padding: 12, textAlign: 'center' }}>
-                                <button onClick={() => setGosterilen(v => v + 50)} style={{ padding: '8px 24px', borderRadius: 999, background: 'var(--primary-green)', border: 'none', color: 'var(--gold)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                                <button onClick={() => setGosterilen(v => v + 50)} style={{ padding: '8px 24px', borderRadius: 999, background: 'var(--primary-green)', border: 'none', color: 'var(--primary-green)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                                     Daha Fazla ({filtreliEslesmeler.length - gosterilen} kaldı)
                                 </button>
                             </div>

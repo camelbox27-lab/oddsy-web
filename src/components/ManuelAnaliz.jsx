@@ -1004,7 +1004,7 @@ export default function ManuelAnaliz() {
                 <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15, maxWidth: 600, margin: '0 auto' }}>
                     <div className="menu-selection-card" onClick={() => setSource('bet365')}>
                         <img src="/1.webp" style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt="Bet365" />
-                        <h3 style={{ color: 'var(--gold)', fontSize: 18, marginBottom: 6 }}>Bet365 Oran Analizi</h3>
+                        <h3 style={{ color: 'var(--gold-text)', fontSize: 18, marginBottom: 6 }}>Bet365 Oran Analizi</h3>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center' }}>
                             Bet365 oran analizi için tıklayınız
                         </p>

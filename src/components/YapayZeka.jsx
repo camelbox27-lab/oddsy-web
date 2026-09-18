@@ -1292,7 +1292,7 @@ export default function YapayZeka() {
                 <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15, maxWidth: 600, margin: '0 auto' }}>
                     <div className="menu-selection-card" onClick={() => setSource('bet365')}>
                         <img src="/1.webp" style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt="Bet365" />
-                        <h3 style={{ color: 'var(--gold)', fontSize: 18, marginBottom: 6 }}>Bet365 Oran Analizi</h3>
+                        <h3 style={{ color: 'var(--gold-text)', fontSize: 18, marginBottom: 6 }}>Bet365 Oran Analizi</h3>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center' }}>
                             Bet365 oran analizi için tıklayınız
                         </p>
@@ -1648,7 +1648,7 @@ export default function YapayZeka() {
                         <div className="flex items-center gap-2 sm:gap-3">
                             <Zap className="text-[#FFD700] w-8 h-8 sm:w-10 sm:h-10 drop-shadow-[0_0_10px_rgba(255,215,0,0.5)] animate-pulse" />
                             <h1 className="text-xl sm:text-2xl md:text-3xl font-black bg-gradient-to-r from-[#FFD700] via-[#FDB913] to-[#FFD700] bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(255,215,0,0.3)]">
-                                ODDSY {sourceLabel.toUpperCase()}-AI ANALİZ SİSTEMİ
+                                WONDIYO {sourceLabel.toUpperCase()}-AI ANALİZ SİSTEMİ
                             </h1>
                             <Zap className="text-[#FFD700] w-8 h-8 sm:w-10 sm:h-10 drop-shadow-[0_0_10px_rgba(255,215,0,0.5)] animate-pulse" />
                         </div>

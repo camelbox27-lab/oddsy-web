@@ -69,8 +69,8 @@ function AuthAction({ mode, oobCode, onNavigate }) {
             <div className="auth-card" style={{ textAlign: 'center' }}>
                 {/* Logo */}
                 <div style={{ marginBottom: 24 }}>
-                    <span style={{ fontSize: 32, fontWeight: 900, color: 'var(--gold)', letterSpacing: -1 }}>
-                        Oddsy
+                    <span style={{ fontSize: 32, fontWeight: 900, color: 'var(--gold-text)', letterSpacing: -1 }}>
+                        Wondiyo
                     </span>
                 </div>
 
@@ -87,7 +87,7 @@ function AuthAction({ mode, oobCode, onNavigate }) {
                         }} />
                         {isVerifyEmail ? (
                             <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.8 }}>
-                                Oddsy ailesine hoş geldiniz!<br />
+                                Wondiyo ailesine hoş geldiniz!<br />
                                 E-posta adresiniz doğrulanıyor, lütfen bekleyin...
                             </p>
                         ) : (
@@ -108,7 +108,7 @@ function AuthAction({ mode, oobCode, onNavigate }) {
                                     E-posta adresiniz doğrulandı!
                                 </h2>
                                 <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.8, marginBottom: 28 }}>
-                                    Harika! Hesabınız artık aktif. Giriş yaparak Oddsy'nin tüm özelliklerinden yararlanabilirsiniz.
+                                    Harika! Hesabınız artık aktif. Giriş yaparak Wondiyo'nin tüm özelliklerinden yararlanabilirsiniz.
                                 </p>
                             </>
                         ) : (
@@ -147,7 +147,7 @@ function AuthAction({ mode, oobCode, onNavigate }) {
                 {phase === 'form' && isResetPassword && (
                     <>
                         <div style={{ fontSize: 40, marginBottom: 16 }}>🔐</div>
-                        <h2 style={{ color: 'var(--gold)', fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
+                        <h2 style={{ color: 'var(--gold-text)', fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
                             Yeni Şifre Belirle
                         </h2>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>

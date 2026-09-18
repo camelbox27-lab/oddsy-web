@@ -14,23 +14,23 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const distDir = join(__dirname, '..', 'dist');
 const indexPath = join(distDir, 'index.html');
 
-const SITE_TITLE = 'Oddsy - Akıllı Futbol Tahminleri';
-const SITE_DESCRIPTION = 'Oddsy ile yapay zeka destekli oran analiziyle güçlendirilmiş futbol tahminleri. Günlük bülten maçlarını filtrele, geçmiş verilerle karşılaştır, akıllı tahminlere ulaş.';
+const SITE_TITLE = 'Wondiyo - Akıllı Futbol Tahminleri';
+const SITE_DESCRIPTION = 'Wondiyo ile yapay zeka destekli oran analiziyle güçlendirilmiş futbol tahminleri. Günlük bülten maçlarını filtrele, geçmiş verilerle karşılaştır, akıllı tahminlere ulaş.';
 
 // Sadece giriş yapmadan da erişilebilen (misafire açık) route'lar için üretilir.
 const PUBLIC_ROUTES = [
-    { path: '/oran-analiz', title: 'Oran Analiz | Oddsy', description: 'Günlük bülten maçlarını geçmiş verilerle birebir eşleştiren oran analiz aracı. Filtrele, karşılaştır, sonucu gör.' },
-    { path: '/manuel-analiz', title: 'Manuel Analiz | Oddsy', description: 'Maç istatistiklerini kendi kriterlerinize göre analiz edin, manuel tahmin oluşturun.' },
-    { path: '/kart-analizi', title: 'Kart Analizi | Oddsy', description: 'Takımların sarı/kırmızı kart istatistiklerine dayalı kart analiz botu.' },
-    { path: '/korner-analizi', title: 'Korner Analizi | Oddsy', description: 'Korner istatistiklerine dayalı yapay zeka destekli korner analiz botu.' },
-    { path: '/yapay-zeka-analizleri', title: 'Yapay Zeka Analizleri | Oddsy', description: 'Yapay zeka algoritmalarıyla oluşturulan günlük maç analizleri ve tahminler.' },
-    { path: '/iy-ms-tahminleri', title: 'İY / MS Tahminleri | Oddsy', description: 'İlk yarı / maç sonu kombinasyon tahminleri, güncel bülten maçları üzerinden.' },
-    { path: '/ilk-yari-gol-listesi', title: 'İlk Yarı Gol Listesi | Oddsy', description: 'İlk yarıda gol beklentisi yüksek maçların listesi ve analizleri.' },
-    { path: '/gunun-kuponlari', title: 'Günün Kuponları | Oddsy', description: 'Banko, ideal ve sürpriz kupon önerileri günlük olarak burada.' },
-    { path: '/gunun-tercihleri', title: 'Günün Tercihleri | Oddsy', description: 'Editör ekibinin günün öne çıkan maçları için tercihleri ve yorumları.' },
-    { path: '/gunun-surprizleri', title: 'Günün Sürprizleri | Oddsy', description: 'Yüksek oranlı, sürpriz sonuç beklentisi olan günün maçları.' },
-    { path: '/orani-dusen-maclar', title: 'Oranı Düşen Maçlar | Oddsy', description: 'Bahis oranı hızla düşen, piyasa hareketliliği yüksek maçların takibi.' },
-    { path: '/abonelik', title: 'Abonelik Planları | Oddsy', description: 'Oddsy VIP abonelik planları ve premium analiz özellikleri.' },
+    { path: '/oran-analiz', title: 'Oran Analiz | Wondiyo', description: 'Günlük bülten maçlarını geçmiş verilerle birebir eşleştiren oran analiz aracı. Filtrele, karşılaştır, sonucu gör.' },
+    { path: '/manuel-analiz', title: 'Manuel Analiz | Wondiyo', description: 'Maç istatistiklerini kendi kriterlerinize göre analiz edin, manuel tahmin oluşturun.' },
+    { path: '/kart-analizi', title: 'Kart Analizi | Wondiyo', description: 'Takımların sarı/kırmızı kart istatistiklerine dayalı kart analiz botu.' },
+    { path: '/korner-analizi', title: 'Korner Analizi | Wondiyo', description: 'Korner istatistiklerine dayalı yapay zeka destekli korner analiz botu.' },
+    { path: '/yapay-zeka-analizleri', title: 'Yapay Zeka Analizleri | Wondiyo', description: 'Yapay zeka algoritmalarıyla oluşturulan günlük maç analizleri ve tahminler.' },
+    { path: '/iy-ms-tahminleri', title: 'İY / MS Tahminleri | Wondiyo', description: 'İlk yarı / maç sonu kombinasyon tahminleri, güncel bülten maçları üzerinden.' },
+    { path: '/ilk-yari-gol-listesi', title: 'İlk Yarı Gol Listesi | Wondiyo', description: 'İlk yarıda gol beklentisi yüksek maçların listesi ve analizleri.' },
+    { path: '/gunun-kuponlari', title: 'Günün Kuponları | Wondiyo', description: 'Banko, ideal ve sürpriz kupon önerileri günlük olarak burada.' },
+    { path: '/gunun-tercihleri', title: 'Günün Tercihleri | Wondiyo', description: 'Editör ekibinin günün öne çıkan maçları için tercihleri ve yorumları.' },
+    { path: '/gunun-surprizleri', title: 'Günün Sürprizleri | Wondiyo', description: 'Yüksek oranlı, sürpriz sonuç beklentisi olan günün maçları.' },
+    { path: '/orani-dusen-maclar', title: 'Oranı Düşen Maçlar | Wondiyo', description: 'Bahis oranı hızla düşen, piyasa hareketliliği yüksek maçların takibi.' },
+    { path: '/abonelik', title: 'Abonelik Planları | Wondiyo', description: 'Wondiyo VIP abonelik planları ve premium analiz özellikleri.' },
 ];
 
 function setMetaContent(html, selectorRegex, replacement) {
@@ -38,7 +38,7 @@ function setMetaContent(html, selectorRegex, replacement) {
 }
 
 function buildHtmlFor(baseHtml, { path, title, description }) {
-    const canonicalUrl = `https://oddsy.com.tr${path}`;
+    const canonicalUrl = `https://wondiyo.com.tr${path}`;
     let html = baseHtml;
 
     html = setMetaContent(html, /<title>.*?<\/title>/, `<title>${title}</title>`);

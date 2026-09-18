@@ -5,13 +5,13 @@ const PrivacyPolicy = ({ onClose }) => {
     <ModalOverlay title="KİŞİSEL VERİLERİN KORUNMASI" onClose={onClose}>
       <div className="p-8 text-gray-200 space-y-6">
         <p className="leading-relaxed">
-          Oddsy olarak, 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında, kullanıcılarımızın kişisel verilerine büyük önem veriyoruz. Bu nedenle, kişisel verilerinizin işlenmesi, saklanması ve paylaşılması ile ilgili olarak sizi bilgilendirmek istiyoruz.
+          Wondiyo olarak, 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında, kullanıcılarımızın kişisel verilerine büyük önem veriyoruz. Bu nedenle, kişisel verilerinizin işlenmesi, saklanması ve paylaşılması ile ilgili olarak sizi bilgilendirmek istiyoruz.
         </p>
 
         <section>
           <h2 className="text-xl font-bold text-yellow-400 mb-3">1. Veri Sorumlusu</h2>
           <p className="leading-relaxed">
-            Kişisel verileriniz, veri sorumlusu sıfatıyla Oddsy tarafından aşağıda belirtilen kapsamda işlenmektedir.
+            Kişisel verileriniz, veri sorumlusu sıfatıyla Wondiyo tarafından aşağıda belirtilen kapsamda işlenmektedir.
           </p>
         </section>
 
@@ -30,7 +30,7 @@ const PrivacyPolicy = ({ onClose }) => {
           <h2 className="text-xl font-bold text-yellow-400 mb-3">3. Verilerin İşlenme Amaçları</h2>
           <ul className="list-disc list-inside space-y-2 ml-4">
             <li>Üyelik işlemlerinin gerçekleştirilmesi</li>
-            <li>Oddsy platformunun çalışmasının sağlanması</li>
+            <li>Wondiyo platformunun çalışmasının sağlanması</li>
             <li>Üyelik bazlı hizmetlerin sunulması</li>
             <li>Kullanıcı taleplerinin karşılanması ve destek süreçleri</li>
             <li>İstatistiksel analiz ve geliştirme faaliyetleri</li>
@@ -84,8 +84,8 @@ const PrivacyPolicy = ({ onClose }) => {
             Bu haklarınızı kullanmak için bizimle aşağıdaki adres üzerinden iletişime geçebilirsiniz:
           </p>
           <p className="text-yellow-400 font-semibold">
-            <a href="mailto:Oddsydestek@gmail.com" className="hover:underline">
-              Oddsydestek@gmail.com
+            <a href="mailto:wondiyodestek@gmail.com" className="hover:underline">
+              wondiyodestek@gmail.com
             </a>
           </p>
         </section>

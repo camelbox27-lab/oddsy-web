@@ -5,13 +5,13 @@ const TermsOfService = ({ onClose }) => {
         <ModalOverlay title="KULLANICI SÖZLEŞMESİ" onClose={onClose}>
             <div className="p-8 text-gray-200 space-y-6">
                 <p className="leading-relaxed">
-                    Bu sözleşme, Oddsy web sitesine üye olan kullanıcılar ("Kullanıcı") ile Oddsy ("Şirket") arasında aşağıdaki şartlarda düzenlenmiştir. Web sitesine üye olarak veya hizmetleri kullanarak, bu sözleşmeyi okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz.
+                    Bu sözleşme, Wondiyo web sitesine üye olan kullanıcılar ("Kullanıcı") ile Wondiyo ("Şirket") arasında aşağıdaki şartlarda düzenlenmiştir. Web sitesine üye olarak veya hizmetleri kullanarak, bu sözleşmeyi okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz.
                 </p>
 
                 <section>
                     <h2 className="text-xl font-bold text-yellow-400 mb-3">1. Taraflar</h2>
                     <ul className="list-disc list-inside space-y-2 ml-4">
-                        <li><strong className="text-white">Hizmet Sağlayıcı:</strong> Oddsy</li>
+                        <li><strong className="text-white">Hizmet Sağlayıcı:</strong> Wondiyo</li>
                         <li><strong className="text-white">Kullanıcı:</strong> Üyelik formunu dolduran, hizmetlere erişen gerçek kişidir.</li>
                     </ul>
                 </section>
@@ -19,14 +19,14 @@ const TermsOfService = ({ onClose }) => {
                 <section>
                     <h2 className="text-xl font-bold text-yellow-400 mb-3">2. Konu</h2>
                     <p className="leading-relaxed">
-                        Bu sözleşme, Oddsy tarafından sağlanan üyelik tabanlı istatistik ve analiz hizmetlerinin kullanım koşullarını, hak ve yükümlülükleri belirler.
+                        Bu sözleşme, Wondiyo tarafından sağlanan üyelik tabanlı istatistik ve analiz hizmetlerinin kullanım koşullarını, hak ve yükümlülükleri belirler.
                     </p>
                 </section>
 
                 <section>
                     <h2 className="text-xl font-bold text-yellow-400 mb-3">3. Hizmet İçeriği</h2>
                     <p className="leading-relaxed">
-                        Oddsy platformu, çeşitli futbol maçlarına ilişkin istatistiksel analizler ve geçmiş verilere dayalı algoritmik tahminler sunar. Oddsy bahis oynatma hizmeti vermez. Sunulan içerikler yalnızca bilgilendirme ve analiz amaçlıdır.
+                        Wondiyo platformu, çeşitli futbol maçlarına ilişkin istatistiksel analizler ve geçmiş verilere dayalı algoritmik tahminler sunar. Wondiyo bahis oynatma hizmeti vermez. Sunulan içerikler yalnızca bilgilendirme ve analiz amaçlıdır.
                     </p>
                 </section>
 
@@ -53,14 +53,14 @@ const TermsOfService = ({ onClose }) => {
                 <section>
                     <h2 className="text-xl font-bold text-yellow-400 mb-3">6. Ücretlendirme ve Fatura</h2>
                     <p className="leading-relaxed">
-                        Oddsy, belirli hizmetleri abonelik modeliyle sunar. Kullanıcı, ödeme altyapısı üzerinden aylık ödeme yaparak hizmetlere erişim kazanır. Yapılan ödemeler sonrası e-Arşiv fatura kesilir ve e-posta ile gönderilir.
+                        Wondiyo, belirli hizmetleri abonelik modeliyle sunar. Kullanıcı, ödeme altyapısı üzerinden aylık ödeme yaparak hizmetlere erişim kazanır. Yapılan ödemeler sonrası e-Arşiv fatura kesilir ve e-posta ile gönderilir.
                     </p>
                 </section>
 
                 <section>
                     <h2 className="text-xl font-bold text-yellow-400 mb-3">7. Fikri Mülkiyet</h2>
                     <p className="leading-relaxed">
-                        Oddsy'ye ait içerikler (veri, analiz, tasarım, kod) Şirket'e aittir. İzinsiz kopyalanamaz, paylaşılmaz.
+                        Wondiyo'ye ait içerikler (veri, analiz, tasarım, kod) Şirket'e aittir. İzinsiz kopyalanamaz, paylaşılmaz.
                     </p>
                 </section>
 
@@ -75,7 +75,7 @@ const TermsOfService = ({ onClose }) => {
                 <section className="bg-yellow-400/10 p-6 rounded-lg border border-yellow-400">
                     <h2 className="text-xl font-bold text-yellow-400 mb-3">9. Sorumluluk Reddi</h2>
                     <p className="leading-relaxed">
-                        Oddsy üzerinde sunulan analizler tavsiye niteliği taşır. Kullanıcının bu analizleri kullanması kendi inisiyatifindedir. Oddsy hiçbir sonuç için garanti vermez.
+                        Wondiyo üzerinde sunulan analizler tavsiye niteliği taşır. Kullanıcının bu analizleri kullanması kendi inisiyatifindedir. Wondiyo hiçbir sonuç için garanti vermez.
                     </p>
                 </section>
 
@@ -89,7 +89,7 @@ const TermsOfService = ({ onClose }) => {
                 <section>
                     <h2 className="text-xl font-bold text-yellow-400 mb-3">11. Yürürlük</h2>
                     <p className="leading-relaxed">
-                        Kullanıcı, bu sözleşmeyi onayladığı anda yürürlüğe girer. Oddsy, sözleşmeyi önceden bildirmeksizin güncelleyebilir.
+                        Kullanıcı, bu sözleşmeyi onayladığı anda yürürlüğe girer. Wondiyo, sözleşmeyi önceden bildirmeksizin güncelleyebilir.
                     </p>
                 </section>
 
@@ -99,8 +99,8 @@ const TermsOfService = ({ onClose }) => {
                         Sorularınız için bizimle iletişime geçebilirsiniz:
                     </p>
                     <p className="text-yellow-400 font-semibold">
-                        <a href="mailto:Oddsydestek@gmail.com" className="hover:underline">
-                            Oddsydestek@gmail.com
+                        <a href="mailto:wondiyodestek@gmail.com" className="hover:underline">
+                            wondiyodestek@gmail.com
                         </a>
                     </p>
                 </section>

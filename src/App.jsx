@@ -67,9 +67,9 @@ const isLocalDevelopment = () => {
 
 const VIP_TRIAL_DAYS = 0;
 
-// Firebase email action link ayarları — linke tıklayınca oddsy.com.tr/auth/action sayfası açılır
+// Firebase email action link ayarları — linke tıklayınca wondiyo.com.tr/auth/action sayfası açılır
 const AUTH_ACTION_SETTINGS = {
-    url: 'https://oddsy.com.tr/auth/action',
+    url: 'https://wondiyo.com.tr/auth/action',
     handleCodeInApp: false,
 };
 const VIP_ADMIN_DAYS = 30;
@@ -163,36 +163,56 @@ const buildTrialVipFields = () => {
 const styles = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;900&display=swap');
 
+/* Wondiyo acik tema paleti */
 :root {
-  --primary-green: #006A4E;
-  --primary-green-light: #00815e;
-  --primary-green-dark: #00523c;
-  --gold: #FDB913;
-  --gold-dark: #ca940f;
-  --bg-dark: #333333;
-  --bg-card: #404040;
-  --text-primary: #FFFFFF;
-  --text-secondary: #FFFFFF;
-  --border: #555555;
-  --success: #4ade80;
-  --error: #f87171;
+  --primary-green: #1E8A45;
+  --primary-green-light: #2FA857;
+  --primary-green-dark: #146B34;
+  --gold: #C8D92E;
+  --gold-dark: #A7B822;
+  /* Acik zeminde limon sari okunmaz; metin vurgusu icin koyu ton */
+  --gold-text: #6B7D0F;
+  --bg-dark: #F4F6F2;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-sunken: #EAEEE6;
+  --text-primary: #16261B;
+  --text-secondary: #4A5B4F;
+  --text-muted: #77857A;
+  --on-green: #FFFFFF;
+  --on-gold: #16261B;
+  --border: #DCE3D6;
+  --header-gradient: linear-gradient(180deg, #D8E33F 0%, #A9CF43 55%, #8DC44A 100%);
+  --success: #1E8A45;
+  --error: #D64545;
+  --shadow-sm: 0 1px 3px rgba(22, 38, 27, 0.08);
+  --shadow-md: 0 4px 14px rgba(22, 38, 27, 0.10);
+  --shadow-lg: 0 10px 30px rgba(22, 38, 27, 0.14);
   --font-logo: 'Outfit', sans-serif;
 }
 
-/* Light Mode */
-[data-theme="light"] {
-  --bg-dark: #f5f5f5;
-  --bg-card: #ffffff;
-  --text-primary: #1a1a1a;
-  --text-secondary: #333333;
-  --border: #e0e0e0;
+/* Koyu mod (opsiyonel) */
+[data-theme="dark"] {
+  --bg-dark: #12211A;
+  --bg-card: #1B2F24;
+  --bg-elevated: #22392C;
+  --bg-sunken: #0E1A14;
+  --text-primary: #F1F6EF;
+  --text-secondary: #C3D3C6;
+  --text-muted: #8FA394;
+  --border: #2D473A;
+  --gold-text: #D8E33F;
+  --header-gradient: linear-gradient(180deg, #1E8A45 0%, #146B34 100%);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 /* Theme Toggle Button */
 .theme-toggle {
   background: rgba(255,255,255,0.1);
-  border: 1px solid var(--gold);
-  color: var(--gold);
+  border: 1px solid var(--primary-green-dark);
+  color: var(--primary-green-dark);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -204,8 +224,8 @@ const styles = `
   transition: all 0.3s ease;
 }
 .theme-toggle:hover {
-  background: var(--gold);
-  color: var(--bg-dark);
+  background: var(--primary-green);
+  color: var(--on-green);
   transform: rotate(180deg);
 }
 
@@ -336,7 +356,7 @@ html, body, #root, .app {
   align-items: center;
   justify-content: center;
   background: var(--bg-dark);
-  color: var(--gold);
+  color: var(--gold-text);
 }
 
 .maintenance-overlay {
@@ -357,14 +377,14 @@ html, body, #root, .app {
 .maintenance-overlay h1 {
   font-size: 32px;
   font-weight: 800;
-  color: #FDB913;
+  color: var(--gold-text);
   margin: 0 0 14px 0;
-  text-shadow: 0 2px 20px rgba(253,185,19,0.3);
+  text-shadow: 0 2px 20px rgba(200, 217, 46,0.3);
 }
 .maintenance-overlay .maintenance-divider {
   width: 60px;
   height: 3px;
-  background: #FDB913;
+  background: var(--gold);
   border-radius: 2px;
   margin: 0 auto 20px auto;
   opacity: 0.6;
@@ -372,13 +392,13 @@ html, body, #root, .app {
 .maintenance-overlay p {
   font-size: 17px;
   line-height: 1.7;
-  color: #fff;
+  color: #FFFFFF;
   max-width: 440px;
   margin: 0 0 8px 0;
 }
 .maintenance-overlay .maintenance-sub {
   font-size: 13px;
-  color: rgba(255,255,255,0.4);
+  color: rgba(255, 255, 255, 0.55);
   margin-top: 24px;
 }
 
@@ -390,14 +410,14 @@ html, body, #root, .app {
 /* Header */
 .header {
   height: 85px;
-  background: var(--bg-dark);
+  background: var(--header-gradient);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
   z-index: 2000;
-  border-bottom: 2px solid var(--primary-green);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(22, 38, 27, 0.08);
+  box-shadow: var(--shadow-md);
   position: fixed;
   top: 0;
   left: 0;
@@ -423,69 +443,81 @@ html, body, #root, .app {
 
 .header-nav-item {
   padding: 6px 10px;
-  color: var(--gold);
+  color: var(--primary-green-dark);
+  background: rgba(255, 255, 255, 0.55);
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 8px;
   white-space: nowrap;
-  border: 1px solid var(--primary-green);
+  border: 1px solid rgba(20, 107, 52, 0.25);
 }
 
 .header-nav-item:hover {
   background: var(--primary-green);
-  color: var(--gold);
+  color: var(--on-green);
 }
 
 .header-nav-item.active {
   background: var(--primary-green);
-  color: var(--gold);
-  box-shadow: 0 0 10px rgba(0, 106, 78, 0.4);
+  color: var(--on-green);
+  border-color: var(--primary-green);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-left, .header-right { display: flex; align-items: center; gap: 10px; }
 
+/* Wondiyo logo: "won" beyaz kutuda yesil, "diyo" yesil zeminde beyaz */
 .logo {
   font-family: var(--font-logo);
-  font-size: 32px;
-  font-weight: 900;
-  color: var(--gold);
-  letter-spacing: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-green);
+  padding: 6px 12px 6px 6px;
+  border-radius: 10px;
   cursor: pointer;
-  text-transform: uppercase;
-  background: linear-gradient(135deg, #FDB913 0%, #ffffff 25%, #FDB913 50%, #ffffff 75%, #FDB913 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 10px rgba(253, 185, 19, 0.3));
-  animation: logoShine 4s linear infinite;
   transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.logo-won {
+  background: #FFFFFF;
+  color: var(--primary-green);
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: -0.5px;
+}
+
+.logo-diyo {
+  color: var(--text-primary);
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.5px;
 }
 
 .logo:hover {
-  filter: drop-shadow(0 0 20px rgba(253, 185, 19, 0.6));
-  transform: scale(1.05);
-  letter-spacing: 4px;
-}
-
-@keyframes logoShine {
-  0% { background-position: 0% center; }
-  100% { background-position: 200% center; }
+  transform: scale(1.04);
+  box-shadow: var(--shadow-md);
 }
 
 .menu-btn {
   background: none;
   border: none;
-  color: var(--gold);
+  color: var(--primary-green-dark);
   font-size: 24px;
   cursor: pointer;
   display: none;
 }
 
 .profile-btn {
-  background: var(--gold);
-  color: var(--primary-green-dark);
+  background: var(--primary-green);
+  color: var(--on-green);
   border: none;
   padding: 6px 12px;
   border-radius: 8px;
@@ -498,13 +530,13 @@ html, body, #root, .app {
   gap: 8px;
 }
 
-.profile-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4); }
+.profile-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(200, 217, 46, 0.4); }
 
 /* Sidebar */
 .sidebar-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(51, 51, 51, 0.8);
+  background: rgba(22, 38, 27, 0.8);
   z-index: 1100;
   display: none;
 }
@@ -520,11 +552,11 @@ html, body, #root, .app {
 }
 .sidebar.open { left: 0; }
 .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-.sidebar-logo { font-size: 24px; font-weight: 900; color: var(--gold); }
+.sidebar-logo { font-size: 24px; font-weight: 900; color: var(--primary-green); letter-spacing: -0.5px; }
 .close-btn { background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer; }
-.sidebar-section-title { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+.sidebar-section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
 .sidebar-item { display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 12px; color: var(--text-secondary); cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
-.sidebar-item:hover, .sidebar-item.active { background: rgba(255, 215, 0, 0.1); color: var(--gold); }
+.sidebar-item:hover, .sidebar-item.active { background: rgba(30, 138, 69, 0.10); color: var(--primary-green); }
 .sidebar-item-icon { font-size: 20px; }
 .sidebar-item-text { font-size: 14px; font-weight: 600; }
 .sidebar-divider { height: 1px; background: var(--border); margin: 20px 0; }
@@ -537,8 +569,8 @@ html, body, #root, .app {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   height: 72px;
-  background: #0a0a12;
-  border-top: 1px solid rgba(255,215,0,0.18);
+  background: var(--gold);
+  border-top: 1px solid rgba(22, 38, 27, 0.10);
   z-index: 1100;
   align-items: center;
   justify-content: space-around;
@@ -556,12 +588,12 @@ html, body, #root, .app {
   background: none;
   border: none;
   cursor: pointer;
-  color: rgba(255,215,0,0.38);
+  color: var(--primary-green-dark);
   transition: color 0.15s;
   padding: 0;
   min-width: 0;
 }
-.bottom-nav-btn.active { color: #FFD700; }
+.bottom-nav-btn.active { color: #E0561F; }
 .bottom-nav-btn-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
 .bottom-nav-btn-icon svg { width: 26px; height: 26px; }
 .bottom-nav-btn-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap; color: inherit; }
@@ -577,64 +609,83 @@ html, body, #root, .app {
 .bottom-nav-center {
   width: 54px; height: 54px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #FFD700 0%, #c8960a 100%);
-  color: #0a0a12;
+  background: linear-gradient(145deg, var(--primary-green-light) 0%, var(--primary-green-dark) 100%);
+  color: var(--text-primary);
   display: flex; align-items: center; justify-content: center;
   border: none; cursor: pointer;
-  box-shadow: 0 0 18px rgba(255,215,0,0.45), 0 0 0 2px rgba(255,215,0,0.2);
+  box-shadow: var(--shadow-md), 0 0 0 3px rgba(255, 255, 255, 0.55);
   transition: transform 0.15s;
   margin-top: -14px;
 }
 .bottom-nav-center:active { transform: scale(0.9); }
-.bottom-nav-center-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,215,0,0.6); }
+.bottom-nav-center-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--primary-green-dark); }
 
 /* Hero Section */
+/* Wondiyo hero: marka gradienti + hafif saha cizgisi dokusu */
 .hero-section {
   position: relative;
-  height: 90vh;
-  min-height: 600px;
-  background-image: url('/stadium.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  height: 72vh;
+  min-height: 520px;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 42%, rgba(200, 217, 46, 0.22) 0%, transparent 70%),
+    linear-gradient(165deg, #2FA857 0%, #1E8A45 45%, #146B34 100%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   padding-bottom: 20px;
   overflow: hidden;
 }
+/* Saha serit dokusu */
 .hero-section::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(180deg, rgba(0, 106, 78, 0.5) 0%, rgba(51, 51, 51, 0.3) 50%, rgba(51, 51, 51, 0.9) 100%);
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.035) 0px,
+    rgba(255, 255, 255, 0.035) 48px,
+    transparent 48px,
+    transparent 96px
+  );
   z-index: 1;
 }
-.hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; text-align: center; text-shadow: 0 2px 15px rgba(51, 51, 51, 0.5); }
+/* Orta saha dairesi */
+.hero-section::after {
+  content: '';
+  position: absolute;
+  top: 38%; left: 50%;
+  width: 300px; height: 300px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 255, 255, 0.10);
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+}
+.hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; text-align: center; text-shadow: 0 2px 15px rgba(22, 38, 27, 0.45); }
 .hero-title { font-size: 36px; font-weight: 900; color: #FFFFFF; margin-bottom: 15px; line-height: 1.1; letter-spacing: -1px; }
-.hero-subtitle { font-size: 15px; color: #EEEEEE; margin-bottom: 30px; line-height: 1.5; max-width: 600px; margin-left: auto; margin-right: auto; font-weight: 500; }
+.hero-subtitle { font-size: 15px; color: #F0F4EC; margin-bottom: 30px; line-height: 1.5; max-width: 600px; margin-left: auto; margin-right: auto; font-weight: 500; }
 .hero-btn { padding: 14px 28px; font-size: 14px; font-weight: 700; border-radius: 16px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: none; }
-.hero-btn.primary { background: var(--primary-green); color: #fff; box-shadow: 0 4px 15px rgba(0, 106, 78, 0.4); border: 1px solid rgba(255,255,255,0.1); }
-.hero-btn.secondary { background: rgba(51, 51, 51, 0.6); color: #fff; border: 2px solid var(--gold); backdrop-filter: blur(8px); }
+.hero-btn.primary { background: var(--primary-green); color: var(--on-green); box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+.hero-btn.secondary { background: var(--gold); color: var(--on-gold); border: 2px solid rgba(255,255,255,0.5); }
 .hero-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
 /* Analysis Section */
 .analysis-section { padding: 100px 20px; text-align: center; background: var(--bg-card); }
 .analysis-title { font-size: 42px; font-weight: 900; color: var(--text-primary); margin-bottom: 20px; }
-.analysis-btn { padding: 18px 50px; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); border: none; border-radius: 30px; color: var(--primary-green-dark); font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; }
+.analysis-btn { padding: 18px 50px; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%); border: none; border-radius: 30px; color: var(--on-gold); font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; }
 
 /* Category & Prediction Cards */
 .category-page { min-height: calc(100vh - 65px); background: var(--bg-dark); }
-.category-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: var(--primary-green-dark); border-bottom: 1px solid var(--border); }
-.category-back-btn { background: none; border: none; color: var(--gold); font-size: 24px; cursor: pointer; padding: 5px; }
-.category-title { font-size: 18px; font-weight: 900; color: var(--gold); letter-spacing: 2px; }
+.category-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: var(--primary-green); border-bottom: 1px solid var(--border); }
+.category-back-btn { background: none; border: none; color: var(--on-green); font-size: 24px; cursor: pointer; padding: 5px; }
+.category-title { font-size: 18px; font-weight: 900; color: var(--on-green); letter-spacing: 2px; }
 .predictions-list { padding: 20px; display: grid; gap: 20px; }
-.prediction-card { 
-    background: linear-gradient(145deg, var(--primary-green-dark) 0%, #004d3a 100%); 
-    border-radius: 24px; 
-    padding: 24px; 
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+.prediction-card {
+    background: var(--bg-card);
+    border-radius: 24px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
     transition: transform 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -642,24 +693,23 @@ html, body, #root, .app {
 .prediction-card::after {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    opacity: 0.3;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary-green), var(--gold));
 }
-.prediction-card:hover { transform: translateY(-5px); border-color: rgba(253, 185, 19, 0.3); }
+.prediction-card:hover { transform: translateY(-5px); border-color: var(--primary-green); }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.league-badge { color: var(--gold); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+.league-badge { color: var(--primary-green); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
 .status-badge { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
-.status-badge.won { background: var(--success); color: #000; box-shadow: 0 0 15px rgba(74, 222, 128, 0.3); }
-.status-badge.lost { background: var(--error); color: #fff; box-shadow: 0 0 15px rgba(248, 113, 113, 0.3); }
+.status-badge.won { background: var(--success); color: var(--text-primary); }
+.status-badge.lost { background: var(--error); color: var(--text-primary); }
 
 .match-row-modern { display: flex; justify-content: space-around; align-items: center; margin: 25px 0; }
 .team-box-modern { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.team-logo-modern { width: 65px; height: 65px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
-.team-name-modern { font-size: 15px; font-weight: 800; color: #fff; text-align: center; max-width: 120px; line-height: 1.2; }
+.team-logo-modern { width: 65px; height: 65px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(22,38,27,0.15)); }
+.team-name-modern { font-size: 15px; font-weight: 800; color: var(--text-primary); text-align: center; max-width: 120px; line-height: 1.2; }
 .scoreboard-box { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 80px; }
-.scoreboard-time { font-size: 24px; font-weight: 900; color: var(--gold); letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-.scoreboard-date { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; }
+.scoreboard-time { font-size: 24px; font-weight: 900; color: var(--primary-green); letter-spacing: 1px; }
+.scoreboard-date { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
 
 .card-footer-modern { 
     display: grid; 
@@ -667,27 +717,27 @@ html, body, #root, .app {
     gap: 15px; 
     margin-top: 20px; 
     padding-top: 20px; 
-    border-top: 1px solid rgba(255, 255, 255, 0.1); 
+    border-top: 1px solid var(--border); 
 }
 .footer-pill { 
-    background: rgba(0, 0, 0, 0.2); 
+    background: var(--bg-sunken); 
     padding: 12px; 
     border-radius: 16px; 
     text-align: center; 
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
     transition: 0.3s;
 }
-.footer-pill:hover { background: rgba(0, 0, 0, 0.3); border-color: var(--gold); }
-.pill-label { color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase; }
-.pill-value { font-size: 15px; font-weight: 800; color: #fff; }
+.footer-pill:hover { background: var(--bg-sunken); border-color: var(--gold); }
+.pill-label { color: var(--text-muted); font-size: 10px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase; }
+.pill-value { font-size: 15px; font-weight: 800; color: var(--text-primary); }
 .pill-value.prediction { color: var(--success); }
-.pill-value.odds { color: var(--gold); }
+.pill-value.odds { color: var(--primary-green); }
 
 .analysis-btn-modern {
     grid-column: span 2;
     background: transparent;
-    border: 1px solid var(--gold);
-    color: var(--gold);
+    border: 1px solid var(--primary-green);
+    color: var(--primary-green);
     padding: 10px;
     border-radius: 12px;
     font-size: 12px;
@@ -697,18 +747,18 @@ html, body, #root, .app {
     transition: all 0.3s ease;
 }
 .analysis-btn-modern:hover {
-    background: var(--gold);
-    color: var(--primary-green-dark);
+    background: var(--primary-green);
+    color: var(--on-green);
 }
 
 /* Coupon Cards - Bet365 Style */
 .coupon-card {
-    border: 1px solid rgba(255,255,255,0.05); /* Start with subtle border */
+    border: 1px solid var(--border); /* Start with subtle border */
     border-radius: 8px;
     padding: 0;
     margin-bottom: 25px;
-    background: #2e3335;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-md);
     overflow: hidden;
     /* Added for sizing and centering */
     max-width: 800px;
@@ -719,19 +769,19 @@ html, body, #root, .app {
 .coupon-card:hover {
     transform: translateY(-5px);
     box-shadow: 
-        0 20px 50px rgba(0,0,0,0.6),
-        inset 0 0 0 1px rgba(253, 185, 19, 0.3),
-        0 0 30px rgba(253, 185, 19, 0.4);
+        0 20px 50px rgba(22, 38, 27, 0.12),
+        inset 0 0 0 1px rgba(200, 217, 46, 0.3),
+        0 0 30px rgba(200, 217, 46, 0.4);
     border-color: var(--gold);
 }
 
 .coupon-header {
-    background: rgba(255,255,255,0.05);
+    background: var(--bg-sunken);
     padding: 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border);
 }
 .coupon-title {
     color: var(--success);
@@ -743,7 +793,7 @@ html, body, #root, .app {
     display: flex;
     flex-direction: column;
     padding: 15px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border);
     position: relative;
 }
 .coupon-match-header {
@@ -756,24 +806,24 @@ html, body, #root, .app {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    border: 1px solid #aaa;
+    border: 1px solid var(--border);
 }
 .coupon-match-prediction {
     /* Removed flex: 1 to bring odds closer */
     font-size: 15px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-primary);
     margin-right: 20px; /* Space between prediction and odds */
 }
 .coupon-match-odds {
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 400;
     font-size: 14px;
 }
 .coupon-match-teams {
     padding-left: 16px;
     font-size: 13px;
-    color: #aaa;
+    color: var(--text-muted);
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -792,29 +842,29 @@ html, body, #root, .app {
     filter: brightness(1.1);
 }
 .total-odds-label {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 15px;
     font-weight: 700;
 }
 .total-odds-value {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 18px;
     font-weight: 700;
     text-shadow: none;
 }
 .coupon-type-badge {
-    color: #aaa;
+    color: var(--text-muted);
     font-size: 11px;
 }
 
 .analysis-content-box {
     grid-column: span 2;
-    background: rgba(0,0,0,0.3);
+    background: var(--bg-sunken);
     padding: 15px;
     border-radius: 12px;
     margin-top: 10px;
     font-size: 13px;
-    color: #e2e8f0;
+    color: var(--text-secondary);
     line-height: 1.5;
     border-left: 3px solid var(--gold);
 }
@@ -823,51 +873,50 @@ html, body, #root, .app {
 .footer-section { padding: 60px 20px 20px; background: var(--bg-dark); border-top: 1px solid var(--border); }
 .footer-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 40px; }
 .footer-col { flex: 1; min-width: 200px; }
-.footer-heading { font-size: 24px; font-weight: 900; color: var(--gold); margin-bottom: 15px; }
+.footer-heading { font-size: 24px; font-weight: 900; color: var(--primary-green); margin-bottom: 15px; }
 .footer-link { display: block; color: var(--text-secondary); margin-bottom: 10px; cursor: pointer; transition: 0.3s; font-size: 14px; text-decoration: none; }
-.footer-link:hover { color: var(--gold); }
-.footer-logo { font-size: 32px; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+.footer-link:hover { color: var(--primary-green); }
+.footer-logo { font-size: 32px; font-weight: 900; color: var(--primary-green); letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
 .footer-logo:hover { opacity: 0.8; }
-.about-pill-btn { background: transparent; border: 1.5px solid var(--gold); color: var(--gold); padding: 6px 18px; border-radius: 25px; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
-.about-pill-btn:hover { background: var(--gold); color: var(--bg-dark); box-shadow: 0 0 15px rgba(253, 185, 19, 0.4); }
+.about-pill-btn { background: transparent; border: 1.5px solid var(--primary-green); color: var(--primary-green); padding: 6px 18px; border-radius: 25px; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+.about-pill-btn:hover { background: var(--primary-green); color: var(--on-green); box-shadow: 0 0 15px rgba(200, 217, 46, 0.4); }
 .footer-divider { height: 1px; background: var(--border); margin: 30px auto; max-width: 1200px; }
 .footer-bottom { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-.age-badge-small { background: #ff0000; color: #fff; font-weight: 900; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
-.copyright { font-size: 12px; color: #666; }
+.age-badge-small { background: #ff0000; color: var(--text-primary); font-weight: 900; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+.copyright { font-size: 12px; color: var(--text-muted); }
 
 /* Auth */
 .auth-container { min-height: calc(100vh - 65px); display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg-dark); }
-.auth-card { width: 100%; max-width: 400px; padding: 30px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(51, 51, 51, 0.5); position: relative; }
-.back-btn { background: none; border: none; color: var(--gold); cursor: pointer; font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+.auth-card { width: 100%; max-width: 400px; padding: 30px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-lg); position: relative; }
+.back-btn { background: none; border: none; color: var(--primary-green); cursor: pointer; font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
 .form-group { margin-bottom: 20px; }
 .form-label { display: block; color: var(--text-secondary); font-size: 11px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
 .form-input { width: 100%; padding: 12px 15px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 14px; }
-.submit-btn { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 10px; color: var(--primary-green-dark); font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; }
-.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(253, 185, 19, 0.5); }
+.submit-btn { width: 100%; padding: 14px; background: var(--gold); border: none; border-radius: 10px; color: var(--on-gold); font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; }
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(200, 217, 46, 0.5); }
 .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 .submit-btn:active { transform: scale(0.98); }
 
 /* Profile & Admin */
 .profile-container { padding: 40px 20px; max-width: 400px; margin: 0 auto; min-height: calc(100vh - 65px); background: var(--bg-dark); }
-.profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; border: 2px solid var(--gold); }
+.profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; border: 2px solid var(--primary-green); }
 .profile-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .logout-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--error); border-radius: 10px; color: var(--error); font-weight: 700; cursor: pointer; margin-top: 20px; }
 
 .loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
-.spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
+.spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--primary-green); border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Unified Prediction Card Design - Standard for all menus */
 .prediction-card {
-    background: #2e3335 !important;
-    border: 2px solid #006A4E !important;
+    background: var(--bg-card) !important;
+    border: 2px solid var(--primary-green) !important;
     border-radius: 16px !important;
     padding: 18px !important;
     padding-top: 38px !important; /* Space for the top-left label */
-    box-shadow: 
-        0 10px 30px rgba(0,0,0,0.4),
-        inset 0 0 0 1px rgba(0, 106, 78, 0.3),
-        0 0 15px rgba(0, 106, 78, 0.2) !important;
+    box-shadow: var(--shadow-md),
+        inset 0 0 0 1px rgba(30, 138, 69, 0.3),
+        0 0 15px rgba(30, 138, 69, 0.2) !important;
     display: flex;
     flex-direction: column;
     min-height: 180px !important;
@@ -883,10 +932,10 @@ html, body, #root, .app {
 .prediction-card:hover {
     transform: translateY(-3px);
     box-shadow: 
-        0 20px 50px rgba(0,0,0,0.6),
-        inset 0 0 0 1px rgba(253, 185, 19, 0.3),
-        0 0 30px rgba(0, 106, 78, 0.4) !important;
-    border-color: rgba(253, 185, 19, 0.6) !important;
+        0 20px 50px rgba(22, 38, 27, 0.12),
+        inset 0 0 0 1px rgba(200, 217, 46, 0.3),
+        0 0 30px rgba(30, 138, 69, 0.4) !important;
+    border-color: rgba(200, 217, 46, 0.6) !important;
 }
 
 @media (max-width: 768px) {
@@ -932,7 +981,7 @@ html, body, #root, .app {
     left: 25px;
     font-size: 14px;
     font-weight: 900;
-    color: var(--gold);
+    color: var(--primary-green);
     text-transform: uppercase;
     letter-spacing: 1.5px;
     z-index: 5;
@@ -940,8 +989,8 @@ html, body, #root, .app {
 
 /* Menu Selection Cards (Tipsters, Kart/Korner choices etc.) */
 .menu-selection-card {
-    background: #2e3335;
-    border: 2px solid #006A4E;
+    background: var(--bg-card);
+    border: 2px solid var(--primary-green);
     border-radius: 16px;
     padding: 22px;
     transition: all 0.3s ease;
@@ -957,17 +1006,16 @@ html, body, #root, .app {
     height: auto !important;
     margin: 15px auto;
     position: relative;
-    box-shadow: 
-        0 10px 30px rgba(0,0,0,0.4),
-        inset 0 0 0 1px rgba(0, 106, 78, 0.3),
-        0 0 15px rgba(0, 106, 78, 0.2);
+    box-shadow: var(--shadow-md),
+        inset 0 0 0 1px rgba(30, 138, 69, 0.3),
+        0 0 15px rgba(30, 138, 69, 0.2);
 }
 .menu-selection-card:hover {
     transform: translateY(-5px);
     box-shadow: 
-        0 20px 50px rgba(0,0,0,0.6),
-        inset 0 0 0 1px rgba(253, 185, 19, 0.3),
-        0 0 30px rgba(253, 185, 19, 0.4);
+        0 20px 50px rgba(22, 38, 27, 0.12),
+        inset 0 0 0 1px rgba(200, 217, 46, 0.3),
+        0 0 30px rgba(200, 217, 46, 0.4);
     border-color: var(--gold);
 }
 
@@ -975,9 +1023,9 @@ html, body, #root, .app {
     position: absolute;
     bottom: 20px;
     right: 20px;
-    background: rgba(0, 106, 78, 0.2);
-    border: 1px solid #006A4E;
-    color: #fff;
+    background: rgba(30, 138, 69, 0.2);
+    border: 1px solid var(--primary-green);
+    color: var(--text-primary);
     padding: 8px 15px;
     border-radius: 12px;
     font-size: 13px;
@@ -991,9 +1039,9 @@ html, body, #root, .app {
 }
 
 .tipster-stats-btn:hover {
-    background: #006A4E;
+    background: var(--primary-green);
     transform: scale(1.05);
-    box-shadow: 0 0 15px rgba(0, 106, 78, 0.4);
+    box-shadow: 0 0 15px rgba(30, 138, 69, 0.4);
 }
 
 .modal-overlay {
@@ -1012,14 +1060,14 @@ html, body, #root, .app {
 }
 
 .stats-modal {
-    background: #2e3335;
-    border: 3px solid #006A4E;
+    background: var(--bg-card);
+    border: 3px solid var(--primary-green);
     border-radius: 30px;
     padding: 40px;
     width: 100%;
     max-width: 500px;
     position: relative;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 30px rgba(0, 106, 78, 0.2);
+    box-shadow: 0 25px 50px rgba(22, 38, 27, 0.12), 0 0 30px rgba(30, 138, 69, 0.2);
     animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -1032,9 +1080,9 @@ html, body, #root, .app {
     position: absolute;
     top: 20px;
     right: 20px;
-    background: rgba(255,255,255,0.05);
+    background: var(--bg-sunken);
     border: none;
-    color: #fff;
+    color: var(--text-primary);
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -1059,7 +1107,7 @@ html, body, #root, .app {
 }
 
 .stat-label {
-    color: #ccc;
+    color: var(--text-secondary);
     font-size: 14px;
     font-weight: 600;
     min-width: 110px;
@@ -1071,7 +1119,7 @@ html, body, #root, .app {
 
 .stat-bar-container {
     height: 10px;
-    background: rgba(255,255,255,0.05);
+    background: var(--bg-sunken);
     border-radius: 5px;
     overflow: hidden;
     position: relative;
@@ -1090,7 +1138,7 @@ html, body, #root, .app {
     gap: 40px;
     margin-bottom: 25px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border);
 }
 
 .premium-team-box {
@@ -1105,13 +1153,13 @@ html, body, #root, .app {
     width: 80px;
     height: 80px;
     object-fit: contain;
-    filter: drop-shadow(0 0 10px rgba(0, 106, 78, 0.4));
+    filter: drop-shadow(0 0 10px rgba(30, 138, 69, 0.4));
 }
 
 .premium-team-name-text {
     font-size: 18px;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-primary);
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1120,9 +1168,9 @@ html, body, #root, .app {
 .premium-vs-divider {
     font-size: 24px;
     font-weight: 900;
-    color: var(--gold);
+    color: var(--gold-text);
     opacity: 0.9;
-    text-shadow: 0 0 15px rgba(253, 185, 19, 0.3);
+    text-shadow: 0 0 15px rgba(200, 217, 46, 0.3);
 }
 
 .premium-analysis-container {
@@ -1133,7 +1181,7 @@ html, body, #root, .app {
 .premium-analysis-text {
     font-size: 16px;
     line-height: 1.8;
-    color: #e0e0e0;
+    color: var(--text-secondary);
     text-align: justify;
 }
 
@@ -1168,7 +1216,7 @@ html, body, #root, .app {
 
 .premium-badge-label {
     font-size: 9px;
-    color: #aaa;
+    color: var(--text-muted);
     font-weight: 700;
     text-transform: uppercase;
     margin-bottom: 2px;
@@ -1177,17 +1225,17 @@ html, body, #root, .app {
 .premium-badge-value {
     font-size: 16px;
     font-weight: 900;
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
-.premium-badge-value.gold { color: var(--gold); }
+.premium-badge-value.gold { color: var(--gold-text); }
 .premium-badge-value.green { color: #10B981; }
 
 .premium-badge-icon {
     position: absolute;
     top: 15px;
     right: 15px;
-    color: var(--gold);
+    color: var(--gold-text);
     font-size: 20px;
     filter: drop-shadow(0 0 5px var(--gold));
     animation: pulse-gold 2s infinite;
@@ -1203,8 +1251,8 @@ html, body, #root, .app {
 }
 
 .league-badge-standard {
-    background: rgba(0,0,0,0.3);
-    color: var(--gold);
+    background: var(--bg-sunken);
+    color: var(--gold-text);
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 10px;
@@ -1218,9 +1266,9 @@ html, body, #root, .app {
     100% { transform: scale(1); opacity: 0.8; }
 }
 
-.alert { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 10px; font-size: 14px; font-weight: 700; z-index: 3500; box-shadow: 0 8px 25px rgba(0,0,0,0.4); max-width: 90vw; text-align: center; }
+.alert { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 10px; font-size: 14px; font-weight: 700; z-index: 3500; box-shadow: 0 8px 25px rgba(22, 38, 27, 0.12); max-width: 90vw; text-align: center; }
 .alert.success { background: var(--success); color: var(--primary-green-dark); }
-.alert.error { background: var(--error); color: #fff; }
+.alert.error { background: var(--error); color: var(--text-primary); }
 
 
 /* Tablet Breakpoint */
@@ -1301,7 +1349,7 @@ html, body, #root, .app {
   gap: 8px;
   margin-top: 15px;
   padding-top: 15px;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid var(--border);
   justify-content: center;
 }
 
@@ -1412,7 +1460,7 @@ const MENU_ITEMS = [
 ];
 
 const COUPON_TYPES = [
-    { id: 'banko', name: 'Banko Kupon', dbName: 'Günün Banko Kuponu', color: 'var(--gold)', image: 'https://i.ibb.co/3mb3dcx0/banko.png', desc: 'Günün en güvenilir tahminleri' },
+    { id: 'banko', name: 'Banko Kupon', dbName: 'Günün Banko Kuponu', color: 'var(--gold-text)', image: 'https://i.ibb.co/3mb3dcx0/banko.png', desc: 'Günün en güvenilir tahminleri' },
     { id: 'ideal', name: 'İdeal Kupon', dbName: 'Günün İdeal Kuponu', color: '#4ade80', image: 'https://i.ibb.co/LFNHb81/ideal.png', desc: 'Dengeli oran ve güven kombinasyonu' },
     { id: 'surpriz', name: 'Sürpriz Kupon', dbName: 'Günün Sürpriz Kuponu', color: '#f87171', image: 'https://i.ibb.co/JFWTPs0y/s-priz.png', desc: 'Yüksek oranlı cesur tahminler' }
 ];
@@ -1465,30 +1513,30 @@ const getRouteFromPathname = (pathname) => {
 
 const getPathForRoute = (route) => ROUTE_PATHS[route] || '/';
 
-const SITE_TITLE = 'Oddsy - Akıllı Futbol Tahminleri';
-const SITE_DESCRIPTION = 'Oddsy ile yapay zeka destekli oran analiziyle güçlendirilmiş futbol tahminleri. Günlük bülten maçlarını filtrele, geçmiş verilerle karşılaştır, akıllı tahminlere ulaş.';
+const SITE_TITLE = 'Wondiyo - Akıllı Futbol Tahminleri';
+const SITE_DESCRIPTION = 'Wondiyo ile yapay zeka destekli oran analiziyle güçlendirilmiş futbol tahminleri. Günlük bülten maçlarını filtrele, geçmiş verilerle karşılaştır, akıllı tahminlere ulaş.';
 
 // Her route için title + meta description + OG description (SEO ve sosyal medya paylaşım kartları için)
 const ROUTE_META = {
     home: { title: SITE_TITLE, description: SITE_DESCRIPTION },
-    'oran-analiz': { title: 'Oran Analiz | Oddsy', description: 'Günlük bülten maçlarını geçmiş verilerle birebir eşleştiren oran analiz aracı. Filtrele, karşılaştır, sonucu gör.' },
-    'manuel-analiz': { title: 'Manuel Analiz | Oddsy', description: 'Maç istatistiklerini kendi kriterlerinize göre analiz edin, manuel tahmin oluşturun.' },
-    'kart-analizi': { title: 'Kart Analizi | Oddsy', description: 'Takımların sarı/kırmızı kart istatistiklerine dayalı kart analiz botu.' },
-    'korner-analizi': { title: 'Korner Analizi | Oddsy', description: 'Korner istatistiklerine dayalı yapay zeka destekli korner analiz botu.' },
-    'yapay-zeka-analizleri': { title: 'Yapay Zeka Analizleri | Oddsy', description: 'Yapay zeka algoritmalarıyla oluşturulan günlük maç analizleri ve tahminler.' },
-    'iy-ms-tahminleri': { title: 'İY / MS Tahminleri | Oddsy', description: 'İlk yarı / maç sonu kombinasyon tahminleri, güncel bülten maçları üzerinden.' },
-    'ilk-yari-gol': { title: 'İlk Yarı Gol Listesi | Oddsy', description: 'İlk yarıda gol beklentisi yüksek maçların listesi ve analizleri.' },
-    coupons: { title: 'Günün Kuponları | Oddsy', description: 'Banko, ideal ve sürpriz kupon önerileri günlük olarak burada.' },
-    'gunun-tercihleri': { title: 'Günün Tercihleri | Oddsy', description: 'Editör ekibinin günün öne çıkan maçları için tercihleri ve yorumları.' },
-    'gunun-surprizleri': { title: 'Günün Sürprizleri | Oddsy', description: 'Yüksek oranlı, sürpriz sonuç beklentisi olan günün maçları.' },
-    'dropping-odds': { title: 'Oranı Düşen Maçlar | Oddsy', description: 'Bahis oranı hızla düşen, piyasa hareketliliği yüksek maçların takibi.' },
-    category: { title: 'Kategori | Oddsy', description: SITE_DESCRIPTION },
-    abonelik: { title: 'Abonelik Planları | Oddsy', description: 'Oddsy VIP abonelik planları ve premium analiz özellikleri.' },
-    profile: { title: 'Profilim | Oddsy', description: SITE_DESCRIPTION },
-    auth: { title: 'Giriş Yap | Oddsy', description: 'Oddsy hesabınıza giriş yapın veya yeni hesap oluşturun.' },
-    admin: { title: 'Admin Paneli | Oddsy', description: SITE_DESCRIPTION },
-    editor: { title: 'Editör Paneli | Oddsy', description: SITE_DESCRIPTION },
-    moderator: { title: 'Moderatör Paneli | Oddsy', description: SITE_DESCRIPTION },
+    'oran-analiz': { title: 'Oran Analiz | Wondiyo', description: 'Günlük bülten maçlarını geçmiş verilerle birebir eşleştiren oran analiz aracı. Filtrele, karşılaştır, sonucu gör.' },
+    'manuel-analiz': { title: 'Manuel Analiz | Wondiyo', description: 'Maç istatistiklerini kendi kriterlerinize göre analiz edin, manuel tahmin oluşturun.' },
+    'kart-analizi': { title: 'Kart Analizi | Wondiyo', description: 'Takımların sarı/kırmızı kart istatistiklerine dayalı kart analiz botu.' },
+    'korner-analizi': { title: 'Korner Analizi | Wondiyo', description: 'Korner istatistiklerine dayalı yapay zeka destekli korner analiz botu.' },
+    'yapay-zeka-analizleri': { title: 'Yapay Zeka Analizleri | Wondiyo', description: 'Yapay zeka algoritmalarıyla oluşturulan günlük maç analizleri ve tahminler.' },
+    'iy-ms-tahminleri': { title: 'İY / MS Tahminleri | Wondiyo', description: 'İlk yarı / maç sonu kombinasyon tahminleri, güncel bülten maçları üzerinden.' },
+    'ilk-yari-gol': { title: 'İlk Yarı Gol Listesi | Wondiyo', description: 'İlk yarıda gol beklentisi yüksek maçların listesi ve analizleri.' },
+    coupons: { title: 'Günün Kuponları | Wondiyo', description: 'Banko, ideal ve sürpriz kupon önerileri günlük olarak burada.' },
+    'gunun-tercihleri': { title: 'Günün Tercihleri | Wondiyo', description: 'Editör ekibinin günün öne çıkan maçları için tercihleri ve yorumları.' },
+    'gunun-surprizleri': { title: 'Günün Sürprizleri | Wondiyo', description: 'Yüksek oranlı, sürpriz sonuç beklentisi olan günün maçları.' },
+    'dropping-odds': { title: 'Oranı Düşen Maçlar | Wondiyo', description: 'Bahis oranı hızla düşen, piyasa hareketliliği yüksek maçların takibi.' },
+    category: { title: 'Kategori | Wondiyo', description: SITE_DESCRIPTION },
+    abonelik: { title: 'Abonelik Planları | Wondiyo', description: 'Wondiyo VIP abonelik planları ve premium analiz özellikleri.' },
+    profile: { title: 'Profilim | Wondiyo', description: SITE_DESCRIPTION },
+    auth: { title: 'Giriş Yap | Wondiyo', description: 'Wondiyo hesabınıza giriş yapın veya yeni hesap oluşturun.' },
+    admin: { title: 'Admin Paneli | Wondiyo', description: SITE_DESCRIPTION },
+    editor: { title: 'Editör Paneli | Wondiyo', description: SITE_DESCRIPTION },
+    moderator: { title: 'Moderatör Paneli | Wondiyo', description: SITE_DESCRIPTION },
 };
 
 const setMetaContent = (selector, content) => {
@@ -1508,7 +1556,7 @@ const syncSeoTags = (route) => {
     setMetaContent('meta[name="twitter:title"]', meta.title);
     setMetaContent('meta[name="twitter:description"]', meta.description);
 
-    const canonicalUrl = 'https://oddsy.com.tr' + getPathForRoute(route);
+    const canonicalUrl = 'https://wondiyo.com.tr' + getPathForRoute(route);
     const canonicalEl = document.querySelector('link[rel="canonical"]');
     if (canonicalEl) canonicalEl.setAttribute('href', canonicalUrl);
     setMetaContent('meta[property="og:url"]', canonicalUrl);
@@ -1519,8 +1567,8 @@ const LEGAL_TEXTS = {
     kvkk: {
         title: "KVKK Aydınlatma Metni",
         content: `### Kişisel Verilerin Korunması ve İşlenmesi
-**Veri Sorumlusu:** ODDSY Tahmin Platformu
-**İletişim:** oddsydestek@gmail.com
+**Veri Sorumlusu:** WONDIYO Tahmin Platformu
+**İletişim:** wondiyodestek@gmail.com
 
 #### 1. Toplanan Kişisel Veriler
 Platformumuzda aşağıdaki kişisel verileriniz toplanmaktadır:
@@ -1563,7 +1611,7 @@ Kişisel verileriniz, işlenme amacının gerektirdiği süre boyunca ve yasal s
         content: `**Son Güncelleme:** Ocak 2026
 
 ### 1. Genel Bilgiler
-ODDSY, kullanıcı gizliliğine önem veren bir tahmin paylaşım platformudur. Bu gizlilik politikası, kişisel verilerinizin nasıl toplandığı, kullanıldığı ve korunduğu hakkında bilgi vermektedir.
+WONDIYO, kullanıcı gizliliğine önem veren bir tahmin paylaşım platformudur. Bu gizlilik politikası, kişisel verilerinizin nasıl toplandığı, kullanıldığı ve korunduğu hakkında bilgi vermektedir.
 
 ### 2. Toplanan Bilgiler
 Platform kullanımınız sırasında aşağıdaki bilgiler toplanmaktadır:
@@ -1590,7 +1638,7 @@ Kişisel bilgileriniz, endüstri standardı güvenlik önlemleriyle korunmaktad�
     terms: {
         title: "Kullanım Koşulları",
         content: `### 1. Hizmetin Kapsamı
-ODDSY, kullanıcıların spor müsabakalarına yönelik tahminlerini paylaşabilecekleri ücretsiz bir platformdur. Platform:
+WONDIYO, kullanıcıların spor müsabakalarına yönelik tahminlerini paylaşabilecekleri ücretsiz bir platformdur. Platform:
 - Bahis hizmeti sunmaz
 - Para kazandırmaz
 - Bahis oynamanıza teşvik etmez
@@ -1616,9 +1664,9 @@ Aşağıdaki faaliyetler kesinlikle yasaktır:
     support: {
         title: "Destek ve Yardım",
         content: `### Nasıl Yardımcı Olabiliriz?
-ODDSY ekibi olarak size en iyi hizmeti sunmak için buradayız. 
+WONDIYO ekibi olarak size en iyi hizmeti sunmak için buradayız. 
 
-**E-posta:** oddsydestek@gmail.com
+**E-posta:** wondiyodestek@gmail.com
 **Yanıt Süresi:** 24-48 saat içinde
 
 ### Sık Sorulan Sorular
@@ -1629,15 +1677,15 @@ C: Ana sayfadan "Kayıt Ol" butonuna tıklayarak e-posta adresinizle kolayca hes
 C: Giriş sayfasında "Şifremi Unuttum" bağlantısını kullanarak şifrenizi sıfırlayabilirsiniz.
 
 **S: Platform ücretli mi?**
-C: Hayır, ODDSY tamamen ücretsiz bir tahmin paylaşım platformudur.`
+C: Hayır, WONDIYO tamamen ücretsiz bir tahmin paylaşım platformudur.`
     },
     responsibility: {
         title: "Sorumluluk Beyanı",
         content: `### ⚠️ ÖNEMLİ UYARILAR
 **🔞 BU PLATFORM 18 YAŞ VE ÜZERİ KİŞİLER İÇİNDİR**
-ODDSY, tamamen bilgi ve eğlence amaçlı bir tahmin paylaşım platformudur. 
+WONDIYO, tamamen bilgi ve eğlence amaçlı bir tahmin paylaşım platformudur. 
 
-### 🚫 ODDSY NE DEĞİLDİR?
+### 🚫 WONDIYO NE DEĞİLDİR?
 - ❌ Bahis sitesi değildir
 - ❌ Kumar platformu değildir  
 - ❌ Para kazandırmaz
@@ -1660,7 +1708,7 @@ Kumar bağımlılığı sadece maddi kayıplara değil, aile içi sorunlara, dep
     },
     about: {
         title: "Hakkında",
-        content: `Oddsy, yapay zeka destekli bir futbol analiz platformudur. Amacımız, geçmiş maç verilerini ve algoritmalarımızı kullanarak kullanıcılara güvenilir maç içgörüleri sunmaktır.
+        content: `Wondiyo, yapay zeka destekli bir futbol analiz platformudur. Amacımız, geçmiş maç verilerini ve algoritmalarımızı kullanarak kullanıcılara güvenilir maç içgörüleri sunmaktır.
 
 Sistemimizde onlarca istatistik ve yapay zeka bazlı analiz algoritmasıyla, her maç için veriye dayalı tahminler oluşturuyoruz. Kullanıcı dostu arayüzümüz ve filtreleme seçeneklerimizle, analizleri kişiselleştirmenizi sağlıyoruz.`
     }
@@ -1682,7 +1730,7 @@ function LegalModal({ type, onClose }) {
         <div className="sidebar-overlay open" onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
             <div className="auth-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                    <h2 style={{ color: 'var(--gold)', fontSize: 18 }}>{data.title}</h2>
+                    <h2 style={{ color: 'var(--gold-text)', fontSize: 18 }}>{data.title}</h2>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}>{Icons.close}</button>
                 </div>
                 <div style={{ fontSize: 14, color: '#aaa', lineHeight: 1.6, whiteSpace: 'pre-line', textAlign: 'left' }}>
@@ -1725,7 +1773,10 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
         <header className="header">
             <div className="header-left">
                 <button className="menu-btn" onClick={onMenuOpen}>{Icons.menu}</button>
-                <div className="logo" onClick={() => onNavigate('home')} style={{ cursor: 'pointer' }}>ODDSY</div>
+                <div className="logo" onClick={() => onNavigate('home')} style={{ cursor: 'pointer' }}>
+                    <span className="logo-won">won</span>
+                    <span className="logo-diyo">diyo</span>
+                </div>
             </div>
             <nav className="header-nav">
                 <div className="nav-row">
@@ -1759,7 +1810,7 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
                             fontWeight: 800
                         }}
                     >
-                        👑 ODDSY VIP
+                        👑 WONDIYO VIP
                     </div>
                 </div>
             </nav>
@@ -1786,7 +1837,7 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
             <div className={`sidebar-overlay ${isOpen ? 'open' : ''}`} onClick={onClose} />
             <div className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <div className="sidebar-logo">ODDSY</div>
+                    <div className="sidebar-logo">WONDIYO</div>
                     <button className="close-btn" onClick={onClose}>{Icons.close}</button>
                 </div>
                 <div className="sidebar-section">
@@ -1929,12 +1980,12 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
         <div className="home-page" style={{ position: 'relative', minHeight: '100vh' }}>
             <div className="hero-section">
                 <div className="hero-content" style={{ paddingTop: '160px' }}>
-                    <h1 className="hero-title">Oddsy ile Akıllı Futbol Tahminleri</h1>
+                    <h1 className="hero-title">Wondiyo ile Akıllı Futbol Tahminleri</h1>
                     <p className="hero-subtitle">Yapay zeka oran analiz sistemiyle güçlendirilmiş, günün öne çıkan karşılaşmalarını sizin için sadeleştiren yeni nesil tahmin platformu.</p>
 <div className="hero-buttons" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {user ? (
                             <div style={{ padding: '8px 20px', background: 'rgba(0,0,0,0.6)', borderRadius: '15px', border: '1px solid var(--gold)', backdropFilter: 'blur(10px)' }}>
-                                <h2 style={{ color: 'var(--gold)', fontWeight: '800', fontSize: '18px', margin: 0 }}>
+                                <h2 style={{ color: 'var(--gold-text)', fontWeight: '800', fontSize: '18px', margin: 0 }}>
                                     Hoş geldin, {userData?.username || user.displayName || 'Kullanıcı'}
                                 </h2>
                             </div>
@@ -1980,7 +2031,7 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
 
             <div className="analysis-section" style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingBottom: '100px' }}>
                 <div style={{ textAlign: 'center' }}>
-                    <h2 className="analysis-title">Oddsy Günün Analizi</h2>
+                    <h2 className="analysis-title">Wondiyo Günün Analizi</h2>
                     <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                         <button className="analysis-btn" onClick={() => onNavigate('category', MENU_ITEMS?.find(m => m.key === 8))}>Özel Analizleri Görüntüle</button>
                         <button className="analysis-btn" onClick={() => onNavigate('performance-summary')} style={{ background: 'linear-gradient(135deg, #4ade80, #10B981)', color: '#000' }}>Tahmin Sonuçları</button>
@@ -1992,18 +2043,18 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
                 <div className="footer-container">
                     <div className="footer-col" style={{ flex: 2 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
-                            <h3 className="footer-logo" onClick={() => onNavigate('home')}>ODDSY</h3>
+                            <h3 className="footer-logo" onClick={() => onNavigate('home')}>WONDIYO</h3>
                             <button className="about-pill-btn" onClick={() => onShowLegal('about')}>Hakkında</button>
                         </div>
                         <p style={{ color: '#aaa', fontSize: 13, marginBottom: 20 }}>
-                            Oddsy plaftormunda yer alan tüm bahis tahmin oranlari yasal mevzuatta olup oranlar yasal platformlardan alınmaktadir(iddaa.com vb.)
+                            Wondiyo plaftormunda yer alan tüm bahis tahmin oranlari yasal mevzuatta olup oranlar yasal platformlardan alınmaktadir(iddaa.com vb.)
                         </p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                             <span className="age-badge-small">18+</span>
                             <span style={{ fontSize: 11, color: '#666' }}>Lütfen sorumlu oynayınız.</span>
                         </div>
-                        <a href="mailto:oddsydestek@gmail.com" className="hero-btn primary" style={{ textDecoration: 'none', display: 'inline-block', fontSize: 12, padding: '10px 20px' }}>
-                            Destek Hattı: oddsydestek@gmail.com
+                        <a href="mailto:wondiyodestek@gmail.com" className="hero-btn primary" style={{ textDecoration: 'none', display: 'inline-block', fontSize: 12, padding: '10px 20px' }}>
+                            Destek Hattı: wondiyodestek@gmail.com
                         </a>
                     </div>
                     <div className="footer-col">
@@ -2022,7 +2073,7 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
                 </div>
                 <div className="footer-divider" />
                 <div className="footer-bottom">
-                    <p className="copyright">© 2025 ODDSY. Tüm hakları saklıdır. oddsydestek@gmail.com</p>
+                    <p className="copyright">© 2025 WONDIYO. Tüm hakları saklıdır. wondiyodestek@gmail.com</p>
                 </div>
             </footer>
 
@@ -2227,7 +2278,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                         }}>
                             📧
                         </div>
-                        <h2 style={{ color: 'var(--gold)', marginBottom: '15px' }}>
+                        <h2 style={{ color: 'var(--gold-text)', marginBottom: '15px' }}>
                             Email Doğrulama Gerekli
                         </h2>
                         <p style={{ color: '#aaa', marginBottom: '20px', lineHeight: '1.6' }}>
@@ -2244,7 +2295,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                             padding: '15px',
                             marginBottom: '20px'
                         }}>
-                            <p style={{ color: 'var(--gold)', fontSize: '13px', margin: 0 }}>
+                            <p style={{ color: 'var(--gold-text)', fontSize: '13px', margin: 0 }}>
                                 ⚠️ Email'i göremiyorsanız spam/gereksiz klasörünü de kontrol edin.
                             </p>
                         </div>
@@ -2298,7 +2349,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                     </form>
                     <p style={{ marginTop: 20, textAlign: 'center', fontSize: 13, color: '#aaa' }}>
                         Şifrenizi hatırladınız mı?
-                        <span style={{ color: 'var(--gold)', cursor: 'pointer', fontWeight: 700, marginLeft: 5 }} onClick={() => setShowForgotPassword(false)}>
+                        <span style={{ color: 'var(--gold-text)', cursor: 'pointer', fontWeight: 700, marginLeft: 5 }} onClick={() => setShowForgotPassword(false)}>
                             Giriş Yap
                         </span>
                     </p>
@@ -2367,14 +2418,14 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 </form>
                 {isLogin && (
                     <p style={{ marginTop: 15, textAlign: 'center', fontSize: 13 }}>
-                        <span style={{ color: 'var(--gold)', cursor: 'pointer', fontWeight: 700 }} onClick={() => setShowForgotPassword(true)}>
+                        <span style={{ color: 'var(--gold-text)', cursor: 'pointer', fontWeight: 700 }} onClick={() => setShowForgotPassword(true)}>
                             Şifremi Unuttum
                         </span>
                     </p>
                 )}
                 <p style={{ marginTop: 20, textAlign: 'center', fontSize: 13, color: '#aaa' }}>
                     {isLogin ? 'Hesabınız yok mu? ' : 'Zaten üye misiniz? '}
-                    <span style={{ color: 'var(--gold)', cursor: 'pointer', fontWeight: 700 }} onClick={() => setMode(isLogin ? 'register' : 'login')}>
+                    <span style={{ color: 'var(--gold-text)', cursor: 'pointer', fontWeight: 700 }} onClick={() => setMode(isLogin ? 'register' : 'login')}>
                         {isLogin ? 'Kaydol' : 'Giriş Yap'}
                     </span>
                 </p>
@@ -2448,7 +2499,7 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
             <button className="back-btn" onClick={() => onBack('home')}>{Icons.back} Geri</button>
             <div className="profile-avatar">{Icons.user}</div>
             <h2 style={{ textAlign: 'center', marginBottom: 10 }}>{userData?.username || 'Kullanıcı'}</h2>
-            <p style={{ textAlign: 'center', color: 'var(--gold)', fontSize: '18px', fontWeight: '800', marginBottom: 30, fontFamily: 'Rajdhani, sans-serif', letterSpacing: '2px' }}>
+            <p style={{ textAlign: 'center', color: 'var(--gold-text)', fontSize: '18px', fontWeight: '800', marginBottom: 30, fontFamily: 'Rajdhani, sans-serif', letterSpacing: '2px' }}>
                 KULLANICI ID: {userData?.displayId || 'Atanıyor...'}
             </p>
 
@@ -2688,7 +2739,7 @@ function AdminDashboard({ onBack, userData }) {
                 Geri
             </button>
 
-            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 30 }}>
+            <h1 style={{ color: 'var(--gold-text)', marginTop: 20, marginBottom: 30 }}>
                 Admin Dashboard
             </h1>
 
@@ -2700,7 +2751,7 @@ function AdminDashboard({ onBack, userData }) {
                 marginBottom: 30
             }}>
                 <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
-                    <div style={{ fontSize: 32, color: 'var(--gold)', fontWeight: 'bold' }}>{users.length}</div>
+                    <div style={{ fontSize: 32, color: 'var(--gold-text)', fontWeight: 'bold' }}>{users.length}</div>
                     <div style={{ fontSize: 12, color: '#aaa', marginTop: 5 }}>Toplam Üye</div>
                 </div>
                 <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, textAlign: 'center' }}>
@@ -2722,7 +2773,7 @@ function AdminDashboard({ onBack, userData }) {
 
             {/* MENÜ ZİYARET SIRALAMALARI */}
             <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, marginBottom: 30 }}>
-                <h2 style={{ color: 'var(--gold)', fontSize: 18, marginBottom: 6 }}>Menü Ziyaret Sıralaması</h2>
+                <h2 style={{ color: 'var(--gold-text)', fontSize: 18, marginBottom: 6 }}>Menü Ziyaret Sıralaması</h2>
                 <p style={{ color: '#666', fontSize: 12, marginBottom: 20, margin: '0 0 20px 0' }}>
                     Kullanıcıların her menüye toplam kaç kez girdiği (canlı)
                 </p>
@@ -2754,7 +2805,7 @@ function AdminDashboard({ onBack, userData }) {
                                         transition: 'width 0.5s ease'
                                     }} />
                                 </div>
-                                <span style={{ fontSize: 13, color: 'var(--gold)', fontWeight: 'bold', width: 50, textAlign: 'right', flexShrink: 0 }}>
+                                <span style={{ fontSize: 13, color: 'var(--gold-text)', fontWeight: 'bold', width: 50, textAlign: 'right', flexShrink: 0 }}>
                                     {item.count.toLocaleString()}
                                 </span>
                             </div>
@@ -2770,7 +2821,7 @@ function AdminDashboard({ onBack, userData }) {
                 borderRadius: 10
             }}>
                 <h2 style={{
-                    color: 'var(--gold)',
+                    color: 'var(--gold-text)',
                     fontSize: 18,
                     marginBottom: 20
                 }}>
@@ -2865,7 +2916,7 @@ function AdminDashboard({ onBack, userData }) {
                                         key={u.id}
                                         style={{ borderBottom: '1px solid #333' }}
                                     >
-                                        <td style={{ padding: 10, fontSize: 13, color: 'var(--gold)', fontWeight: '700' }}>
+                                        <td style={{ padding: 10, fontSize: 13, color: 'var(--gold-text)', fontWeight: '700' }}>
                                             {u.displayId || '-'}
                                         </td>
                                         <td style={{ padding: 10, fontSize: 12 }}>
@@ -2954,12 +3005,12 @@ function AdminDashboard({ onBack, userData }) {
 }
 
 function AbonelikScreen({ onBack, userData, user, onNavigate }) {
-    const TELEGRAM_BOT_USERNAME = 'OddsyAbonelikBot';
+    const TELEGRAM_BOT_USERNAME = 'WondiyoAbonelikBot';
 
     const handleSubscribe = (planName) => {
         const userId = userData?.displayId || '';
         const username = userData?.username || '';
-        const message = encodeURIComponent(`Merhaba! Oddsy ${planName} abonelik almak istiyorum.\n\nKullanıcı Adı: ${username}\nKullanıcı ID: ${userId}`);
+        const message = encodeURIComponent(`Merhaba! Wondiyo ${planName} abonelik almak istiyorum.\n\nKullanıcı Adı: ${username}\nKullanıcı ID: ${userId}`);
         window.open(`https://t.me/${TELEGRAM_BOT_USERNAME}?text=${message}`, '_blank');
     };
 
@@ -3039,7 +3090,7 @@ function AbonelikScreen({ onBack, userData, user, onNavigate }) {
 
             <div style={{ textAlign: 'center', marginTop: 20, marginBottom: 30 }}>
                 <h1 style={{ color: 'var(--text-primary)', fontSize: 28, fontWeight: 900, marginBottom: 10 }}>
-                    Oddsy Abonelik Planları
+                    Wondiyo Abonelik Planları
                 </h1>
                 <p style={{ color: '#aaa', fontSize: 14, lineHeight: 1.6 }}>
                     Gelişmiş analiz özelliklerinden ve yapay zeka tahminlerinden faydalanmak için size uygun planı seçin.
@@ -3220,7 +3271,7 @@ function EditorScreen({ onBack, showAlert, userData }) {
     return (
         <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
             <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
-            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 30 }}>Editör Paneli - Editörün Seçimi</h1>
+            <h1 style={{ color: 'var(--gold-text)', marginTop: 20, marginBottom: 30 }}>Editör Paneli - Editörün Seçimi</h1>
 
             <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
                 <form onSubmit={handleAddMatch}>
@@ -3234,7 +3285,7 @@ function EditorScreen({ onBack, showAlert, userData }) {
                         <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Maç Analizi</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="2" value={matchData.analysis} onChange={e => setMatchData({ ...matchData, analysis: e.target.value })} placeholder="Bu maç için analizini buraya yaz..." /></div>
                         <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                             <input type="checkbox" id="premium-check-editor" checked={matchData.isPremium} onChange={e => setMatchData({ ...matchData, isPremium: e.target.checked })} />
-                            <label htmlFor="premium-check-editor" style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 'bold' }}>⭐ Premium (Özel Çerçeveli) Olarak İşaretle</label>
+                            <label htmlFor="premium-check-editor" style={{ color: 'var(--gold-text)', fontSize: 12, fontWeight: 'bold' }}>⭐ Premium (Özel Çerçeveli) Olarak İşaretle</label>
                         </div>
                     </div>
                     <button className="submit-btn" disabled={loading} style={{ marginTop: 15, padding: 10, fontSize: 13 }}>Kaydet</button>
@@ -3345,7 +3396,7 @@ function PerformanceSummaryScreen({ onBack }) {
             ) : (
                 <div style={{ display: 'grid', gap: 16 }}>
                     {predictionSummary.length > 0 && (
-                        <h3 style={{ color: 'var(--gold)', margin: 0, fontSize: 16, letterSpacing: 0.5 }}>Menü Başarı Kartları</h3>
+                        <h3 style={{ color: 'var(--gold-text)', margin: 0, fontSize: 16, letterSpacing: 0.5 }}>Menü Başarı Kartları</h3>
                     )}
                     {predictionSummary.map(item => (
                         <div key={`pred-${item.key}`} className="prediction-card" style={{ border: '2px solid #FDB913', borderRadius: 16, padding: 16, transition: 'all 0.3s ease', cursor: 'pointer', ':hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 25px rgba(253,185,19,0.35)', borderColor: '#ffd700' }, background: 'linear-gradient(145deg, rgba(30,30,30,0.9), rgba(20,20,20,0.95))', boxShadow: '0 4px 15px rgba(253,185,19,0.15)' }}>
@@ -3379,7 +3430,7 @@ function PerformanceSummaryScreen({ onBack }) {
                     ))}
 
                     {couponSummary.length > 0 && (
-                        <h3 style={{ color: 'var(--gold)', margin: '6px 0 0', fontSize: 16, letterSpacing: 0.5 }}>Kupon Başarı Kartları</h3>
+                        <h3 style={{ color: 'var(--gold-text)', margin: '6px 0 0', fontSize: 16, letterSpacing: 0.5 }}>Kupon Başarı Kartları</h3>
                     )}
                     {couponSummary.map((item, idx) => (
                         <div key={`coupon-${idx}`} className="prediction-card" style={{ border: '2px solid #FDB913', borderRadius: 16, padding: 16, transition: 'all 0.3s ease', cursor: 'pointer', background: 'linear-gradient(145deg, rgba(30,30,30,0.9), rgba(20,20,20,0.95))', boxShadow: '0 4px 15px rgba(253,185,19,0.15)' }}>
@@ -3408,7 +3459,7 @@ function PerformanceSummaryScreen({ onBack }) {
                                 <div style={{ background: 'rgba(255,255,255,0.04)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: '#aaa', fontSize: 11 }}>Toplam</div><div style={{ color: '#fff', fontWeight: 800 }}>{item.total}</div></div>
                                 <div style={{ background: 'rgba(74,222,128,0.08)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: '#86efac', fontSize: 11 }}>Kazandı</div><div style={{ color: '#4ade80', fontWeight: 800 }}>{item.won}</div></div>
                                 <div style={{ background: 'rgba(248,113,113,0.08)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: '#fca5a5', fontSize: 11 }}>Kaybetti</div><div style={{ color: '#f87171', fontWeight: 800 }}>{item.lost}</div></div>
-                                {item.avgOdds && <div style={{ background: 'rgba(253,185,19,0.08)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: 'var(--gold)', fontSize: 11 }}>Ort. Oran</div><div style={{ color: 'var(--gold)', fontWeight: 800 }}>{item.avgOdds}</div></div>}
+                                {item.avgOdds && <div style={{ background: 'rgba(253,185,19,0.08)', padding: 8, borderRadius: 10, textAlign: 'center' }}><div style={{ color: 'var(--gold-text)', fontSize: 11 }}>Ort. Oran</div><div style={{ color: 'var(--gold-text)', fontWeight: 800 }}>{item.avgOdds}</div></div>}
                             </div>
                         </div>
                     ))}
@@ -3484,7 +3535,7 @@ function ModeratorScreen({ onBack, showAlert }) {
     return (
         <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
             <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
-            <h1 style={{ color: 'var(--gold)', marginTop: 20, marginBottom: 20 }}>Moderatör Paneli - {categoryTitle}</h1>
+            <h1 style={{ color: 'var(--gold-text)', marginTop: 20, marginBottom: 20 }}>Moderatör Paneli - {categoryTitle}</h1>
 
             <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
                 <button className={`hero-btn secondary ${selectedCategory === 7 ? 'active' : ''}`} onClick={() => { setSelectedCategory(7); setMatchData(prev => ({ ...prev, categoryKey: 7 })); }} style={{ fontSize: 12, padding: '8px 12px' }}>İY/MS</button>
@@ -3507,7 +3558,7 @@ function ModeratorScreen({ onBack, showAlert }) {
             </div>
 
             <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
-                <h3 style={{ color: 'var(--gold)', marginBottom: 12 }}>{categoryTitle} Liste</h3>
+                <h3 style={{ color: 'var(--gold-text)', marginBottom: 12 }}>{categoryTitle} Liste</h3>
                 {listLoading ? <div className="loading"><div className="spinner" /></div> : (
                     <div style={{ display: 'grid', gap: 10 }}>
                         {matches.map(m => (
@@ -3718,7 +3769,7 @@ function AdminScreen({ onBack, showAlert, userData }) {
             <div className="admin-content-grid" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20 }}>
                 {/* Sol Taraf - Input Listesi */}
                 <div style={{ background: 'var(--bg-card)', padding: 15, borderRadius: 10, height: 'fit-content' }}>
-                    <h3 style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 15, textAlign: 'center' }}>INPUT</h3>
+                    <h3 style={{ color: 'var(--gold-text)', fontSize: 14, marginBottom: 15, textAlign: 'center' }}>INPUT</h3>
                     <div className="admin-sidebar-buttons" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <button className={`hero-btn secondary ${view === 'addMatch' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addMatch')}>Tahmin Ekle</button>
                         <button className={`hero-btn secondary ${view === 'addCoupon' ? 'active' : ''}`} style={{ fontSize: '11px', padding: '8px 12px', width: '100%' }} onClick={() => setView('addCoupon')}>Kupon Ekle</button>
@@ -3753,7 +3804,7 @@ function AdminScreen({ onBack, showAlert, userData }) {
                                 <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 10 }}><label className="form-label" style={{ fontSize: 10 }}>Maç Analizi</label><textarea className="form-input" style={{ padding: 8, fontSize: 12 }} rows="2" value={matchData.analysis} onChange={e => setMatchData({ ...matchData, analysis: e.target.value })} placeholder="Bu maç için analizini buraya yaz..." /></div>
                                 <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                                     <input type="checkbox" id="premium-check-admin" checked={matchData.isPremium} onChange={e => setMatchData({ ...matchData, isPremium: e.target.checked })} />
-                                    <label htmlFor="premium-check-admin" style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 'bold' }}>⭐ Premium Tahmin Olarak İşaretle</label>
+                                    <label htmlFor="premium-check-admin" style={{ color: 'var(--gold-text)', fontSize: 12, fontWeight: 'bold' }}>⭐ Premium Tahmin Olarak İşaretle</label>
                                 </div>
 
                                 {view === 'addCard' && (
@@ -3813,12 +3864,12 @@ function AdminScreen({ onBack, showAlert, userData }) {
 
                     {view === 'editCoupon' && !editingCouponId && (
                         <div>
-                            <h3 style={{ color: 'var(--gold)', fontSize: 14, marginBottom: 12 }}>✏️ Düzenlenecek Kuponu Seç</h3>
+                            <h3 style={{ color: 'var(--gold-text)', fontSize: 14, marginBottom: 12 }}>✏️ Düzenlenecek Kuponu Seç</h3>
                             {adminCoupons.length === 0 && <div style={{ color: '#aaa', fontSize: 13 }}>Henüz kupon yok.</div>}
                             {adminCoupons.map(c => (
                                 <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#2a2a2a', borderRadius: 8, padding: '10px 12px', marginBottom: 8, border: '1px solid #444' }}>
                                     <div>
-                                        <div style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 'bold' }}>{c.type}</div>
+                                        <div style={{ color: 'var(--gold-text)', fontSize: 12, fontWeight: 'bold' }}>{c.type}</div>
                                         <div style={{ color: '#aaa', fontSize: 11 }}>{c.matches?.length || 0} maç • Oran: {c.totalOdds || '-'}</div>
                                     </div>
                                     <button className="hero-btn secondary" style={{ fontSize: 11, padding: '6px 12px' }} onClick={() => handleStartEditCoupon(c)}>Düzenle</button>
@@ -3831,7 +3882,7 @@ function AdminScreen({ onBack, showAlert, userData }) {
                         <form onSubmit={handleSaveEditCoupon}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 15 }}>
                                 <button type="button" className="hero-btn secondary" style={{ fontSize: 11, padding: '6px 12px' }} onClick={() => { setEditingCouponId(null); setEditCouponData(null); }}>← Geri</button>
-                                <h3 style={{ color: 'var(--gold)', fontSize: 13, margin: 0 }}>Kuponu Düzenle</h3>
+                                <h3 style={{ color: 'var(--gold-text)', fontSize: 13, margin: 0 }}>Kuponu Düzenle</h3>
                             </div>
                             <div className="form-group" style={{ marginBottom: 15 }}>
                                 <label className="form-label" style={{ fontSize: 10 }}>Kupon Türü</label>
@@ -4313,7 +4364,7 @@ function PredictionCard({ item, userData }) {
                                         </div>
                                         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
                                             <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', fontWeight: '700' }}>ORAN</div>
-                                            <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--gold)' }}>{oddsVal}</div>
+                                            <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--gold-text)' }}>{oddsVal}</div>
                                         </div>
                                     </div>
                                 );
@@ -4328,7 +4379,7 @@ function PredictionCard({ item, userData }) {
                             </div>
                             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
                                 <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px', textTransform: 'uppercase', fontWeight: '700' }}>ORAN</div>
-                                <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--gold)' }}>{item.odds || '-'}</div>
+                                <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--gold-text)' }}>{item.odds || '-'}</div>
                             </div>
                         </div>
                     )}
@@ -4491,7 +4542,15 @@ export default function App() {
 
     useEffect(() => { syncSeoTags(route); }, [route]);
     const [legalType, setLegalType] = useState(null);
-    const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+    const [theme, setTheme] = useState(() => {
+        // Wondiyo gecisi: eski Wondiyo koyu tema tercihi bir kez sifirlanir
+        if (localStorage.getItem('themeMigratedWondiyo') !== '1') {
+            localStorage.setItem('themeMigratedWondiyo', '1');
+            localStorage.setItem('theme', 'light');
+            return 'light';
+        }
+        return localStorage.getItem('theme') || 'light';
+    });
     const [appBannerDismissed, setAppBannerDismissed] = useState(() => sessionStorage.getItem('appBannerDismissed') === '1');
 
     const toggleTheme = () => {
@@ -4722,7 +4781,7 @@ export default function App() {
         };
     }, []);
 
-    if (loading && route !== 'auth' && route !== 'auth-action') return <div className="auth-loading-screen"><div className="spinner" /><h3>Oddsy Yükleniyor...</h3></div>;
+    if (loading && route !== 'auth' && route !== 'auth-action') return <div className="auth-loading-screen"><div className="spinner" /><h3>Wondiyo Yükleniyor...</h3></div>;
 
     const render = () => {
         // Giriş gerektiren sayfalar - kullanıcı giriş yapmamışsa auth ekranını göster
@@ -4749,11 +4808,11 @@ export default function App() {
                         const [shareLoading, setShareLoading] = useState(null); // option id
 
                         const SHARE_OPTIONS = [
-                            { id: 'gunun-kuponu',      label: 'Günün Kuponları',        metin: "Oddsy'de Günün Banko Kuponu yayında!\n\noddsy.com.tr", imageUrl: null },
-                            { id: 'gunun-tercihleri',  label: 'Günün Tercihleri',       metin: "Oddsy'de Günün Tercihleri yayında!\n\noddsy.com.tr",   imageUrl: null },
-                            { id: 'kupon-kazandi',     label: 'Günün Kuponu Kazandı',   metin: "Oddsy Günün Kuponu KAZANDI!\n\noddsy.com.tr",           imageUrl: null },
-                            { id: 'editor-tercihleri', label: 'Editör Tercihleri',      metin: "Oddsy'de Editör Tercihleri yayında!\n\noddsy.com.tr",   imageUrl: null },
-                            { id: 'editor-kazandi',    label: "Editörün tercihi kazandı", metin: "Oddsy Editörün Tercihi KAZANDI!\n\noddsy.com.tr",     imageUrl: null },
+                            { id: 'gunun-kuponu',      label: 'Günün Kuponları',        metin: "Wondiyo'de Günün Banko Kuponu yayında!\n\nwondiyo.com.tr", imageUrl: null },
+                            { id: 'gunun-tercihleri',  label: 'Günün Tercihleri',       metin: "Wondiyo'de Günün Tercihleri yayında!\n\nwondiyo.com.tr",   imageUrl: null },
+                            { id: 'kupon-kazandi',     label: 'Günün Kuponu Kazandı',   metin: "Wondiyo Günün Kuponu KAZANDI!\n\nwondiyo.com.tr",           imageUrl: null },
+                            { id: 'editor-tercihleri', label: 'Editör Tercihleri',      metin: "Wondiyo'de Editör Tercihleri yayında!\n\nwondiyo.com.tr",   imageUrl: null },
+                            { id: 'editor-kazandi',    label: "Editörün tercihi kazandı", metin: "Wondiyo Editörün Tercihi KAZANDI!\n\nwondiyo.com.tr",     imageUrl: null },
                         ];
 
                         const handleShare = async (option) => {
@@ -4828,7 +4887,7 @@ export default function App() {
                                     {adminView === 'content' && <AdminScreen onBack={() => navigate('home')} showAlert={showAlert} userData={userData} />}
                                     {adminView === 'paylas' && (
                                         <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                            <h3 style={{ color: 'var(--gold)', marginBottom: 8 }}>📢 X & Telegram'da Paylaş</h3>
+                                            <h3 style={{ color: 'var(--gold-text)', marginBottom: 8 }}>📢 X & Telegram'da Paylaş</h3>
                                             <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 4 }}>Seçtiğin içerik ~30-60 saniye içinde X ve Telegram'da yayınlanır.</p>
                                             {SHARE_OPTIONS.map(opt => (
                                                 <button
@@ -4856,7 +4915,7 @@ export default function App() {
                                     )}
                                     {adminView === 'bildirim' && (
                                         <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                                            <h3 style={{ color: 'var(--gold)', marginBottom: 8 }}>🔔 Push Bildirim Gönder</h3>
+                                            <h3 style={{ color: 'var(--gold-text)', marginBottom: 8 }}>🔔 Push Bildirim Gönder</h3>
                                             <input
                                                 placeholder="Başlık"
                                                 value={notifTitle}
@@ -4989,7 +5048,7 @@ case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')}
                         <div className="maintenance-divider" />
                         <p>Yeniliklerle dolu yeni versiyonumuz için<br />son hazırlıkları yapıyoruz.</p>
                         <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', marginTop: 6 }}>Çok yakında geri döneceğiz.</p>
-                        <p className="maintenance-sub">oddsy.com.tr</p>
+                        <p className="maintenance-sub">wondiyo.com.tr</p>
                     </div>
                 )}
                 {alert && <Alert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
@@ -5001,8 +5060,8 @@ case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')}
                         justifyContent: 'space-between',
                         gap: '8px',
                         padding: '8px 12px',
-                        background: 'linear-gradient(90deg, #1a1a1a, #2a2a2a)',
-                        borderBottom: '1px solid rgba(253,185,19,0.3)',
+                        background: 'linear-gradient(90deg, #1E8A45, #146B34)',
+                        borderBottom: '1px solid rgba(200,217,46,0.4)',
                         position: 'fixed',
                         top: 0,
                         left: 0,
@@ -5010,16 +5069,16 @@ case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')}
                         zIndex: 9999,
                     }} className="mobile-app-banner">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                            <img src="/oddsylogo.png" alt="Oddsy" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
+                            <span style={{ background: '#fff', color: '#1E8A45', fontWeight: 900, fontSize: '12px', padding: '4px 7px', borderRadius: '5px', lineHeight: 1 }}>won</span>
                             <div>
-                                <div style={{ fontSize: '11px', fontWeight: '800', color: '#fff', lineHeight: 1.2 }}>Oddsy Uygulaması</div>
-                                <div style={{ fontSize: '10px', color: 'rgba(253,185,19,0.8)', lineHeight: 1.2 }}>Daha iyi deneyim için indir</div>
+                                <div style={{ fontSize: '11px', fontWeight: '800', color: '#fff', lineHeight: 1.2 }}>Wondiyo Uygulaması</div>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.2 }}>Daha iyi deneyim için indir</div>
                             </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <a
                                 href="https://github.com/camelbox27-lab/oddsy-web/releases/download/v1.0/Oddsy.apk"
-                                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#FDB913', borderRadius: '8px', padding: '5px 10px', textDecoration: 'none' }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#C8D92E', borderRadius: '8px', padding: '5px 10px', textDecoration: 'none' }}
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                     <path d="M3.18 23a1 1 0 0 1-.68-1.71L15.29 8.5l-2.83-2.83L3.5 14.63a1 1 0 1 1-1.41-1.41L12.46 2.84a1 1 0 0 1 1.41 0l4.24 4.24a1 1 0 0 1 0 1.41L3.86 22.74A1 1 0 0 1 3.18 23z" fill="#333"/>

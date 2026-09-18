@@ -1,4 +1,4 @@
-# ODDSY - Futbol Tahmin Platformu
+# WONDIYO - Futbol Tahmin Platformu
 
 Modern, güvenli ve performanslı futbol tahmin platformu.
 
@@ -86,4 +86,4 @@ src/
 
 ## 📝 Lisans
 
-© 2025 ODDSY. Tüm hakları saklıdır.
+© 2025 WONDIYO. Tüm hakları saklıdır.

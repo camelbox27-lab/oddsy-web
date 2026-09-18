@@ -23,14 +23,14 @@ const FAQItem = ({ question, answer }) => {
 
 const FAQ = ({ onClose }) => {
     const questions = [
-        { q: "Oddsy nedir?", a: "Oddsy, yapay zeka ve istatistiksel verileri kullanarak futbol maçları için analizler sunan profesyonel bir platformdur." },
-        { q: "Uygulama ücretli mi?", a: "Oddsy tamamen ücretsizdir. Tüm analizlerimizden ücretsiz olarak faydalanabilirsiniz." },
+        { q: "Wondiyo nedir?", a: "Wondiyo, yapay zeka ve istatistiksel verileri kullanarak futbol maçları için analizler sunan profesyonel bir platformdur." },
+        { q: "Uygulama ücretli mi?", a: "Wondiyo tamamen ücretsizdir. Tüm analizlerimizden ücretsiz olarak faydalanabilirsiniz." },
         { q: "Tahminler ne kadar güvenilir?", a: "Tahminlerimiz gelişmiş AI modelleri ve geçmiş verilerle oluşturulur ancak %100 kesinlik garantisi vermez." },
-        { q: "Bahis oynayabilir miyim?", a: "Hayır. Oddsy sadece analiz ve tahmin platformudur. Üzerinden bahis oynatılmaz." },
+        { q: "Bahis oynayabilir miyim?", a: "Hayır. Wondiyo sadece analiz ve tahmin platformudur. Üzerinden bahis oynatılmaz." },
         { q: "Hangi ligleri kapsıyor?", a: "Premier Lig, La Liga, Bundesliga, Serie A, Süper Lig ve daha birçok popüler ligi kapsıyoruz." },
         { q: "Verilerim güvende mi?", a: "Evet, kişisel verileriniz KVKK standartlarına uygun olarak korunmaktadır." },
         { q: "Hesabımı nasıl silebilirim?", a: "Hesap ayarları bölümünden veya destek ekibimizle iletişime geçerek hesabınızı silebilirsiniz." },
-        { q: "İletişim kanalları nelerdir?", a: "Bize her zaman Oddsydestek@gmail.com adresinden ulaşabilirsiniz." }
+        { q: "İletişim kanalları nelerdir?", a: "Bize her zaman wondiyodestek@gmail.com adresinden ulaşabilirsiniz." }
     ];
 
     return (
