@@ -16,3 +16,39 @@
 *.xlsx
 .vercel
 .env*.local
+
+# --- Mobil / bot (web projesi icin gerekli degil) ---
+/android
+/.expo
+expo-env.d.ts
+/bot
+/oddsy-data
+/web-version
+/YEDEK_EXCEL
+
+# --- Editor / arac ayarlari ---
+/.claude
+/.vercel
+
+# --- Log dosyalari ---
+*.log
+vite-dev.out.log
+vite-dev.err.log
+vercel-dev.out.log
+vercel-dev.err.log
+ngrok.log
+
+# --- Yanlislikla olusmus dosyalar ---
+nul
+$null
+debug-filter.mjs
+_verify.mjs
+_shot.mjs
+
+# --- Gizli anahtarlar (ek guvence) ---
+**/serviceAccountKey.json
+**/google-services.json
+.env*
+!.env.example
+ersAyberkEyl*
+et --hard*
