@@ -1,6 +1,6 @@
 {
-  "name": "oddsy-functions",
-  "description": "Oddsy Firebase Cloud Functions",
+  "name": "wondiyo-functions",
+  "description": "Wondiyo Firebase Cloud Functions",
   "scripts": {
     "serve": "firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"

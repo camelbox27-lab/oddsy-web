@@ -14,7 +14,7 @@ app = FastAPI()
 # CORS: Production domainler ile sınırlandır
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",
-    "https://oddsy.vercel.app,https://oddsy-web.vercel.app,https://www.oddsy.com,https://oddsy.com"
+    "https://wondiyo.com.tr,https://www.wondiyo.com.tr"
 ).split(",")
 
 app.add_middleware(
