@@ -2253,7 +2253,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
         setLoading(true);
         try {
             const resolvedEmail = await resolveEmail(loginIdentifier);
-            await sendPasswordResetEmail(auth, resolvedEmail);
+            await sendPasswordResetEmail(auth, resolvedEmail, AUTH_ACTION_SETTINGS);
             showAlert('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success');
             setShowForgotPassword(false);
         } catch (err) {
@@ -2628,7 +2628,7 @@ function AdminDashboard({ onBack, userData }) {
         if (!email) return alert('Bu kullanıcının e-posta adresi yok!');
         if (!confirm(`${email} adresine şifre sıfırlama maili gönderilsin mi?`)) return;
         try {
-            await sendPasswordResetEmail(auth, email);
+            await sendPasswordResetEmail(auth, email, AUTH_ACTION_SETTINGS);
             alert(`Şifre sıfırlama maili gönderildi: ${email}`);
         } catch (err) {
             alert('Hata: ' + err.message);
