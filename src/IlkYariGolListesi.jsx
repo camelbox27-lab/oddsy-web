@@ -111,8 +111,8 @@ function IlkYariGolListesi({ userData }) {
                 <div style={{
                     width: '32px',
                     height: '32px',
-                    border: '3px solid #333',
-                    borderTopColor: '#10B981',
+                    border: '3px solid var(--border)',
+                    borderTopColor: 'var(--primary-green)',
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
                 }}></div>
@@ -125,7 +125,7 @@ function IlkYariGolListesi({ userData }) {
             <h2 style={{
                 fontSize: '20px',
                 fontWeight: '900',
-                color: '#10B981',
+                color: 'var(--primary-green)',
                 marginBottom: '16px',
                 display: 'flex',
                 alignItems: 'center',
@@ -179,7 +179,7 @@ function IlkYariGolListesi({ userData }) {
                                     <div style={{
                                         fontSize: '11px',
                                         fontWeight: '700',
-                                        color: 'rgba(253, 185, 19, 0.6)',
+                                        color: 'var(--gold-text)',
                                         textTransform: 'uppercase',
                                         letterSpacing: '1px',
                                         marginBottom: '16px',
@@ -198,16 +198,16 @@ function IlkYariGolListesi({ userData }) {
                                 }}>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                                         <img src={getTeamLogo(homeTeam)} alt={homeTeam} onError={handleLogoError} style={{ width: '70px', height: '70px', objectFit: 'contain' }} />
-                                        <span style={{ fontSize: '16px', fontWeight: '700', color: '#fff', textAlign: 'center' }}>{homeTeam}</span>
+                                        <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center' }}>{homeTeam}</span>
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
-                                        <span style={{ fontSize: '24px', fontWeight: '900', color: '#FDB913', fontStyle: 'italic' }}>VS</span>
+                                        <span style={{ fontSize: '24px', fontWeight: '900', color: 'var(--primary-green)', fontStyle: 'italic' }}>VS</span>
                                     </div>
 
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                                         <img src={getTeamLogo(awayTeam)} alt={awayTeam} onError={handleLogoError} style={{ width: '70px', height: '70px', objectFit: 'contain' }} />
-                                        <span style={{ fontSize: '16px', fontWeight: '700', color: '#fff', textAlign: 'center' }}>{awayTeam}</span>
+                                        <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center' }}>{awayTeam}</span>
                                     </div>
                                 </div>
 
@@ -215,10 +215,10 @@ function IlkYariGolListesi({ userData }) {
 
                                 {/* Admin: Kazandı/Kaybetti/Sil */}
                                 {isAdmin && (
-                                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px', padding: '10px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px', padding: '10px', background: 'var(--bg-sunken)', borderRadius: '10px' }}>
                                         <button className="admin-btn delete" onClick={async () => { if (!window.confirm('Bu tahmini silmek istediğinize emin misiniz?')) return; try { await hideJsonItem(match); setHiddenKeys(prev => new Set([...prev, buildMatchKey(match)])); if (match.source === 'admin') { await setDoc(doc(db, 'predictions', match.id), { hiddenFromDaily: true }, { merge: true }); setFirestoreMatches(prev => prev.filter(m => m.id !== match.id)); } window.alert('Tahmin başarıyla silindi.'); } catch (err) { console.error('Silme hatası:', err); window.alert('Silme hatası: ' + err.message); } }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>SİL</button>
                                         {match.analysis && (
-                                            <button className="admin-btn" onClick={() => setShowAnalysis(showAnalysis === match.id ? null : match.id)} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px', background: showAnalysis === match.id ? '#FDB913' : '#6366f1', color: '#fff' }}>YORUM {showAnalysis === match.id ? 'KAPAT' : 'GÖSTER'}</button>
+                                            <button className="admin-btn" onClick={() => setShowAnalysis(showAnalysis === match.id ? null : match.id)} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px', background: showAnalysis === match.id ? 'var(--gold-dark)' : '#6366f1', color: '#fff' }}>YORUM {showAnalysis === match.id ? 'KAPAT' : 'GÖSTER'}</button>
                                         )}
                                         <button className="admin-btn won" onClick={async () => { if (match.source === 'admin') await setDoc(doc(db, 'predictions', match.id), { status: 'won' }, { merge: true }); else await upsertFromJsonToPredictions(match, 'won'); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAZANDI</button>
                                         <button className="admin-btn lost" onClick={async () => { if (match.source === 'admin') await setDoc(doc(db, 'predictions', match.id), { status: 'lost' }, { merge: true }); else await upsertFromJsonToPredictions(match, 'lost'); }} style={{ flex: 1, padding: '10px', fontSize: '12px', fontWeight: '700', borderRadius: '8px' }}>KAYBETTİ</button>
@@ -226,14 +226,14 @@ function IlkYariGolListesi({ userData }) {
                                 )}
                                 {/* Show analysis for non-admin users */}
                                 {!isAdmin && match.analysis && (
-                                    <button onClick={() => setShowAnalysis(showAnalysis === match.id ? null : match.id)} style={{ marginTop: '12px', padding: '10px', width: '100%', background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.5)', borderRadius: '8px', color: '#a5b4fc', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>
+                                    <button onClick={() => setShowAnalysis(showAnalysis === match.id ? null : match.id)} style={{ marginTop: '12px', padding: '10px', width: '100%', background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.5)', borderRadius: '8px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>
                                         {showAnalysis === match.id ? 'Yorumu Kapat' : 'Maç Yorumunu Görüntüle'}
                                     </button>
                                 )}
                                 {/* Analysis Display */}
                                 {showAnalysis === match.id && match.analysis && (
                                     <div style={{ marginTop: '12px', padding: '15px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '10px' }}>
-                                        <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#e0e0e0', margin: 0 }}>{match.analysis}</p>
+                                        <p style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-primary)', margin: 0 }}>{match.analysis}</p>
                                     </div>
                                 )}
                             </div>
@@ -241,7 +241,7 @@ function IlkYariGolListesi({ userData }) {
                     })
                 ) : (
                     <div style={{ padding: '40px', textAlign: 'center' }}>
-                        <p style={{ color: 'rgba(253, 185, 19, 0.6)', fontWeight: '700' }}>Henüz ilk yarı gol maçı bulunmuyor.</p>
+                        <p style={{ color: 'var(--gold-text)', fontWeight: '700' }}>Henüz ilk yarı gol maçı bulunmuyor.</p>
                     </div>
                 )}
             </div>
