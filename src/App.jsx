@@ -621,45 +621,170 @@ html, body, #root, .app {
 .bottom-nav-center-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--primary-green-dark); }
 
 /* Hero Section */
-/* Wondiyo hero: marka gradienti + hafif saha cizgisi dokusu */
+/* Wondiyo hero: projektorle aydinlatilmis perspektifli stadyum sahnesi */
 .hero-section {
   position: relative;
   height: 72vh;
   min-height: 520px;
-  background:
-    radial-gradient(ellipse 80% 55% at 50% 42%, rgba(200, 217, 46, 0.22) 0%, transparent 70%),
-    linear-gradient(165deg, #2FA857 0%, #1E8A45 45%, #146B34 100%);
+  background: linear-gradient(
+    180deg,
+    #0A2E1C 0%,
+    #0F4527 20%,
+    #1C7B42 31%,
+    var(--primary-green-light) 48%,
+    var(--primary-green) 76%,
+    #0F5228 100%
+  );
   display: flex;
   align-items: flex-end;
   justify-content: center;
   padding-bottom: 20px;
   overflow: hidden;
 }
-/* Saha serit dokusu */
-.hero-section::before {
-  content: '';
+/* Sahne katmanlarinin kapsayicisi */
+.hero-pitch {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.035) 0px,
-    rgba(255, 255, 255, 0.035) 48px,
-    transparent 48px,
-    transparent 96px
-  );
-  z-index: 1;
-}
-/* Orta saha dairesi */
-.hero-section::after {
-  content: '';
-  position: absolute;
-  top: 38%; left: 50%;
-  width: 300px; height: 300px;
-  transform: translate(-50%, -50%);
-  border: 2px solid rgba(255, 255, 255, 0.10);
-  border-radius: 50%;
+  inset: 0;
+  overflow: hidden;
   z-index: 1;
   pointer-events: none;
+}
+/* Stadyum kasesi: ufuktaki tribun silueti */
+.hero-bowl {
+  position: absolute;
+  left: -12%; right: -12%;
+  top: 15%; height: 21%;
+  border-radius: 50% 50% 0 0 / 70% 70% 0 0;
+  background:
+    radial-gradient(ellipse 60% 70% at 50% 118%, rgba(200, 217, 46, 0.12) 0%, transparent 62%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 6px),
+    linear-gradient(180deg, #04150C 0%, #061E11 55%, #0A2E1A 100%);
+  box-shadow: inset 0 -14px 26px rgba(0, 0, 0, 0.5);
+}
+/* Tribun isik sirasi */
+.hero-bowl::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 16%;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, rgba(226, 245, 205, 0.75) 0 2px, transparent 2px 13px);
+  opacity: 0.5;
+  filter: blur(0.4px);
+}
+/* Tribun cati kenari */
+.hero-bowl::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 4px;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(90deg, transparent, rgba(200, 217, 46, 0.35), transparent);
+}
+/* Projektor direkleri */
+.hero-flood {
+  position: absolute;
+  top: 17%;
+  width: 44%;
+  height: 44%;
+  animation: heroFlood 9s ease-in-out infinite;
+}
+.hero-flood.left { left: 2%; }
+.hero-flood.right { right: 2%; animation-delay: -4.5s; }
+.hero-flood-lamp {
+  position: absolute;
+  top: 0; left: 50%;
+  width: 10px; height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: #F6FFE4;
+  box-shadow: 0 0 14px 6px rgba(234, 255, 200, 0.75), 0 0 44px 18px rgba(200, 217, 46, 0.3);
+}
+.hero-flood-beam {
+  position: absolute;
+  top: 4px; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, rgba(246, 255, 228, 0.2) 0%, rgba(200, 217, 46, 0.07) 42%, transparent 86%);
+  clip-path: polygon(47% 0%, 53% 0%, 100% 100%, 0% 100%);
+  filter: blur(10px);
+}
+.hero-flood.left .hero-flood-beam { transform: skewX(9deg); }
+.hero-flood.right .hero-flood-beam { transform: skewX(-9deg); }
+@keyframes heroFlood {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+/* Ufuk cizgisi parlamasi */
+.hero-horizon {
+  position: absolute;
+  left: 0; right: 0;
+  top: 34%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(200, 217, 46, 0.4) 28%, rgba(240, 255, 220, 0.65) 50%, rgba(200, 217, 46, 0.4) 72%, transparent 100%);
+  filter: blur(0.5px);
+  box-shadow: 0 0 26px 4px rgba(200, 217, 46, 0.2);
+}
+/* Perspektifli saha zemini */
+.hero-pitch-plane {
+  position: absolute;
+  top: 34%; left: 50%;
+  width: 300%; height: 92%;
+  margin-left: -150%;
+  transform: perspective(1000px) rotateX(68deg);
+  transform-origin: 50% 0%;
+  background:
+    radial-gradient(ellipse 22% 40% at 50% 26%, rgba(255, 255, 255, 0.10) 0%, transparent 70%),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0 52px, rgba(3, 32, 17, 0.08) 52px 104px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 5%, #000 76%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 5%, #000 76%, transparent 100%);
+}
+/* Saha cizgileri */
+.pitch-line { position: absolute; background: rgba(255, 255, 255, 0.17); }
+.pitch-line.touch-left { left: 37%; top: 2%; bottom: 0; width: 3px; }
+.pitch-line.touch-right { left: 63%; top: 2%; bottom: 0; width: 3px; }
+.pitch-line.goal-far { left: 37%; right: 37%; top: 2%; height: 3px; }
+.pitch-line.halfway { left: 37%; right: 37%; top: 26%; height: 3px; }
+.pitch-circle {
+  position: absolute;
+  left: 50%; top: 26%;
+  width: 5.2%; height: 26%;
+  transform: translate(-50%, -50%);
+  border: 3px solid rgba(255, 255, 255, 0.17);
+  border-radius: 50%;
+}
+.pitch-spot {
+  position: absolute;
+  left: 50%; top: 26%;
+  width: 0.4%; height: 2%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+}
+.pitch-box { position: absolute; border: 3px solid rgba(255, 255, 255, 0.17); }
+.pitch-box.far { left: 44.5%; right: 44.5%; top: 2%; height: 8%; border-top: none; }
+.pitch-box.near { left: 40%; right: 40%; bottom: -10%; height: 36%; border-bottom: none; }
+/* Cime islenmis marka damgasi */
+.pitch-brand {
+  position: absolute;
+  left: 50%; top: 44%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-logo);
+  font-weight: 900;
+  font-size: 40px;
+  letter-spacing: 18px;
+  color: rgba(255, 255, 255, 0.075);
+  white-space: nowrap;
+}
+/* Kenar karartmasi */
+.hero-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 62% at 50% 58%, transparent 38%, rgba(3, 24, 13, 0.5) 100%);
+}
+@media (max-width: 768px) {
+  .pitch-brand { font-size: 20px; letter-spacing: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-flood { animation: none; }
 }
 .hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; text-align: center; text-shadow: 0 2px 15px rgba(22, 38, 27, 0.45); }
 .hero-title { font-size: 36px; font-weight: 900; color: #FFFFFF; margin-bottom: 15px; line-height: 1.1; letter-spacing: -1px; }
@@ -1979,6 +2104,24 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
     return (
         <div className="home-page" style={{ position: 'relative', minHeight: '100vh' }}>
             <div className="hero-section">
+                <div className="hero-pitch" aria-hidden="true">
+                    <div className="hero-bowl" />
+                    <div className="hero-flood left"><span className="hero-flood-lamp" /><span className="hero-flood-beam" /></div>
+                    <div className="hero-flood right"><span className="hero-flood-lamp" /><span className="hero-flood-beam" /></div>
+                    <div className="hero-horizon" />
+                    <div className="hero-pitch-plane">
+                        <span className="pitch-line touch-left" />
+                        <span className="pitch-line touch-right" />
+                        <span className="pitch-line goal-far" />
+                        <span className="pitch-box far" />
+                        <span className="pitch-box near" />
+                        <span className="pitch-line halfway" />
+                        <span className="pitch-circle" />
+                        <span className="pitch-spot" />
+                        <span className="pitch-brand">WONDIYO</span>
+                    </div>
+                    <div className="hero-vignette" />
+                </div>
                 <div className="hero-content" style={{ paddingTop: '160px' }}>
                     <h1 className="hero-title">Wondiyo ile Akıllı Futbol Tahminleri</h1>
                     <p className="hero-subtitle">Yapay zeka oran analiz sistemiyle güçlendirilmiş, günün öne çıkan karşılaşmalarını sizin için sadeleştiren yeni nesil tahmin platformu.</p>
