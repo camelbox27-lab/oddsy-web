@@ -44,7 +44,7 @@ import Korner from './components/Korner';
 import ManuelAnaliz from './components/ManuelAnaliz';
 import OranAnaliz from './components/OranAnaliz';
 import YapayZeka from './components/YapayZeka';
-import { auth, db, functions, googleProvider, rtdb } from './firebaseConfig';
+import { auth, AUTH_ACTION_SETTINGS, db, functions, googleProvider, rtdb } from './firebaseConfig';
 import { ref as dbRef, set as dbSet } from 'firebase/database';
 import GununSurprizleri from './GununSurprizleri';
 import GununTercihleri from './GununTercihleri';
@@ -67,11 +67,6 @@ const isLocalDevelopment = () => {
 
 const VIP_TRIAL_DAYS = 0;
 
-// Firebase email action link ayarları — linke tıklayınca wondiyo.com.tr/auth/action sayfası açılır
-const AUTH_ACTION_SETTINGS = {
-    url: 'https://wondiyo.com.tr/auth/action',
-    handleCodeInApp: false,
-};
 const VIP_ADMIN_DAYS = 30;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const IP_API_URL = 'https://api64.ipify.org?format=json';
@@ -1332,16 +1327,6 @@ html, body, #root, .app {
   .prediction-card { padding: 12px !important; padding-top: 30px !important; }
 }
 
-/* Mobile App Banner - sadece mobilde göster */
-.mobile-app-banner { display: flex !important; }
-@media (min-width: 769px) {
-  .mobile-app-banner { display: none !important; }
-}
-/* Banner açıkken header ve content aşağı kayar - sadece mobilde */
-@media (max-width: 768px) {
-  .app.banner-visible .header { top: 45px; }
-  .app.banner-visible .main-content { padding-top: calc(85px + 45px); }
-}
 
 /* Admin Action Buttons */
 .admin-actions {
@@ -1502,12 +1487,20 @@ const PATH_TO_ROUTE = Object.entries(ROUTE_PATHS).reduce((acc, [routeName, path]
     return acc;
 }, {});
 
+// Firebase aksiyon parametreleri bazi mail istemcilerinde hash'e tasinabiliyor,
+// bu yuzden hem query string hem hash kontrol edilir.
+const readAuthActionParams = () => {
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams((window.location.hash || '').replace(/^#\/?\??/, ''));
+    const mode = query.get('mode') || hash.get('mode') || '';
+    const oobCode = query.get('oobCode') || hash.get('oobCode') || '';
+    return { mode, oobCode };
+};
+
 const getRouteFromPathname = (pathname) => {
-    if (pathname === '/auth/action') {
-        const p = new URLSearchParams(window.location.search);
-        if (p.get('mode') && p.get('oobCode')) return 'auth-action';
-        return 'home';
-    }
+    // Parametre eksik olsa bile auth-action sayfasi acilir; sayfa kurtarma
+    // ekranini (yeni dogrulama maili gonder) gosterir.
+    if (pathname === '/auth/action') return 'auth-action';
     return PATH_TO_ROUTE[pathname] || 'home';
 };
 
@@ -1998,21 +1991,6 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
                     </div>
                     {/* Store Download Buttons */}
                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '14px', flexWrap: 'wrap' }}>
-                        <a
-                            href="https://github.com/camelbox27-lab/oddsy-web/releases/download/v1.0/Oddsy.apk"
-                            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.75)', border: '1.5px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '9px 18px', textDecoration: 'none', backdropFilter: 'blur(10px)' }}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                <path d="M3.18 23a1 1 0 0 1-.68-1.71L15.29 8.5l-2.83-2.83L3.5 14.63a1 1 0 1 1-1.41-1.41L12.46 2.84a1 1 0 0 1 1.41 0l4.24 4.24a1 1 0 0 1 0 1.41L3.86 22.74A1 1 0 0 1 3.18 23z" fill="#ea4335"/>
-                                <path d="M2.5 2.09v19.82L14.09 12 2.5 2.09z" fill="#4285f4"/>
-                                <path d="M2.5 2.09L14.09 12l3.54-3.54-12-6.91a1 1 0 0 0-3.13.54z" fill="#34a853"/>
-                                <path d="M2.5 21.91l12-6.91-3.54-3.54L2.5 21.91z" fill="#fbbc05"/>
-                            </svg>
-                            <div style={{ textAlign: 'left' }}>
-                                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.5px', lineHeight: 1 }}>MOBİL UYGULAMA İNDİR</div>
-                                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.3 }}>Google Play</div>
-                            </div>
-                        </a>
                         <button
                             onClick={() => showAlert('App Store yakında sizlerle! 🍎', 'info')}
                             style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.75)', border: '1.5px solid rgba(255,255,255,0.18)', borderRadius: 12, padding: '9px 18px', cursor: 'pointer', backdropFilter: 'blur(10px)' }}
@@ -4526,12 +4504,7 @@ export default function App() {
 
     const [route, setRoute] = useState(() => getRouteFromPathname(window.location.pathname));
     const [routeParams, setRouteParams] = useState(() => {
-        if (window.location.pathname === '/auth/action') {
-            const p = new URLSearchParams(window.location.search);
-            const mode = p.get('mode');
-            const oobCode = p.get('oobCode');
-            if (mode && oobCode) return { mode, oobCode };
-        }
+        if (window.location.pathname === '/auth/action') return readAuthActionParams();
         return {};
     });
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -4551,7 +4524,6 @@ export default function App() {
         }
         return localStorage.getItem('theme') || 'light';
     });
-    const [appBannerDismissed, setAppBannerDismissed] = useState(() => sessionStorage.getItem('appBannerDismissed') === '1');
 
     const toggleTheme = () => {
         const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -4675,9 +4647,12 @@ export default function App() {
 
         window.addEventListener('popstate', handlePopState);
 
-        // İlk yüklemede mevcut route'u tarihe işle
+        // İlk yüklemede mevcut route'u tarihe işle.
+        // auth-action'da query string korunur, aksi halde sayfa yenilenince oobCode kaybolur.
         if (!window.history.state) {
-            window.history.replaceState({ route, params: routeParams }, '', getPathForRoute(route));
+            const basePath = getPathForRoute(route);
+            const url = route === 'auth-action' ? basePath + window.location.search : basePath;
+            window.history.replaceState({ route, params: routeParams }, '', url);
         }
 
         return () => window.removeEventListener('popstate', handlePopState);
@@ -5041,7 +5016,7 @@ case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')}
 
     return (
         <ErrorBoundary>
-            <div className={`app${!appBannerDismissed ? ' banner-visible' : ''}`}>
+            <div className="app">
                 {showMaintenanceOverlay && (
                     <div className="maintenance-overlay">
                         <h1>Bakımdayız!</h1>
@@ -5053,46 +5028,6 @@ case 'dropping-odds': return <DroppingOddsModal onClose={() => navigate('home')}
                 )}
                 {alert && <Alert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
                 {legalType && <LegalModal type={legalType} onClose={() => setLegalType(null)} />}
-                {!appBannerDismissed && (
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '8px',
-                        padding: '8px 12px',
-                        background: 'linear-gradient(90deg, #1E8A45, #146B34)',
-                        borderBottom: '1px solid rgba(200,217,46,0.4)',
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        zIndex: 9999,
-                    }} className="mobile-app-banner">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                            <span style={{ background: '#fff', color: '#1E8A45', fontWeight: 900, fontSize: '12px', padding: '4px 7px', borderRadius: '5px', lineHeight: 1 }}>won</span>
-                            <div>
-                                <div style={{ fontSize: '11px', fontWeight: '800', color: '#fff', lineHeight: 1.2 }}>Wondiyo Uygulaması</div>
-                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.2 }}>Daha iyi deneyim için indir</div>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <a
-                                href="https://github.com/camelbox27-lab/oddsy-web/releases/download/v1.0/Oddsy.apk"
-                                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#C8D92E', borderRadius: '8px', padding: '5px 10px', textDecoration: 'none' }}
-                            >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path d="M3.18 23a1 1 0 0 1-.68-1.71L15.29 8.5l-2.83-2.83L3.5 14.63a1 1 0 1 1-1.41-1.41L12.46 2.84a1 1 0 0 1 1.41 0l4.24 4.24a1 1 0 0 1 0 1.41L3.86 22.74A1 1 0 0 1 3.18 23z" fill="#333"/>
-                                    <path d="M2.5 2.09v19.82L14.09 12 2.5 2.09z" fill="#333"/>
-                                </svg>
-                                <span style={{ fontSize: '11px', fontWeight: '800', color: '#333' }}>Android</span>
-                            </a>
-                            <button
-                                onClick={() => { setAppBannerDismissed(true); sessionStorage.setItem('appBannerDismissed', '1'); }}
-                                style={{ background: 'none', border: 'none', color: '#888', fontSize: '18px', cursor: 'pointer', padding: '2px 6px', lineHeight: 1 }}
-                            >×</button>
-                        </div>
-                    </div>
-                )}
                 <Header
                     onMenuOpen={() => setSidebarOpen(true)}
                     user={user}
