@@ -43,8 +43,8 @@ aksi halde üyeler ölü bir adrese (404) düşer.
 - "Özelleştir" (kalem) → **Action URL** → `https://wondiyo.com.tr/auth/action`
 - Aynı kontrolü "Şifre sıfırlama" şablonu için de yap
 - Authentication → Settings → Authorized domains listesine `wondiyo.com.tr` ekli olmalı
-- Eski domain (`oddsy.com.tr`) hâlâ kayıtlıysa Vercel'de projeye alias olarak bağlı
-  tutulması, daha önce gönderilmiş maillerin çalışmaya devam etmesini sağlar
+- Domain değiştirilirken eski domain bir süre Vercel'de alias olarak bağlı tutulursa,
+  daha önce gönderilmiş mailler de çalışmaya devam eder
 
 #### 3. Custom Domain Bağlama
 ```bash
