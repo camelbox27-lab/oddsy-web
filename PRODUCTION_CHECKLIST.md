@@ -33,6 +33,19 @@ ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com,https://yourdo
 
 - **Firestore Rules**: Zaten yapılandırılmış ✓
 
+#### 2.1 E-Posta Aksiyon URL'si (ZORUNLU)
+
+Doğrulama ve şifre sıfırlama maillerindeki linkin hedefi **koddan değil**,
+Firebase Console'dan gelir. Domain değiştiğinde buranın da güncellenmesi şarttır,
+aksi halde üyeler ölü bir adrese (404) düşer.
+
+- Firebase Console → Authentication → Templates → "E-posta adresini doğrula"
+- "Özelleştir" (kalem) → **Action URL** → `https://wondiyo.com.tr/auth/action`
+- Aynı kontrolü "Şifre sıfırlama" şablonu için de yap
+- Authentication → Settings → Authorized domains listesine `wondiyo.com.tr` ekli olmalı
+- Eski domain (`oddsy.com.tr`) hâlâ kayıtlıysa Vercel'de projeye alias olarak bağlı
+  tutulması, daha önce gönderilmiş maillerin çalışmaya devam etmesini sağlar
+
 #### 3. Custom Domain Bağlama
 ```bash
 # Vercel CLI ile

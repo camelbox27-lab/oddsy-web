@@ -31,3 +31,12 @@ export const db = getFirestore(app);
 export const rtdb = getDatabase(app);
 export const functions = getFunctions(app);
 export default app;
+
+// Firebase e-posta aksiyon linki ayarlari (dogrulama + sifre sifirlama).
+// Tek kaynak: hem App.jsx hem AuthAction.jsx buradan okur.
+// NOT: Buradaki "url" sadece continueUrl'dir. Mailin icindeki asil link
+// Firebase Console > Authentication > Templates > "Action URL" ayarindan gelir.
+export const AUTH_ACTION_SETTINGS = {
+    url: 'https://wondiyo.com.tr/auth/action',
+    handleCodeInApp: false,
+};

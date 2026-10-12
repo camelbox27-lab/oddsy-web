@@ -44,7 +44,7 @@ import Korner from './components/Korner';
 import ManuelAnaliz from './components/ManuelAnaliz';
 import OranAnaliz from './components/OranAnaliz';
 import YapayZeka from './components/YapayZeka';
-import { auth, db, functions, googleProvider, rtdb } from './firebaseConfig';
+import { auth, AUTH_ACTION_SETTINGS, db, functions, googleProvider, rtdb } from './firebaseConfig';
 import { ref as dbRef, set as dbSet } from 'firebase/database';
 import GununSurprizleri from './GununSurprizleri';
 import GununTercihleri from './GununTercihleri';
@@ -67,11 +67,6 @@ const isLocalDevelopment = () => {
 
 const VIP_TRIAL_DAYS = 0;
 
-// Firebase email action link ayarları — linke tıklayınca wondiyo.com.tr/auth/action sayfası açılır
-const AUTH_ACTION_SETTINGS = {
-    url: 'https://wondiyo.com.tr/auth/action',
-    handleCodeInApp: false,
-};
 const VIP_ADMIN_DAYS = 30;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const IP_API_URL = 'https://api64.ipify.org?format=json';
@@ -1502,12 +1497,20 @@ const PATH_TO_ROUTE = Object.entries(ROUTE_PATHS).reduce((acc, [routeName, path]
     return acc;
 }, {});
 
+// Firebase aksiyon parametreleri bazi mail istemcilerinde hash'e tasinabiliyor,
+// bu yuzden hem query string hem hash kontrol edilir.
+const readAuthActionParams = () => {
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams((window.location.hash || '').replace(/^#\/?\??/, ''));
+    const mode = query.get('mode') || hash.get('mode') || '';
+    const oobCode = query.get('oobCode') || hash.get('oobCode') || '';
+    return { mode, oobCode };
+};
+
 const getRouteFromPathname = (pathname) => {
-    if (pathname === '/auth/action') {
-        const p = new URLSearchParams(window.location.search);
-        if (p.get('mode') && p.get('oobCode')) return 'auth-action';
-        return 'home';
-    }
+    // Parametre eksik olsa bile auth-action sayfasi acilir; sayfa kurtarma
+    // ekranini (yeni dogrulama maili gonder) gosterir.
+    if (pathname === '/auth/action') return 'auth-action';
     return PATH_TO_ROUTE[pathname] || 'home';
 };
 
@@ -4526,12 +4529,7 @@ export default function App() {
 
     const [route, setRoute] = useState(() => getRouteFromPathname(window.location.pathname));
     const [routeParams, setRouteParams] = useState(() => {
-        if (window.location.pathname === '/auth/action') {
-            const p = new URLSearchParams(window.location.search);
-            const mode = p.get('mode');
-            const oobCode = p.get('oobCode');
-            if (mode && oobCode) return { mode, oobCode };
-        }
+        if (window.location.pathname === '/auth/action') return readAuthActionParams();
         return {};
     });
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -4675,9 +4673,12 @@ export default function App() {
 
         window.addEventListener('popstate', handlePopState);
 
-        // İlk yüklemede mevcut route'u tarihe işle
+        // İlk yüklemede mevcut route'u tarihe işle.
+        // auth-action'da query string korunur, aksi halde sayfa yenilenince oobCode kaybolur.
         if (!window.history.state) {
-            window.history.replaceState({ route, params: routeParams }, '', getPathForRoute(route));
+            const basePath = getPathForRoute(route);
+            const url = route === 'auth-action' ? basePath + window.location.search : basePath;
+            window.history.replaceState({ route, params: routeParams }, '', url);
         }
 
         return () => window.removeEventListener('popstate', handlePopState);
