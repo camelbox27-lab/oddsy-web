@@ -65,6 +65,12 @@ const isLocalDevelopment = () => {
 };
 // ===========================
 
+// ======= VIP GÖRÜNÜRLÜĞÜ =======
+// VIP üyelik ve "Wondiyo VIP" bölümü şu an site üzerinde gizli.
+// Tüm VIP kodu yerinde duruyor; tekrar yayına almak için bu bayrağı true yapmak yeterli.
+const SHOW_VIP_FEATURES = false;
+// ===============================
+
 const VIP_TRIAL_DAYS = 0;
 
 const VIP_ADMIN_DAYS = 30;
@@ -1793,18 +1799,21 @@ function Header({ onMenuOpen, user, onProfileClick, onNavigate, currentCategory,
                             {cat.title}
                         </div>
                     ))}
-                    <div
-                        className="header-nav-item ripple"
-                        onClick={() => onNavigate('abonelik')}
-                        style={{
-                            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                            color: '#000',
-                            border: '1px solid #FFD700',
-                            fontWeight: 800
-                        }}
-                    >
-                        👑 WONDIYO VIP
-                    </div>
+                    {/* VIP bölümü geçici olarak gizli (SHOW_VIP_FEATURES) */}
+                    {SHOW_VIP_FEATURES && (
+                        <div
+                            className="header-nav-item ripple"
+                            onClick={() => onNavigate('abonelik')}
+                            style={{
+                                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                                color: '#000',
+                                border: '1px solid #FFD700',
+                                fontWeight: 800
+                            }}
+                        >
+                            👑 WONDIYO VIP
+                        </div>
+                    )}
                 </div>
             </nav>
             <div className="header-right">
@@ -1842,7 +1851,7 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
                     {MENU_ITEMS.map(item => (
                         <div key={item.id} className={`sidebar-item ${currentRoute === item.route ? 'active' : ''}`} onClick={() => { onNavigate(item.route, { ...item }); onClose(); }}>
                             <span className="sidebar-item-icon">{item.icon}</span>
-                            <span className="sidebar-item-text">{item.title}{item.vipOnly && !userData?.isVip && userData?.role !== 'admin' ? ' 🔒' : ''}</span>
+                            <span className="sidebar-item-text">{item.title}{SHOW_VIP_FEATURES && item.vipOnly && !userData?.isVip && userData?.role !== 'admin' ? ' 🔒' : ''}</span>
                         </div>
                     ))}
                 </div>
@@ -1853,10 +1862,13 @@ function Sidebar({ isOpen, onClose, onNavigate, currentRoute, userData }) {
                         <span className="sidebar-item-icon">{Icons.user}</span>
                         <span className="sidebar-item-text">Profilim</span>
                     </div>
-                    <div className={`sidebar-item ${currentRoute === 'abonelik' ? 'active' : ''}`} onClick={() => { onNavigate('abonelik'); onClose(); }}>
-                        <span className="sidebar-item-icon">👑</span>
-                        <span className="sidebar-item-text">Abonelik Planları</span>
-                    </div>
+                    {/* Abonelik/VIP menüsü geçici olarak gizli (SHOW_VIP_FEATURES) */}
+                    {SHOW_VIP_FEATURES && (
+                        <div className={`sidebar-item ${currentRoute === 'abonelik' ? 'active' : ''}`} onClick={() => { onNavigate('abonelik'); onClose(); }}>
+                            <span className="sidebar-item-icon">👑</span>
+                            <span className="sidebar-item-text">Abonelik Planları</span>
+                        </div>
+                    )}
                     {userData?.role === 'admin' && (
                         <div className={`sidebar-item ${currentRoute === 'admin' ? 'active' : ''}`} onClick={() => { onNavigate('admin'); onClose(); }}>
                             <span className="sidebar-item-icon">{Icons.admin}</span>
@@ -2499,14 +2511,20 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
                 </button>
             )}
 
-            <div className="profile-row"><span>Üyelik</span><span style={{ color: vipMeta.isVipActive ? (userData?.vipTier === 'platinum' ? '#B0C4DE' : userData?.vipTier === 'silver' ? '#C0C0C0' : 'var(--gold)') : '#aaa', fontWeight: vipMeta.isVipActive ? 'bold' : 'normal' }}>{vipMeta.isVipActive ? (userData?.vipTier === 'platinum' ? '💎 Platin VIP' : userData?.vipTier === 'silver' ? '🥈 Gümüş VIP' : '👑 Altın VIP') : 'Standart'}</span></div>
-            <div className="profile-row"><span>VIP Başlangıç</span><span>{vipMeta.startText}</span></div>
-            <div className="profile-row"><span>VIP Bitiş</span><span>{vipMeta.endText}</span></div>
-            <div className="profile-row"><span>Kalan Gün</span><span>{vipMeta.remainingDays === null ? '-' : `${vipMeta.remainingDays} gün`}</span></div>
-            <div className="profile-row"><span>VIP Durumu</span><span style={{ color: vipMeta.isVipActive ? 'var(--success)' : '#aaa', fontWeight: 'bold' }}>{vipMeta.isVipActive ? 'Aktif' : (vipMeta.expired ? 'Süresi Doldu' : 'Pasif')}</span></div>
+            {/* VIP üyelik bilgileri geçici olarak gizli (SHOW_VIP_FEATURES) */}
+            {SHOW_VIP_FEATURES && (
+                <>
+                    <div className="profile-row"><span>Üyelik</span><span style={{ color: vipMeta.isVipActive ? (userData?.vipTier === 'platinum' ? '#B0C4DE' : userData?.vipTier === 'silver' ? '#C0C0C0' : 'var(--gold)') : '#aaa', fontWeight: vipMeta.isVipActive ? 'bold' : 'normal' }}>{vipMeta.isVipActive ? (userData?.vipTier === 'platinum' ? '💎 Platin VIP' : userData?.vipTier === 'silver' ? '🥈 Gümüş VIP' : '👑 Altın VIP') : 'Standart'}</span></div>
+                    <div className="profile-row"><span>VIP Başlangıç</span><span>{vipMeta.startText}</span></div>
+                    <div className="profile-row"><span>VIP Bitiş</span><span>{vipMeta.endText}</span></div>
+                    <div className="profile-row"><span>Kalan Gün</span><span>{vipMeta.remainingDays === null ? '-' : `${vipMeta.remainingDays} gün`}</span></div>
+                    <div className="profile-row"><span>VIP Durumu</span><span style={{ color: vipMeta.isVipActive ? 'var(--success)' : '#aaa', fontWeight: 'bold' }}>{vipMeta.isVipActive ? 'Aktif' : (vipMeta.expired ? 'Süresi Doldu' : 'Pasif')}</span></div>
+                </>
+            )}
             <div className="profile-row"><span>Rol</span><span>{userData?.role === 'admin' ? 'Admin' : userData?.role === 'editor' ? 'Editör' : userData?.role === 'moderator' ? 'Moderatör' : 'Üye'}</span></div>
 
-            {!vipMeta.isVipActive && (
+            {/* "VIP Üye Ol" butonu geçici olarak gizli (SHOW_VIP_FEATURES) */}
+            {SHOW_VIP_FEATURES && !vipMeta.isVipActive && (
                 <button className="submit-btn" style={{ marginTop: 20, background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', fontWeight: 'bold' }} onClick={() => onBack('abonelik')}>👑 VIP Üye Ol</button>
             )}
             {userData?.role === 'admin' && <button className="submit-btn" style={{ marginTop: 20 }} onClick={() => onBack('admin')}>Admin Paneli</button>}
@@ -2844,38 +2862,43 @@ function AdminDashboard({ onBack, userData }) {
                                 }}>
                                     Rol
                                 </th>
-                                <th style={{
-                                    padding: 10,
-                                    textAlign: 'left',
-                                    fontSize: 12,
-                                    color: '#aaa'
-                                }}>
-                                    VIP Tier
-                                </th>
-                                <th className="admin-col-hide-mobile" style={{
-                                    padding: 10,
-                                    textAlign: 'left',
-                                    fontSize: 12,
-                                    color: '#aaa'
-                                }}>
-                                    VIP Başlangıç
-                                </th>
-                                <th className="admin-col-hide-mobile" style={{
-                                    padding: 10,
-                                    textAlign: 'left',
-                                    fontSize: 12,
-                                    color: '#aaa'
-                                }}>
-                                    VIP Bitiş
-                                </th>
-                                <th style={{
-                                    padding: 10,
-                                    textAlign: 'left',
-                                    fontSize: 12,
-                                    color: '#aaa'
-                                }}>
-                                    Kalan
-                                </th>
+                                {/* VIP sütunları geçici olarak gizli (SHOW_VIP_FEATURES) */}
+                                {SHOW_VIP_FEATURES && (
+                                    <>
+                                        <th style={{
+                                            padding: 10,
+                                            textAlign: 'left',
+                                            fontSize: 12,
+                                            color: '#aaa'
+                                        }}>
+                                            VIP Tier
+                                        </th>
+                                        <th className="admin-col-hide-mobile" style={{
+                                            padding: 10,
+                                            textAlign: 'left',
+                                            fontSize: 12,
+                                            color: '#aaa'
+                                        }}>
+                                            VIP Başlangıç
+                                        </th>
+                                        <th className="admin-col-hide-mobile" style={{
+                                            padding: 10,
+                                            textAlign: 'left',
+                                            fontSize: 12,
+                                            color: '#aaa'
+                                        }}>
+                                            VIP Bitiş
+                                        </th>
+                                        <th style={{
+                                            padding: 10,
+                                            textAlign: 'left',
+                                            fontSize: 12,
+                                            color: '#aaa'
+                                        }}>
+                                            Kalan
+                                        </th>
+                                    </>
+                                )}
                                 <th style={{
                                     padding: 10,
                                     textAlign: 'left',
@@ -2906,36 +2929,41 @@ function AdminDashboard({ onBack, userData }) {
                                         <td style={{ padding: 10, fontSize: 12 }}>
                                             {u.role || 'user'}
                                         </td>
-                                        <td style={{ padding: 10, fontSize: 12 }}>
-                                            <select
-                                                value={u.vipTier || (u.isVip ? 'gold' : 'none')}
-                                                onChange={(e) => handleVipTierChange(u.id, e.target.value)}
-                                                style={{
-                                                    background: u.vipTier === 'platinum' ? '#7B68EE' : u.vipTier === 'gold' || (u.isVip && !u.vipTier) ? '#B8860B' : u.vipTier === 'silver' ? '#808080' : '#333',
-                                                    color: u.isVip || u.vipTier ? '#fff' : '#aaa',
-                                                    border: 'none',
-                                                    padding: '4px 8px',
-                                                    borderRadius: 5,
-                                                    fontSize: 11,
-                                                    cursor: 'pointer',
-                                                    fontWeight: u.isVip || u.vipTier ? 'bold' : 'normal'
-                                                }}
-                                            >
-                                                <option value="none">Standart</option>
-                                                <option value="silver">🥈 Gümüş VIP</option>
-                                                <option value="gold">👑 Altın VIP</option>
-                                                <option value="platinum">💎 Platin VIP</option>
-                                            </select>
-                                        </td>
-                                        <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
-                                            {vipMeta.startText}
-                                        </td>
-                                        <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
-                                            {vipMeta.endText}
-                                        </td>
-                                        <td style={{ padding: 10, fontSize: 12, color: vipMeta.isVipActive ? 'var(--success)' : '#aaa', fontWeight: 'bold' }}>
-                                            {vipMeta.remainingDays === null ? '-' : `${vipMeta.remainingDays}g`}
-                                        </td>
+                                        {/* VIP sütunları geçici olarak gizli (SHOW_VIP_FEATURES) */}
+                                        {SHOW_VIP_FEATURES && (
+                                            <>
+                                                <td style={{ padding: 10, fontSize: 12 }}>
+                                                    <select
+                                                        value={u.vipTier || (u.isVip ? 'gold' : 'none')}
+                                                        onChange={(e) => handleVipTierChange(u.id, e.target.value)}
+                                                        style={{
+                                                            background: u.vipTier === 'platinum' ? '#7B68EE' : u.vipTier === 'gold' || (u.isVip && !u.vipTier) ? '#B8860B' : u.vipTier === 'silver' ? '#808080' : '#333',
+                                                            color: u.isVip || u.vipTier ? '#fff' : '#aaa',
+                                                            border: 'none',
+                                                            padding: '4px 8px',
+                                                            borderRadius: 5,
+                                                            fontSize: 11,
+                                                            cursor: 'pointer',
+                                                            fontWeight: u.isVip || u.vipTier ? 'bold' : 'normal'
+                                                        }}
+                                                    >
+                                                        <option value="none">Standart</option>
+                                                        <option value="silver">🥈 Gümüş VIP</option>
+                                                        <option value="gold">👑 Altın VIP</option>
+                                                        <option value="platinum">💎 Platin VIP</option>
+                                                    </select>
+                                                </td>
+                                                <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
+                                                    {vipMeta.startText}
+                                                </td>
+                                                <td className="admin-col-hide-mobile" style={{ padding: 10, fontSize: 12 }}>
+                                                    {vipMeta.endText}
+                                                </td>
+                                                <td style={{ padding: 10, fontSize: 12, color: vipMeta.isVipActive ? 'var(--success)' : '#aaa', fontWeight: 'bold' }}>
+                                                    {vipMeta.remainingDays === null ? '-' : `${vipMeta.remainingDays}g`}
+                                                </td>
+                                            </>
+                                        )}
                                         <td style={{ padding: 10, fontSize: 12 }}>
                                             <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                                                 <select
@@ -4726,6 +4754,14 @@ export default function App() {
     }, [user]);
     const showAlert = useCallback((m, t) => setAlert({ message: m, type: t }), []);
 
+    // VIP kapalıyken /abonelik adresine doğrudan girilse bile ana sayfaya dön
+    useEffect(() => {
+        if (!SHOW_VIP_FEATURES && route === 'abonelik') {
+            navigate('home', {}, false);
+            window.history.replaceState({ route: 'home', params: {} }, '', getPathForRoute('home'));
+        }
+    }, [route, navigate]);
+
     // Android geri tuşu yönetimi
     useEffect(() => {
         let backHandler;
@@ -4759,11 +4795,27 @@ export default function App() {
     if (loading && route !== 'auth' && route !== 'auth-action') return <div className="auth-loading-screen"><div className="spinner" /><h3>Wondiyo Yükleniyor...</h3></div>;
 
     const render = () => {
-        // Giriş gerektiren sayfalar - kullanıcı giriş yapmamışsa auth ekranını göster
-        const publicRoutes = ['home', 'auth', 'auth-action', 'abonelik', 'performance-summary',
-            'dropping-odds', 'category', 'ilk-yari-gol', 'iy-ms-tahminleri',
-            'gunun-surprizleri', 'gunun-tercihleri', 'oran-analiz'];
-        if (!user && !publicRoutes.includes(route)) {
+        // Üyelik gerektirmeyen tek sayfalar: ana sayfa ve giriş/doğrulama ekranları.
+        // Diğer tüm menüler sadece onaylı üyelere açık.
+        const publicRoutes = ['home', 'auth', 'auth-action'];
+        // Onaylı üye = giriş yapmış + e-posta doğrulaması tamamlanmış
+        const isApprovedMember = !!user && !!user.emailVerified;
+        // Doğrulanmamış üye profilinden doğrulama linkini tekrar isteyebilsin
+        const isSelfServiceRoute = !!user && route === 'profile';
+
+        if (!isApprovedMember && !publicRoutes.includes(route) && !isSelfServiceRoute) {
+            // Giriş yapmış ama üyeliği onaylanmamış kullanıcıya ne yapması gerektiğini anlat
+            if (user) {
+                return (
+                    <div className="profile-container" style={{ textAlign: 'center' }}>
+                        <h2 style={{ marginBottom: 12 }}>Üyeliğiniz Onay Bekliyor</h2>
+                        <p style={{ color: '#aaa', fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
+                            Menüleri kullanabilmek için e-posta adresinize gönderilen doğrulama linkine tıklayarak üyeliğinizi onaylamanız gerekiyor.
+                        </p>
+                        <button className="submit-btn" onClick={() => navigate('profile')}>Profilime Git</button>
+                    </div>
+                );
+            }
             return <AuthScreen onBack={() => navigate('home')} showAlert={showAlert} initialIsLogin={true} />;
         }
 
@@ -4948,7 +5000,10 @@ export default function App() {
                 if (userData?.role === 'moderator') return <ModeratorScreen onBack={navigate} showAlert={showAlert} />;
                 return <div className="loading">Yetkisiz erişim</div>;
             case 'performance-summary': return <PerformanceSummaryScreen onBack={() => navigate('home')} />;
-            case 'abonelik': return <AbonelikScreen onBack={() => navigate('home')} userData={userData} user={user} onNavigate={navigate} />;
+            case 'abonelik':
+                // VIP kapalıyken abonelik ekranı gösterilmez (kod hazır duruyor)
+                if (!SHOW_VIP_FEATURES) return <HomePage user={user} userData={userData} onLoginClick={() => navigate(user ? 'profile' : 'auth')} onNavigate={navigate} onShowLegal={setLegalType} />;
+                return <AbonelikScreen onBack={() => navigate('home')} userData={userData} user={user} onNavigate={navigate} />;
             case 'category': return <CategoryScreen category={routeParams} onBack={() => navigate('home')} userData={userData} onNavigate={navigate} />;
             case 'coupons': return (
                 <VipGate userData={userData} user={user} onNavigate={navigate}>

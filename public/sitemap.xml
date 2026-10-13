@@ -60,9 +60,11 @@
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
+  <!-- VIP/abonelik sayfası şu an sitede gizli; tekrar açılınca bu kayıt geri eklenecek
   <url>
     <loc>https://wondiyo.com.tr/abonelik</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
+  -->
 </urlset>
