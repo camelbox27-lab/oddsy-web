@@ -1,13 +1,18 @@
 import {
     applyActionCode,
     confirmPasswordReset,
-    sendEmailVerification,
     signInWithEmailAndPassword,
     signOut,
     verifyPasswordResetCode
 } from 'firebase/auth';
 import { useEffect, useRef, useState } from 'react';
-import { auth, AUTH_ACTION_SETTINGS } from '../firebaseConfig';
+import { auth } from '../firebaseConfig';
+import {
+    confirmEmailVerification,
+    confirmPasswordResetWithToken,
+    describeAuthMailError,
+    requestEmailVerification
+} from '../utils/authMail';
 
 // Firebase hata kodu -> kullaniciya gosterilecek Turkce mesaj
 const ACTION_ERROR_MESSAGES = {
@@ -38,7 +43,7 @@ const inputStyle = {
     boxSizing: 'border-box'
 };
 
-function AuthAction({ mode, oobCode, onNavigate }) {
+function AuthAction({ mode, oobCode, token, onNavigate }) {
     // loading | form (sifre sifirlama) | success | error | resend (yeni mail iste) | resent
     const [phase, setPhase] = useState('loading');
     const [errorMsg, setErrorMsg] = useState('');
@@ -57,6 +62,25 @@ function AuthAction({ mode, oobCode, onNavigate }) {
         handledRef.current = true;
 
         const isVerify = mode === 'verifyEmail';
+
+        // Kendi mail akisimiz: link ?token=... ile gelir
+        if (token) {
+            if (isVerify) {
+                confirmEmailVerification(token)
+                    .then(() => setPhase('success'))
+                    .catch((err) => {
+                        setPhase('resend');
+                        setInfoMsg(describeAuthMailError(err));
+                    });
+            } else if (mode === 'resetPassword') {
+                // Token'i simdi tuketmiyoruz; yeni sifreyle birlikte gonderilecek
+                setPhase('form');
+            } else {
+                setPhase('error');
+                setErrorMsg('Bilinmeyen işlem türü.');
+            }
+            return;
+        }
 
         // Link eksik/bozuk geldiyse olu bir hata yerine kurtarma ekrani goster
         if (!oobCode) {
@@ -105,7 +129,7 @@ function AuthAction({ mode, oobCode, onNavigate }) {
             setPhase('error');
             setErrorMsg('Bilinmeyen işlem türü.');
         }
-    }, [mode, oobCode]);
+    }, [mode, oobCode, token]);
 
     const handlePasswordReset = async (e) => {
         e.preventDefault();
@@ -116,10 +140,17 @@ function AuthAction({ mode, oobCode, onNavigate }) {
         setErrorMsg('');
         setSubmitting(true);
         try {
-            await confirmPasswordReset(auth, oobCode, newPassword);
+            if (token) {
+                await confirmPasswordResetWithToken(token, newPassword);
+            } else {
+                await confirmPasswordReset(auth, oobCode, newPassword);
+            }
             setPhase('success');
         } catch (err) {
-            setErrorMsg(ACTION_ERROR_MESSAGES[err?.code] || 'Şifre değiştirilemedi. Bağlantı süresi dolmuş olabilir, lütfen tekrar talep edin.');
+            const message = token
+                ? describeAuthMailError(err)
+                : (ACTION_ERROR_MESSAGES[err?.code] || 'Şifre değiştirilemedi. Bağlantı süresi dolmuş olabilir, lütfen tekrar talep edin.');
+            setErrorMsg(message);
         } finally {
             setSubmitting(false);
         }
@@ -145,7 +176,7 @@ function AuthAction({ mode, oobCode, onNavigate }) {
                 return;
             }
 
-            await sendEmailVerification(credential.user, AUTH_ACTION_SETTINGS);
+            await requestEmailVerification();
             await signOut(auth);
             setResendPassword('');
             setPhase('resent');

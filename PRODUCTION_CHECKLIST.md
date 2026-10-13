@@ -157,6 +157,23 @@ firebase deploy --only hosting:wondiyo-auth
 Tek seferlik kurulum adımları (Console + DNS + Vercel değişkeni):
 `auth-hosting/README.md`
 
+### Auth mailleri (Resend)
+Doğrulama ve şifre sıfırlama mailleri Firebase'in şablon sistemiyle değil,
+Cloud Functions + Resend üzerinden gönderiliyor. Sebebi: Firebase konsolu bu
+proje için "Email template updates are currently unavailable for this project"
+diyor ve Action URL eski `oddsy.com.tr` adresinde kilitli kalmış durumda.
+
+Tek seferlik kurulum:
+```bash
+# 1) Resend API anahtarını secret olarak kaydet
+firebase functions:secrets:set RESEND_API_KEY
+
+# 2) Fonksiyonları ve kuralları deploy et
+firebase deploy --only functions,firestore:rules
+```
+Ön koşul: Resend panelinde `wondiyo.com.tr` doğrulanmış olmalı (DKIM + 2 CNAME
++ DMARC kayıtları Turhost DNS yönetiminde).
+
 ### Manuel Deployment
 ```bash
 cd web-version

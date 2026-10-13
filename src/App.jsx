@@ -11,8 +11,6 @@ import {
     deleteUser,
     getIdTokenResult,
     onAuthStateChanged,
-    sendEmailVerification,
-    sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut,
@@ -44,7 +42,7 @@ import Korner from './components/Korner';
 import ManuelAnaliz from './components/ManuelAnaliz';
 import OranAnaliz from './components/OranAnaliz';
 import YapayZeka from './components/YapayZeka';
-import { auth, AUTH_ACTION_SETTINGS, db, functions, googleProvider, rtdb } from './firebaseConfig';
+import { auth, db, functions, googleProvider, rtdb } from './firebaseConfig';
 import { ref as dbRef, set as dbSet } from 'firebase/database';
 import GununSurprizleri from './GununSurprizleri';
 import GununTercihleri from './GununTercihleri';
@@ -52,6 +50,11 @@ import IYMSTahminleri from './IYMSTahminleri';
 import IlkYariGolListesi from './IlkYariGolListesi';
 import { getTeamLogo, handleLogoError } from './helper';
 import { getNextUserId, ensureUserDisplayId } from './utils/userId';
+import {
+    describeAuthMailError,
+    requestEmailVerification,
+    requestPasswordReset
+} from './utils/authMail';
 import {
     backfillUsernameMappings,
     ensureUsernameMapping,
@@ -1507,7 +1510,9 @@ const readAuthActionParams = () => {
     const hash = new URLSearchParams((window.location.hash || '').replace(/^#\/?\??/, ''));
     const mode = query.get('mode') || hash.get('mode') || '';
     const oobCode = query.get('oobCode') || hash.get('oobCode') || '';
-    return { mode, oobCode };
+    // Kendi mail akisimizin token'i (Firebase'in oobCode'u yerine)
+    const token = query.get('token') || hash.get('token') || '';
+    return { mode, oobCode, token };
 };
 
 const getRouteFromPathname = (pathname) => {
@@ -2122,11 +2127,11 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
             setLoading(true);
             try {
                 const resolvedEmail = await resolveEmail(loginIdentifier);
-                await sendPasswordResetEmail(auth, resolvedEmail, AUTH_ACTION_SETTINGS);
+                await requestPasswordReset(resolvedEmail);
                 showAlert('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success');
                 setMode('login');
             } catch (err) {
-                showAlert('Hata: ' + err.message, 'error');
+                showAlert('Hata: ' + describeAuthMailError(err), 'error');
             } finally {
                 setLoading(false);
             }
@@ -2152,7 +2157,8 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 try { await userCredential.user.reload(); } catch (_) {}
 
                 if (!userCredential.user.emailVerified) {
-                    await sendEmailVerification(userCredential.user, AUTH_ACTION_SETTINGS);
+                    // Mail gonderilemese bile oturumu kapatip kullaniciyi bilgilendir
+                    try { await requestEmailVerification(); } catch (mailErr) { console.error('Doğrulama maili gönderilemedi:', mailErr); }
                     await signOut(auth);
                     showAlert('Email adresiniz henüz doğrulanmamış. Yeni bir doğrulama linki gönderildi.', 'error');
                     setEmail(resolvedEmail);
@@ -2185,7 +2191,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 try { await updateProfile(newUser, { displayName: username.trim() }); } catch (e) { console.error('Profile update failed:', e); }
 
                 // Doğrulama maili gönder
-                try { await sendEmailVerification(newUser, AUTH_ACTION_SETTINGS); } catch (e) { console.error('Email verification send failed:', e); }
+                try { await requestEmailVerification(); } catch (e) { console.error('Email verification send failed:', e); }
 
                 // Firestore dökümanını oluştur - hata olursa bile kayıt devam etsin
                 let nextDisplayId = null;
@@ -2275,11 +2281,11 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
         setLoading(true);
         try {
             const resolvedEmail = await resolveEmail(loginIdentifier);
-            await sendPasswordResetEmail(auth, resolvedEmail, AUTH_ACTION_SETTINGS);
+            await requestPasswordReset(resolvedEmail);
             showAlert('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success');
             setShowForgotPassword(false);
         } catch (err) {
-            showAlert('Hata: ' + err.message, 'error');
+            showAlert('Hata: ' + describeAuthMailError(err), 'error');
         } finally {
             setLoading(false);
         }
@@ -2503,10 +2509,10 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
         if (resending) return;
         setResending(true);
         try {
-            await sendEmailVerification(auth.currentUser, AUTH_ACTION_SETTINGS);
+            await requestEmailVerification();
             showAlert('Doğrulama linki tekrar gönderildi. Lütfen mailinizi kontrol edin.', 'success');
         } catch (err) {
-            showAlert('Hata: ' + err.message, 'error');
+            showAlert('Hata: ' + describeAuthMailError(err), 'error');
         } finally {
             setResending(false);
         }
@@ -2688,10 +2694,10 @@ function AdminDashboard({ onBack, userData }) {
         if (!email) return alert('Bu kullanıcının e-posta adresi yok!');
         if (!confirm(`${email} adresine şifre sıfırlama maili gönderilsin mi?`)) return;
         try {
-            await sendPasswordResetEmail(auth, email, AUTH_ACTION_SETTINGS);
+            await requestPasswordReset(email);
             alert(`Şifre sıfırlama maili gönderildi: ${email}`);
         } catch (err) {
-            alert('Hata: ' + err.message);
+            alert('Hata: ' + describeAuthMailError(err));
         }
     };
 
@@ -5063,7 +5069,7 @@ export default function App() {
         }
 
         switch (route) {
-            case 'auth-action': return <AuthAction mode={routeParams.mode} oobCode={routeParams.oobCode} onNavigate={navigate} />;
+            case 'auth-action': return <AuthAction mode={routeParams.mode} oobCode={routeParams.oobCode} token={routeParams.token} onNavigate={navigate} />;
             case 'auth': return <AuthScreen onBack={() => navigate('home')} showAlert={showAlert} initialIsLogin={routeParams.isLogin !== undefined ? routeParams.isLogin : true} />;
             case 'profile': return <ProfileScreen user={user} userData={userData} onBack={r => navigate(r || 'home')} showAlert={showAlert} />;
             case 'admin':

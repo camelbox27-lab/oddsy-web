@@ -32,10 +32,12 @@ export const rtdb = getDatabase(app);
 export const functions = getFunctions(app);
 export default app;
 
-// Firebase e-posta aksiyon linki ayarlari (dogrulama + sifre sifirlama).
-// Tek kaynak: hem App.jsx hem AuthAction.jsx buradan okur.
-// NOT: Buradaki "url" sadece continueUrl'dir. Mailin icindeki asil link
-// Firebase Console > Authentication > Templates > "Action URL" ayarindan gelir.
+// Firebase'in kendi e-posta aksiyon ayarlari.
+// ARTIK KULLANILMIYOR: bu projede Firebase'in mail sablonlari kilitli
+// ("Email template updates are currently unavailable for this project"),
+// bu yuzden dogrulama ve sifre sifirlama maillerini Cloud Functions uzerinden
+// kendimiz gonderiyoruz. Bkz. functions/authMail.js ve src/utils/authMail.js.
+// Kilit kalkar da Firebase'in akisina donulurse diye kod burada duruyor.
 export const AUTH_ACTION_SETTINGS = {
     url: 'https://wondiyo.com.tr/auth/action',
     handleCodeInApp: false,

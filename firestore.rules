@@ -74,6 +74,16 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ===== AUTH TOKENS (e-posta doğrulama / şifre sıfırlama) =====
+    // İstemciye tamamen kapalı. Sadece Cloud Functions (Admin SDK) okur/yazar,
+    // Admin SDK bu kuralları atladığı için burada her şeyi reddediyoruz.
+    match /authTokens/{tokenHash} {
+      allow read, write: if false;
+    }
+    match /authTokenMeta/{metaId} {
+      allow read, write: if false;
+    }
+
     // ===== COUNTERS (User ID sayacı) =====
     match /counters/{counterId} {
       allow read: if isSignedIn();
