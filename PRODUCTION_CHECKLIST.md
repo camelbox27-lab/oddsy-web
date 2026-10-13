@@ -136,6 +136,18 @@ git push origin main
 
 Vercel otomatik deploy edecek.
 
+### Firestore Kuralları (ayrı deploy gerekir)
+`firestore.rules` değiştiğinde Vercel deploy'u yetmez, kuralları ayrıca
+Firebase'e göndermek gerekir:
+```bash
+firebase deploy --only firestore:rules
+```
+
+**Kullanıcı adı eşlemeleri (tek seferlik):** `usernames` koleksiyonu devreye
+alındığında, kuralları deploy ettikten hemen sonra Admin Dashboard →
+Kullanıcı Yönetimi → **"Eşlemeleri Oluştur"** butonuna basın. Bu yapılmadan
+mevcut üyeler kullanıcı adıyla giriş yapamaz (e-posta ile giriş etkilenmez).
+
 ### Manuel Deployment
 ```bash
 cd web-version

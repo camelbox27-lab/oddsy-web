@@ -43,15 +43,34 @@ service cloud.firestore {
 
     // ===== USERS COLLECTION =====
     match /users/{userId} {
-      // list: login sırasında username->email çözümlemesi için herkes sorgulayabilir
+      // list: toplu listeleme sadece adminlere açık (eskiden herkese açıktı).
+      //       Girişte kullanıcı adı -> e-posta çözümlemesi artık usernames
+      //       eşleme koleksiyonundan yapılıyor, users taranmıyor.
       // get: sadece giriş yapmış kullanıcılar belirli bir dökümanı okuyabilir
-      allow list: if true;
+      allow list: if isAdmin();
       allow get: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == userId && isValidSize();
       allow update: if isSignedIn() &&
                        (request.auth.uid == userId || isAdmin()) &&
                        isValidSize() &&
                        (request.auth.uid == userId ? !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isVip', 'isAdmin']) : true);
+      allow delete: if isAdmin();
+    }
+
+    // ===== USERNAMES (kullanıcı adı -> e-posta eşlemesi) =====
+    // Giriş ekranı kullanıcı adını e-postaya çevirmek için tek döküman okur.
+    // Bu yüzden get herkese açık; list ise sadece adminlere açık, böylece
+    // kimse tüm kullanıcı adlarını / e-postaları toplu çekemez.
+    match /usernames/{usernameKey} {
+      allow get: if true;
+      allow list: if isAdmin();
+      // Kayıt sırasında kullanıcı yalnızca kendi eşlemesini oluşturabilir
+      allow create: if isAdmin() ||
+                       (isSignedIn() && request.resource.data.uid == request.auth.uid && isValidSize());
+      // Var olan bir eşlemeyi sadece sahibi veya admin güncelleyebilir
+      allow update: if isAdmin() ||
+                       (isSignedIn() && resource.data.uid == request.auth.uid &&
+                        request.resource.data.uid == request.auth.uid && isValidSize());
       allow delete: if isAdmin();
     }
 
@@ -88,7 +107,9 @@ service cloud.firestore {
     // ===== COUPONS =====
     match /coupons/{couponId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      // Moderatör kupon ekleyebilir; düzenleme ve silme adminde kalır
+      allow create: if (isAdmin() || isModerator()) && isValidSize();
+      allow update, delete: if isAdmin();
     }
 
     // ===== KART & KORNER ANALİZ =====

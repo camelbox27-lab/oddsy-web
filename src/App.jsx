@@ -52,6 +52,13 @@ import IYMSTahminleri from './IYMSTahminleri';
 import IlkYariGolListesi from './IlkYariGolListesi';
 import { getTeamLogo, handleLogoError } from './helper';
 import { getNextUserId, ensureUserDisplayId } from './utils/userId';
+import {
+    backfillUsernameMappings,
+    ensureUsernameMapping,
+    isUsernameTaken,
+    lookupEmailByUsername,
+    reserveUsername
+} from './utils/usernames';
 import { debounce, throttle, listenerRegistry, connectionMonitor } from './utils/performanceUtils';
 import { dataCache } from './utils/cache';
 
@@ -2083,15 +2090,28 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
     const resolveEmail = async (identifier) => {
         const trimmed = identifier.trim();
         if (trimmed.includes('@')) return trimmed;
-        const q = query(collection(db, 'users'), where('username', '==', trimmed));
-        const snap = await getDocs(q);
-        if (snap.empty) {
-            const qLower = query(collection(db, 'users'), where('username', '==', trimmed.toLowerCase()));
-            const snapLower = await getDocs(qLower);
-            if (snapLower.empty) throw new Error('Bu kullanıcı adı ile kayıtlı hesap bulunamadı.');
-            return snapLower.docs[0].data().email;
+
+        // Birincil yol: usernames eşleme koleksiyonundan tek dökümanlık okuma
+        try {
+            const mappedEmail = await lookupEmailByUsername(trimmed);
+            if (mappedEmail) return mappedEmail;
+        } catch (mapErr) {
+            console.error('Kullanıcı adı eşlemesi okunamadı:', mapErr);
         }
-        return snap.docs[0].data().email;
+
+        // Geri düşüş: eşleme henüz oluşturulmamış eski üyeler için users sorgusu.
+        // Yeni kurallar yayına alındıktan sonra bu sorgu reddedilir ve
+        // aşağıdaki hata mesajı gösterilir.
+        try {
+            const snap = await getDocs(query(collection(db, 'users'), where('username', '==', trimmed)));
+            if (!snap.empty) return snap.docs[0].data().email;
+            const snapLower = await getDocs(query(collection(db, 'users'), where('username', '==', trimmed.toLowerCase())));
+            if (!snapLower.empty) return snapLower.docs[0].data().email;
+        } catch (legacyErr) {
+            console.error('Eski kullanıcı adı sorgusu başarısız:', legacyErr);
+        }
+
+        throw new Error('Bu kullanıcı adı ile kayıtlı hesap bulunamadı. E-posta adresinizle giriş yapmayı deneyin.');
     };
 
     const handleSubmit = async (e) => {
@@ -2143,6 +2163,11 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 onBack();
             } else if (mode === 'register') {
                 const cleanEmail = email.trim();
+                // Kullanıcı adı başkası tarafından alınmış mı?
+                if (await isUsernameTaken(username)) {
+                    setLoading(false);
+                    return showAlert('Bu kullanıcı adı zaten alınmış. Lütfen başka bir tane seçin.', 'error');
+                }
                 // Kayıt İşlemi
                 const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
                 const newUser = userCredential.user;
@@ -2188,6 +2213,13 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 } catch (firestoreErr) {
                     console.error('Firestore user doc oluşturulamadı:', firestoreErr);
                     // Firestore hatası olsa bile kayıt başarılı sayılır - onAuthStateChanged'de tekrar denenecek
+                }
+
+                // Kullanıcı adı -> e-posta eşlemesi (giriş ekranı bunu okuyor)
+                try {
+                    await reserveUsername(username.trim(), newUser.uid, newUser.email);
+                } catch (mapErr) {
+                    console.error('Kullanıcı adı eşlemesi oluşturulamadı:', mapErr);
                 }
 
                 // ÖNEMLİ: Firebase kayıt sonrası otomatik giriş yapar.
@@ -2578,6 +2610,7 @@ const ROUTE_LABELS = {
 function AdminDashboard({ onBack, userData }) {
     const [users, setUsers] = useState([]);
     const [userSearch, setUserSearch] = useState('');
+    const [backfillStatus, setBackfillStatus] = useState(null);
     const [onlineCount, setOnlineCount] = useState(0);
     const [totalPredictions, setTotalPredictions] = useState(0);
     const [totalCoupons, setTotalCoupons] = useState(0);
@@ -2634,6 +2667,22 @@ function AdminDashboard({ onBack, userData }) {
             String(u.displayId || '').includes(term)
         );
     }, [users, userSearch]);
+
+    // Eski üyeler için kullanıcı adı -> e-posta eşlemelerini toplu oluşturur.
+    // Bir kez çalıştırılması yeterli; yeni kayıtların eşlemesi otomatik yazılıyor.
+    const handleBackfillUsernames = async () => {
+        if (!window.confirm(`${users.length} üye için kullanıcı adı eşlemeleri oluşturulacak. Devam edilsin mi?`)) return;
+        setBackfillStatus({ type: 'loading', text: 'Eşlemeler oluşturuluyor...' });
+        try {
+            const result = await backfillUsernameMappings(users);
+            setBackfillStatus({
+                type: result.failed > 0 ? 'error' : 'success',
+                text: `${result.created} eşleme yazıldı, ${result.skipped} atlandı (kullanıcı adı yok/tekrar), ${result.failed} başarısız.`
+            });
+        } catch (err) {
+            setBackfillStatus({ type: 'error', text: 'Hata: ' + err.message });
+        }
+    };
 
     const handlePasswordReset = async (email) => {
         if (!email) return alert('Bu kullanıcının e-posta adresi yok!');
@@ -2874,6 +2923,28 @@ function AdminDashboard({ onBack, userData }) {
                             ? `${visibleUsers.length} / ${users.length} kullanıcı`
                             : `${users.length} kullanıcı (A-Z sıralı)`}
                     </span>
+                </div>
+
+                {/* Kullanıcı adı eşlemeleri: eski üyelerin kullanıcı adıyla giriş yapabilmesi için bir kez çalıştırılır */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid #333', borderRadius: 8, flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 240px', minWidth: 200 }}>
+                        <div style={{ fontSize: 12, color: '#ddd', fontWeight: 'bold' }}>Kullanıcı Adı Eşlemeleri</div>
+                        <div style={{ fontSize: 11, color: '#777', marginTop: 2 }}>
+                            Eski üyelerin kullanıcı adıyla giriş yapabilmesi için bir kez çalıştırın.
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleBackfillUsernames}
+                        disabled={backfillStatus?.type === 'loading'}
+                        style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 6, fontSize: 12, fontWeight: 'bold', cursor: backfillStatus?.type === 'loading' ? 'default' : 'pointer', opacity: backfillStatus?.type === 'loading' ? 0.6 : 1 }}
+                    >
+                        {backfillStatus?.type === 'loading' ? 'Oluşturuluyor...' : 'Eşlemeleri Oluştur'}
+                    </button>
+                    {backfillStatus && backfillStatus.type !== 'loading' && (
+                        <span style={{ fontSize: 11, color: backfillStatus.type === 'error' ? 'var(--error)' : 'var(--success)', flexBasis: '100%' }}>
+                            {backfillStatus.text}
+                        </span>
+                    )}
                 </div>
 
                 <div style={{ overflowX: 'auto' }}>
@@ -3546,7 +3617,9 @@ function ModeratorScreen({ onBack, showAlert }) {
     const [listLoading, setListLoading] = useState(true);
     const [matches, setMatches] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(7);
+    const [view, setView] = useState('prediction');
     const [matchData, setMatchData] = useState({ homeTeam: '', awayTeam: '', league: 'Premier Lig', time: '20:00', prediction: '', odds: '', categoryKey: 7, status: 'pending', analysis: '' });
+    const [couponData, setCouponData] = useState({ type: 'Günün Banko Kuponu', matches: [{ home: '', away: '', prediction: '', odds: '' }] });
 
     const categoryTitle = selectedCategory === 7 ? 'İY/MS Tahminleri' : 'Günün Sürprizleri';
 
@@ -3600,16 +3673,117 @@ function ModeratorScreen({ onBack, showAlert }) {
         }
     };
 
+    const handleAddMatchToCoupon = () => {
+        setCouponData(prev => ({ ...prev, matches: [...prev.matches, { home: '', away: '', prediction: '', odds: '' }] }));
+    };
+
+    const handleUpdateCouponMatch = (index, field, value) => {
+        setCouponData(prev => ({
+            ...prev,
+            matches: prev.matches.map((m, i) => (i === index ? { ...m, [field]: value } : m))
+        }));
+    };
+
+    const handleRemoveCouponMatch = (index) => {
+        setCouponData(prev => ({
+            ...prev,
+            matches: prev.matches.length > 1 ? prev.matches.filter((_, i) => i !== index) : prev.matches
+        }));
+    };
+
+    const handleSaveCoupon = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const u = auth.currentUser;
+            if (!u) throw new Error('Oturum kapalı');
+
+            // Oranlardaki virgülleri noktaya çevir ve güvenli hesapla
+            const safeParse = (v) => {
+                if (!v) return 1;
+                const cleaned = v.toString().replace(',', '.');
+                const parsed = parseFloat(cleaned);
+                return isNaN(parsed) ? 1 : parsed;
+            };
+
+            const totalOdds = couponData.matches.reduce((acc, curr) => acc * safeParse(curr.odds), 1).toFixed(2);
+
+            await addDoc(collection(db, 'coupons'), {
+                ...couponData,
+                totalOdds,
+                createdAt: serverTimestamp(),
+                authorId: u.uid,
+                authorEmail: u.email
+            });
+
+            showAlert('Kupon eklendi!', 'success');
+            setCouponData({ type: 'Günün Banko Kuponu', matches: [{ home: '', away: '', prediction: '', odds: '' }] });
+        } catch (err) {
+            showAlert('Hata: ' + err.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto', minHeight: 'calc(100vh - 65px)' }}>
             <button className="back-btn" onClick={() => onBack('home')}>Geri</button>
-            <h1 style={{ color: 'var(--gold-text)', marginTop: 20, marginBottom: 20 }}>Moderatör Paneli - {categoryTitle}</h1>
+            <h1 style={{ color: 'var(--gold-text)', marginTop: 20, marginBottom: 20 }}>
+                Moderatör Paneli - {view === 'coupon' ? 'Kupon Ekle' : categoryTitle}
+            </h1>
 
+            {/* Ana sekmeler: tahmin ekleme / kupon ekleme */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+                <button className={`hero-btn secondary ${view === 'prediction' ? 'active' : ''}`} onClick={() => setView('prediction')} style={{ fontSize: 12, padding: '8px 12px' }}>Tahmin Ekle</button>
+                <button className={`hero-btn secondary ${view === 'coupon' ? 'active' : ''}`} onClick={() => setView('coupon')} style={{ fontSize: 12, padding: '8px 12px' }}>🎫 Kupon Ekle</button>
+            </div>
+
+            {view === 'prediction' && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
                 <button className={`hero-btn secondary ${selectedCategory === 7 ? 'active' : ''}`} onClick={() => { setSelectedCategory(7); setMatchData(prev => ({ ...prev, categoryKey: 7 })); }} style={{ fontSize: 12, padding: '8px 12px' }}>İY/MS</button>
                 <button className={`hero-btn secondary ${selectedCategory === 6 ? 'active' : ''}`} onClick={() => { setSelectedCategory(6); setMatchData(prev => ({ ...prev, categoryKey: 6 })); }} style={{ fontSize: 12, padding: '8px 12px' }}>Günün Sürprizleri</button>
             </div>
+            )}
 
+            {/* Kupon ekleme formu */}
+            {view === 'coupon' && (
+                <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, marginBottom: 20 }}>
+                    <form onSubmit={handleSaveCoupon}>
+                        <div className="form-group" style={{ marginBottom: 15 }}>
+                            <label className="form-label" style={{ fontSize: 10 }}>Kupon Türü</label>
+                            <select className="form-input" style={{ padding: 8, fontSize: 12 }} value={couponData.type} onChange={e => setCouponData({ ...couponData, type: e.target.value })}>
+                                {COUPON_TYPES.map(t => <option key={t.id} value={t.dbName}>{t.dbName}</option>)}
+                            </select>
+                        </div>
+
+                        {couponData.matches.map((m, i) => (
+                            <div key={i} style={{ border: '2px solid var(--primary-green)', padding: 12, borderRadius: 10, marginBottom: 12, background: '#3a3a3a' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                    <span style={{ fontSize: 11, color: '#bbb', fontWeight: 'bold' }}>{i + 1}. Maç</span>
+                                    {couponData.matches.length > 1 && (
+                                        <button type="button" onClick={() => handleRemoveCouponMatch(i)} style={{ background: 'none', border: 'none', color: '#f87171', fontSize: 11, cursor: 'pointer' }}>Kaldır</button>
+                                    )}
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                                    <input placeholder="Ev Sahibi" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.home} onChange={e => handleUpdateCouponMatch(i, 'home', e.target.value)} />
+                                    <input placeholder="Deplasman" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.away} onChange={e => handleUpdateCouponMatch(i, 'away', e.target.value)} />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                    <input placeholder="Tahmin" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.prediction} onChange={e => handleUpdateCouponMatch(i, 'prediction', e.target.value)} />
+                                    <input placeholder="Oran (1.50)" className="form-input" style={{ padding: 8, fontSize: 12 }} value={m.odds} onChange={e => handleUpdateCouponMatch(i, 'odds', e.target.value)} />
+                                </div>
+                            </div>
+                        ))}
+                        <button type="button" className="hero-btn secondary" onClick={handleAddMatchToCoupon} style={{ width: '100%', marginBottom: 12, padding: 10, fontSize: 12 }}>+ Maç Ekle</button>
+                        <button className="submit-btn" disabled={loading} style={{ padding: 10, fontSize: 13 }}>Kuponu Kaydet</button>
+                        <p style={{ color: '#777', fontSize: 11, marginTop: 10, marginBottom: 0 }}>
+                            Eklenen kupon anında Günün Kuponları sayfasında yayınlanır. Düzenleme ve silme yetkisi adminde.
+                        </p>
+                    </form>
+                </div>
+            )}
+
+            {view === 'prediction' && (
             <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10, marginBottom: 20 }}>
                 <form onSubmit={handleAdd}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -3624,7 +3798,9 @@ function ModeratorScreen({ onBack, showAlert }) {
                     <button className="submit-btn" disabled={loading} style={{ marginTop: 15, padding: 10, fontSize: 13 }}>Kaydet</button>
                 </form>
             </div>
+            )}
 
+            {view === 'prediction' && (
             <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 10 }}>
                 <h3 style={{ color: 'var(--gold-text)', marginBottom: 12 }}>{categoryTitle} Liste</h3>
                 {listLoading ? <div className="loading"><div className="spinner" /></div> : (
@@ -3639,6 +3815,7 @@ function ModeratorScreen({ onBack, showAlert }) {
                     </div>
                 )}
             </div>
+            )}
         </div>
     );
 }
@@ -4696,6 +4873,9 @@ export default function App() {
                             } else {
                                 setUserData(data);
                             }
+
+                            // Eski üyelerin eksik kullanıcı adı eşlemesini girişte tamamla
+                            ensureUsernameMapping(data.username, u.uid, u.email);
                         } else {
                             // User doc yok - oluştur
                             let nextDisplayId = null;
@@ -4703,6 +4883,7 @@ export default function App() {
                             const initData = { uid: u.uid, email: u.email, username: u.displayName || u.email.split('@')[0], displayId: nextDisplayId, isAdmin: false, isPremium: false, role: 'user', createdAt: serverTimestamp(), ...buildTrialVipFields() };
                             try { await setDoc(doc(db, 'users', u.uid), initData); } catch (setErr) { console.error('User doc oluşturulamadı:', setErr); }
                             setUserData(initData);
+                            ensureUsernameMapping(initData.username, u.uid, u.email);
                         }
                     } catch (e) {
                         console.error('Auth flow hatası:', e);
