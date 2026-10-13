@@ -2577,6 +2577,7 @@ const ROUTE_LABELS = {
 
 function AdminDashboard({ onBack, userData }) {
     const [users, setUsers] = useState([]);
+    const [userSearch, setUserSearch] = useState('');
     const [onlineCount, setOnlineCount] = useState(0);
     const [totalPredictions, setTotalPredictions] = useState(0);
     const [totalCoupons, setTotalCoupons] = useState(0);
@@ -2619,6 +2620,20 @@ function AdminDashboard({ onBack, userData }) {
             setTotalCoupons(cSnap.size);
         }).catch(err => console.error('Sayım hatası:', err));
     }, []);
+
+    // Kullanıcı adları alfabetik sıralanır; arama e-posta / kullanıcı adı / ID üzerinden çalışır
+    const visibleUsers = useMemo(() => {
+        const term = userSearch.trim().toLocaleLowerCase('tr');
+        const sorted = [...users].sort((a, b) =>
+            (a.username || a.email || '').localeCompare(b.username || b.email || '', 'tr', { sensitivity: 'base' })
+        );
+        if (!term) return sorted;
+        return sorted.filter(u =>
+            (u.email || '').toLocaleLowerCase('tr').includes(term) ||
+            (u.username || '').toLocaleLowerCase('tr').includes(term) ||
+            String(u.displayId || '').includes(term)
+        );
+    }, [users, userSearch]);
 
     const handlePasswordReset = async (email) => {
         if (!email) return alert('Bu kullanıcının e-posta adresi yok!');
@@ -2819,10 +2834,48 @@ function AdminDashboard({ onBack, userData }) {
                 <h2 style={{
                     color: 'var(--gold-text)',
                     fontSize: 18,
-                    marginBottom: 20
+                    marginBottom: 12
                 }}>
                     Kullanıcı Yönetimi
                 </h2>
+
+                {/* Kullanıcı arama: e-posta, kullanıcı adı veya ID ile filtreler */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative', flex: '1 1 260px', minWidth: 220 }}>
+                        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#888', pointerEvents: 'none' }}>🔍</span>
+                        <input
+                            type="search"
+                            value={userSearch}
+                            onChange={e => setUserSearch(e.target.value)}
+                            placeholder="E-posta, kullanıcı adı veya ID ile ara..."
+                            style={{
+                                width: '100%',
+                                padding: '10px 36px 10px 34px',
+                                background: 'rgba(255,255,255,0.05)',
+                                border: '1px solid #444',
+                                borderRadius: 8,
+                                color: 'var(--text-primary)',
+                                fontSize: 13,
+                                outline: 'none'
+                            }}
+                        />
+                        {userSearch && (
+                            <button
+                                onClick={() => setUserSearch('')}
+                                title="Aramayı temizle"
+                                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#888', fontSize: 16, cursor: 'pointer', lineHeight: 1, padding: 4 }}
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
+                    <span style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap' }}>
+                        {userSearch
+                            ? `${visibleUsers.length} / ${users.length} kullanıcı`
+                            : `${users.length} kullanıcı (A-Z sıralı)`}
+                    </span>
+                </div>
+
                 <div style={{ overflowX: 'auto' }}>
                     <table className="admin-user-table" style={{
                         width: '100%',
@@ -2910,7 +2963,7 @@ function AdminDashboard({ onBack, userData }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map(u => {
+                            {visibleUsers.map(u => {
                                 const vipMeta = getVipMeta(u);
                                 return (
                                     <tr
@@ -3002,6 +3055,15 @@ function AdminDashboard({ onBack, userData }) {
                                     </tr>
                                 );
                             })}
+                            {visibleUsers.length === 0 && (
+                                <tr>
+                                    <td colSpan={SHOW_VIP_FEATURES ? 9 : 5} style={{ padding: 24, textAlign: 'center', color: '#666', fontSize: 13 }}>
+                                        {userSearch
+                                            ? `"${userSearch}" ile eşleşen kullanıcı bulunamadı.`
+                                            : 'Henüz kayıtlı kullanıcı yok.'}
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
