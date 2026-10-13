@@ -1,55 +1,69 @@
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebaseConfig';
+import { auth } from '../firebaseConfig';
 
 /**
  * Kendi e-posta dogrulama / sifre sifirlama akisimizin istemci tarafi.
  *
  * Firebase'in mail sablonlari bu projede kilitli oldugu icin bu mailleri
- * Cloud Functions uzerinden Resend ile biz gonderiyoruz. Linkler dogrudan
- * wondiyo.com.tr/auth/action adresine gelir.
+ * /api/auth-mail (Vercel) uzerinden Resend ile biz gonderiyoruz.
+ * Linkler dogrudan wondiyo.com.tr/auth/action adresine gelir.
  */
 
-// Cloud Functions hata kodlarini kullaniciya gosterilecek Turkce mesaja cevirir
-const FUNCTION_ERROR_MESSAGES = {
+const ENDPOINT = '/api/auth-mail';
+
+// Sunucudan donen hata kodlarini kullaniciya gosterilecek Turkce mesaja cevirir
+const ERROR_MESSAGES = {
     'invalid-token': 'Bu bağlantı geçersiz.',
     'used-token': 'Bu bağlantı daha önce kullanılmış. Yeni bir bağlantı isteyin.',
-    'expired-token': 'Bu bağlantının süresi dolmuş. Yeni bir bağlantı isteyin.'
+    'expired-token': 'Bu bağlantının süresi dolmuş. Yeni bir bağlantı isteyin.',
+    unauthenticated: 'Oturumunuz kapanmış. Lütfen tekrar giriş yapın.'
 };
 
 export function describeAuthMailError(err) {
     const raw = err?.message || '';
-    for (const [key, message] of Object.entries(FUNCTION_ERROR_MESSAGES)) {
-        if (raw.includes(key)) return message;
+    return ERROR_MESSAGES[raw] || raw || 'İşlem sırasında bir hata oluştu.';
+}
+
+async function call(action, payload = {}) {
+    let response;
+    try {
+        response = await fetch(ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ...payload })
+        });
+    } catch (networkErr) {
+        throw new Error('Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edin.');
     }
-    if (err?.code === 'functions/resource-exhausted') return raw;
-    if (err?.code === 'functions/unauthenticated') return 'Oturumunuz kapanmış. Lütfen tekrar giriş yapın.';
-    return raw || 'İşlem sırasında bir hata oluştu.';
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    return data;
+}
+
+/** Giris yapmis kullanicinin kimlik tokenini alir. */
+async function currentIdToken() {
+    const user = auth.currentUser;
+    if (!user) throw new Error('unauthenticated');
+    return user.getIdToken();
 }
 
 /** Giris yapmis kullaniciya dogrulama maili gonderir. */
 export async function requestEmailVerification() {
-    const call = httpsCallable(functions, 'requestEmailVerification');
-    const result = await call();
-    return result.data;
+    const idToken = await currentIdToken();
+    return call('requestEmailVerification', { idToken });
 }
 
 /** Dogrulama token'ini isler. */
 export async function confirmEmailVerification(token) {
-    const call = httpsCallable(functions, 'confirmEmailVerification');
-    const result = await call({ token });
-    return result.data;
+    return call('confirmEmailVerification', { token });
 }
 
 /** Sifre sifirlama maili gonderir. */
 export async function requestPasswordReset(email) {
-    const call = httpsCallable(functions, 'requestPasswordReset');
-    const result = await call({ email });
-    return result.data;
+    return call('requestPasswordReset', { email });
 }
 
 /** Token ile yeni sifreyi kaydeder. */
 export async function confirmPasswordResetWithToken(token, newPassword) {
-    const call = httpsCallable(functions, 'confirmPasswordReset');
-    const result = await call({ token, newPassword });
-    return result.data;
+    return call('confirmPasswordReset', { token, newPassword });
 }

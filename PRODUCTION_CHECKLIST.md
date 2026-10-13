@@ -157,22 +157,29 @@ firebase deploy --only hosting:wondiyo-auth
 Tek seferlik kurulum adımları (Console + DNS + Vercel değişkeni):
 `auth-hosting/README.md`
 
-### Auth mailleri (Resend)
+### Auth mailleri (Resend + Vercel)
 Doğrulama ve şifre sıfırlama mailleri Firebase'in şablon sistemiyle değil,
-Cloud Functions + Resend üzerinden gönderiliyor. Sebebi: Firebase konsolu bu
-proje için "Email template updates are currently unavailable for this project"
-diyor ve Action URL eski `oddsy.com.tr` adresinde kilitli kalmış durumda.
+`api/auth-mail.js` (Vercel) üzerinden Resend ile gönderiliyor. Sebebi: Firebase
+konsolu bu proje için "Email template updates are currently unavailable for
+this project" diyor ve Action URL erişime kapalı `oddsy.com.tr` adresinde
+kilitli kalmış. Proje Spark planında olduğu için Cloud Functions kullanılamıyor.
 
-Tek seferlik kurulum:
-```bash
-# 1) Resend API anahtarını secret olarak kaydet
-firebase functions:secrets:set RESEND_API_KEY
+Vercel → Settings → Environment Variables (Production):
+| Değişken | Açıklama |
+|---|---|
+| `RESEND_API_KEY` | Resend panelinden alınan API anahtarı |
+| `FIREBASE_SERVICE_ACCOUNT` | Service account JSON'ı (tek satır) — zaten `send-notification.js` için tanımlı olabilir |
+| `VITE_FIREBASE_API_KEY` | Zaten tanımlı |
 
-# 2) Fonksiyonları ve kuralları deploy et
-firebase deploy --only functions,firestore:rules
-```
+Ekledikten sonra **redeploy** gerekir.
+
 Ön koşul: Resend panelinde `wondiyo.com.tr` doğrulanmış olmalı (DKIM + 2 CNAME
 + DMARC kayıtları Turhost DNS yönetiminde).
+
+Firestore kuralları ayrıca gönderilir (Blaze gerekmez):
+```bash
+firebase deploy --only firestore:rules
+```
 
 ### Manuel Deployment
 ```bash
