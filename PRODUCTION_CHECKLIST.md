@@ -148,6 +148,15 @@ alındığında, kuralları deploy ettikten hemen sonra Admin Dashboard →
 Kullanıcı Yönetimi → **"Eşlemeleri Oluştur"** butonuna basın. Bu yapılmadan
 mevcut üyeler kullanıcı adıyla giriş yapamaz (e-posta ile giriş etkilenmez).
 
+### Auth alt alan adı (auth.wondiyo.com.tr)
+Google ile girişte `oddsy-778d7.firebaseapp.com` yerine kendi alan adımızın
+görünmesi için auth'a özel Hosting sitesi:
+```bash
+firebase deploy --only hosting:wondiyo-auth
+```
+Tek seferlik kurulum adımları (Console + DNS + Vercel değişkeni):
+`auth-hosting/README.md`
+
 ### Manuel Deployment
 ```bash
 cd web-version

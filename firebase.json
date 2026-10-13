@@ -4,5 +4,17 @@
   },
   "functions": {
     "source": "functions"
-  }
+  },
+  "hosting": [
+    {
+      "site": "wondiyo-auth",
+      "public": "auth-hosting",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**",
+        "**/README.md"
+      ]
+    }
+  ]
 }
