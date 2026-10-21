@@ -13,7 +13,9 @@ const firebaseConfig = {
     projectId: (import.meta.env.VITE_FIREBASE_PROJECT_ID || '').trim(),
     storageBucket: (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '').trim(),
     messagingSenderId: (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '').trim(),
-    appId: (import.meta.env.VITE_FIREBASE_APP_ID || '').trim()
+    appId: (import.meta.env.VITE_FIREBASE_APP_ID || '').trim(),
+    // Boşsa Analytics, appId'ye bağlı ölçüm kimliğini Firebase'den kendisi alır
+    measurementId: (import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '').trim() || undefined
 };
 
 

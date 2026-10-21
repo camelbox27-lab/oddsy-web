@@ -9,6 +9,7 @@ if (isNative()) {
 import {
     createUserWithEmailAndPassword,
     deleteUser,
+    getAdditionalUserInfo,
     getIdTokenResult,
     onAuthStateChanged,
     signInWithEmailAndPassword,
@@ -43,6 +44,7 @@ import ManuelAnaliz from './components/ManuelAnaliz';
 import OranAnaliz from './components/OranAnaliz';
 import YapayZeka from './components/YapayZeka';
 import { auth, db, functions, googleProvider, rtdb } from './firebaseConfig';
+import { identifyUser, trackEvent, trackPageView } from './analytics';
 import { ref as dbRef, set as dbSet } from 'firebase/database';
 import GununSurprizleri from './GununSurprizleri';
 import GununTercihleri from './GununTercihleri';
@@ -2165,6 +2167,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                     setMode('verify');
                     return;
                 }
+                trackEvent('login', { method: 'email' });
                 showAlert('Giriş başarılı!', 'success');
                 onBack();
             } else if (mode === 'register') {
@@ -2232,6 +2235,7 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
                 // Biz bunu istemiyoruz çünkü email doğrulanmadı.
                 await signOut(auth);
 
+                trackEvent('sign_up', { method: 'email' });
                 showAlert('Kayıt işlemi başarılı. Lütfen e-posta adresinize gönderilen link ile hesabınızı doğrulayın.', 'success');
                 setMode('verify');
                 setPassword('');
@@ -2256,7 +2260,9 @@ function AuthScreen({ onBack, showAlert, initialIsLogin = true }) {
     const handleGoogleSignIn = async () => {
         setLoading(true);
         try {
-            await signInWithPopup(auth, googleProvider);
+            const googleResult = await signInWithPopup(auth, googleProvider);
+            const isNewUser = getAdditionalUserInfo(googleResult)?.isNewUser;
+            trackEvent(isNewUser ? 'sign_up' : 'login', { method: 'google' });
             showAlert('Giriş başarılı!', 'success');
             onBack();
         } catch (err) {
@@ -2498,6 +2504,7 @@ function ProfileScreen({ user, userData, onBack, showAlert }) {
     const handleLogout = async () => {
         try {
             await signOut(auth);
+            trackEvent('logout');
             showAlert('Başarıyla çıkış yapıldı.', 'success');
             onBack('home');
         } catch (err) {
@@ -3153,6 +3160,7 @@ function AbonelikScreen({ onBack, userData, user, onNavigate }) {
     const TELEGRAM_BOT_USERNAME = 'WondiyoAbonelikBot';
 
     const handleSubscribe = (planName) => {
+        trackEvent('abonelik_tikla', { plan: planName });
         const userId = userData?.displayId || '';
         const username = userData?.username || '';
         const message = encodeURIComponent(`Merhaba! Wondiyo ${planName} abonelik almak istiyorum.\n\nKullanıcı Adı: ${username}\nKullanıcı ID: ${userId}`);
@@ -4787,6 +4795,14 @@ export default function App() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => { syncSeoTags(route); }, [route]);
+
+    // Google Analytics: her menü/sayfa geçişi bir sayfa görüntülemesi (başlık syncSeoTags'ten gelir)
+    const categoryId = route === 'category' ? routeParams?.id : undefined;
+    const categoryTitle = route === 'category' ? routeParams?.title : undefined;
+    useEffect(() => {
+        const path = categoryId ? `/kategori/${categoryId}` : getPathForRoute(route);
+        trackPageView(path, categoryTitle || document.title, { menu: route });
+    }, [route, categoryId, categoryTitle]);
     const [legalType, setLegalType] = useState(null);
     const [theme, setTheme] = useState(() => {
         // Wondiyo gecisi: eski Wondiyo koyu tema tercihi bir kez sifirlanir
@@ -4934,6 +4950,17 @@ export default function App() {
 
         return () => window.removeEventListener('popstate', handlePopState);
     }, [route, routeParams]);
+
+    // Google Analytics: raporlarda üye/misafir ve abonelik tipine göre ayırım yapılabilsin
+    const analyticsTier = userData?.vipTier || (userData?.isVip ? 'gold' : 'yok');
+    const analyticsRole = userData?.role || 'user';
+    useEffect(() => {
+        identifyUser(user?.uid, {
+            uye_durumu: user ? 'uye' : 'misafir',
+            abonelik: user ? analyticsTier : 'yok',
+            rol: user ? analyticsRole : 'misafir',
+        });
+    }, [user, analyticsTier, analyticsRole]);
 
     // Çevrimiçi kullanıcı takibi: lastActive'i her 2 dakikada güncelle
     useEffect(() => {

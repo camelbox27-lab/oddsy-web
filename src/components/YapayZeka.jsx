@@ -1,5 +1,6 @@
 import { ArrowLeft, Search, Star, Trophy, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { trackEvent } from '../analytics';
 import { getTeamLogo, handleLogoError } from '../helper';
 const BET365_DAILY_URL = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/bet365/gunlukmaclar.json';
 const IDDAA_DAILY_URL = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/iddaa/gunluk/gunlukmaclar.json';
@@ -298,6 +299,7 @@ function YapayZekaIddaa({ onBack }) {
         if (!selectedMac) { setError('Lütfen bir maç seçin!'); return; }
         if (selectedKolonlar.length === 0) { setError('Lütfen en az bir oran kolonunu seçin!'); return; }
 
+        trackEvent('analiz_yap', { bot: 'yapay_zeka', kaynak: 'iddaa', kolon_sayisi: selectedKolonlar.length });
         setError('');
         setAnalyzing(true);
         setResults(null);
@@ -1087,6 +1089,7 @@ export default function YapayZeka() {
             return;
         }
 
+        if (!silent) trackEvent('analiz_yap', { bot: 'yapay_zeka', kaynak: 'bet365', oran_turu: oranTuru });
         setError('');
         setResults([]);
         setShowResults(false);
@@ -1290,14 +1293,14 @@ export default function YapayZeka() {
                     <h1 className="category-title">YAPAY ZEKA ANALİZ BOTU</h1>
                 </div>
                 <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15, maxWidth: 600, margin: '0 auto' }}>
-                    <div className="menu-selection-card" onClick={() => setSource('bet365')}>
+                    <div className="menu-selection-card" onClick={() => { trackEvent('kaynak_sec', { bot: 'yapay_zeka', kaynak: 'bet365' }); setSource('bet365'); }}>
                         <img src="/1.webp" style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt="Bet365" />
                         <h3 style={{ color: 'var(--gold-text)', fontSize: 18, marginBottom: 6 }}>Bet365 Oran Analizi</h3>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center' }}>
                             Bet365 oran analizi için tıklayınız
                         </p>
                     </div>
-                    <div className="menu-selection-card" onClick={() => setSource('iddaa')}>
+                    <div className="menu-selection-card" onClick={() => { trackEvent('kaynak_sec', { bot: 'yapay_zeka', kaynak: 'iddaa' }); setSource('iddaa'); }}>
                         <img src="/2.png" style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt="İddaa" />
                         <h3 style={{ color: '#4ade80', fontSize: 18, marginBottom: 6 }}>İddaa Oran Analizi</h3>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center' }}>

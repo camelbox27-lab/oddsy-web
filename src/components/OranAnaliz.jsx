@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { trackEvent } from '../analytics';
 import { db, auth } from '../firebaseConfig';
 import { collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
@@ -291,6 +292,7 @@ export default function OranAnaliz({ onBack, user }) {
     const filtreKaydet = async () => {
         if (!uid || !kaydetIsim.trim()) return;
         const aktifKolonlar = Object.keys(gunlukFiltre).filter(k => gunlukFiltre[k] !== '');
+        trackEvent('filtre_kaydet', { kolon_sayisi: aktifKolonlar.length });
         await addDoc(collection(db, 'users', uid, 'savedFilters'), {
             isim: kaydetIsim.trim(),
             kolonlar: aktifKolonlar,

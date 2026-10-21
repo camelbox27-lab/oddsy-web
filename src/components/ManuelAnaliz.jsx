@@ -1,5 +1,6 @@
 import { ArrowLeft, Search, Star, Trophy, Zap, Edit3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { trackEvent } from '../analytics';
 import { getTeamLogo, handleLogoError } from '../helper';
 const iddaaGecmisUrl = 'https://raw.githubusercontent.com/camelbox27-lab/oddsy-data/main/iddaa/gecmis/iddaagecmis.json';
 
@@ -239,6 +240,7 @@ function ManuelIddaa({ onBack }) {
             setError('Lütfen en az bir oran girin!');
             return;
         }
+        trackEvent('analiz_yap', { bot: 'manuel', kaynak: 'iddaa' });
         setError('');
         setAnalyzing(true);
         setResults(null);
@@ -839,6 +841,7 @@ export default function ManuelAnaliz() {
             return;
         }
 
+        trackEvent('analiz_yap', { bot: 'manuel', kaynak: 'bet365' });
         setError('');
         setAnalyzing(true);
         setResults([]);
@@ -1002,14 +1005,14 @@ export default function ManuelAnaliz() {
                     <h1 className="category-title">MANUEL ANALİZ</h1>
                 </div>
                 <div className="predictions-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15, maxWidth: 600, margin: '0 auto' }}>
-                    <div className="menu-selection-card" onClick={() => setSource('bet365')}>
+                    <div className="menu-selection-card" onClick={() => { trackEvent('kaynak_sec', { bot: 'manuel', kaynak: 'bet365' }); setSource('bet365'); }}>
                         <img src="/1.webp" style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt="Bet365" />
                         <h3 style={{ color: 'var(--gold-text)', fontSize: 18, marginBottom: 6 }}>Bet365 Oran Analizi</h3>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center' }}>
                             Bet365 oran analizi için tıklayınız
                         </p>
                     </div>
-                    <div className="menu-selection-card" onClick={() => setSource('iddaa')}>
+                    <div className="menu-selection-card" onClick={() => { trackEvent('kaynak_sec', { bot: 'manuel', kaynak: 'iddaa' }); setSource('iddaa'); }}>
                         <img src="/2.png" style={{ width: 100, height: 100, marginBottom: 15, objectFit: 'contain' }} alt="İddaa" />
                         <h3 style={{ color: '#4ade80', fontSize: 18, marginBottom: 6 }}>İddaa Oran Analizi</h3>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center' }}>
