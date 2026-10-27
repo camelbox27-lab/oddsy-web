@@ -1569,7 +1569,7 @@ const syncSeoTags = (route) => {
     setMetaContent('meta[name="twitter:title"]', meta.title);
     setMetaContent('meta[name="twitter:description"]', meta.description);
 
-    const canonicalUrl = 'https://wondiyo.com.tr' + getPathForRoute(route);
+    const canonicalUrl = 'https://www.wondiyo.com.tr' + getPathForRoute(route);
     const canonicalEl = document.querySelector('link[rel="canonical"]');
     if (canonicalEl) canonicalEl.setAttribute('href', canonicalUrl);
     setMetaContent('meta[property="og:url"]', canonicalUrl);

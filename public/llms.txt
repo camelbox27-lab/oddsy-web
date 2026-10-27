@@ -1,0 +1,50 @@
+# Wondiyo
+
+> Wondiyo, futbol maçlarının bahis oranlarını geçmiş maç verileriyle birebir eşleştirerek
+> istatistiksel analiz sunan, Türkiye merkezli ücretsiz bir tahmin platformudur.
+> Wondiyo bahis oynatmaz, bahis kabul etmez ve bir bahis sitesi değildir;
+> yalnızca veri analizi ve tahmin araçları sunar.
+
+## Ne yapar
+
+Kullanıcı günlük bültendeki bir maçın oranlarını girer veya seçer. Wondiyo bu oranları
+geçmiş maç arşiviyle **birebir** (tolerans olmadan) eşleştirir ve aynı oran yapısına sahip
+geçmiş maçların nasıl sonuçlandığını gösterir. Böylece tahmin, tahmin yürütmeye değil
+geçmiş veriye dayanır.
+
+## Temel özellikler
+
+- **Oran Analiz**: Günlük bülten maçlarını geçmiş verilerle birebir eşleştiren ana araç
+- **Manuel Analiz**: Kullanıcının kendi kriterlerini girerek yaptığı serbest analiz
+- **Yapay Zeka Analizleri**: Algoritmik olarak üretilen günlük maç analizleri
+- **Kart Analizi**: Sarı/kırmızı kart istatistiklerine dayalı analiz
+- **Korner Analizi**: Korner istatistiklerine dayalı analiz
+- **İY/MS Tahminleri**: İlk yarı / maç sonu kombinasyon analizleri
+- **İlk Yarı Gol Listesi**: İlk yarıda gol beklentisi yüksek maçlar
+- **Oranı Düşen Maçlar**: Piyasa hareketliliği yüksek maçların takibi
+- **Günün Kuponları / Tercihleri / Sürprizleri**: Günlük öne çıkan seçimler
+
+## Kapsam
+
+Premier Lig, La Liga, Bundesliga, Serie A, Süper Lig ve diğer popüler ligler.
+Oran verisi Bet365 ve İddaa bültenlerinden alınır; açılış ve kapanış oranları ayrı tutulur.
+
+## Önemli sınırlar
+
+- Analizler istatistikseldir, sonuç garantisi vermez.
+- Platform ücretsizdir ve üzerinden para yatırma/çekme veya bahis işlemi yapılmaz.
+- İçerik 18 yaş ve üzeri kullanıcılara yöneliktir.
+
+## Bağlantılar
+
+- Ana sayfa: https://www.wondiyo.com.tr/
+- Oran Analiz: https://www.wondiyo.com.tr/oran-analiz
+- Yapay Zeka Analizleri: https://www.wondiyo.com.tr/yapay-zeka-analizleri
+- İY/MS Tahminleri: https://www.wondiyo.com.tr/iy-ms-tahminleri
+- İlk Yarı Gol Listesi: https://www.wondiyo.com.tr/ilk-yari-gol-listesi
+- Oranı Düşen Maçlar: https://www.wondiyo.com.tr/orani-dusen-maclar
+- Site haritası: https://www.wondiyo.com.tr/sitemap.xml
+
+## İletişim
+
+wondiyodestek@gmail.com

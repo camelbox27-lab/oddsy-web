@@ -38,7 +38,7 @@ function setMetaContent(html, selectorRegex, replacement) {
 }
 
 function buildHtmlFor(baseHtml, { path, title, description }) {
-    const canonicalUrl = `https://wondiyo.com.tr${path}`;
+    const canonicalUrl = `https://www.wondiyo.com.tr${path}`;
     let html = baseHtml;
 
     html = setMetaContent(html, /<title>.*?<\/title>/, `<title>${title}</title>`);
@@ -49,6 +49,34 @@ function buildHtmlFor(baseHtml, { path, title, description }) {
     html = setMetaContent(html, /(<meta property="og:url" content=")[^"]*(")/, `$1${canonicalUrl}$2`);
     html = setMetaContent(html, /(<meta name="twitter:title" content=")[^"]*(")/, `$1${title}$2`);
     html = setMetaContent(html, /(<meta name="twitter:description" content=")[^"]*(")/, `$1${description}$2`);
+
+    // SSS yapısal verisi sadece ana sayfaya ait; alt sayfalardan çıkarılır
+    html = html.replace(/\s*<!-- faq-jsonld:start -->[\s\S]*?<!-- faq-jsonld:end -->/, '');
+
+    // Alt sayfaya kırıntı navigasyonu (breadcrumb) ve sayfa tanımı eklenir
+    const pageLd = {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'WebPage',
+                '@id': canonicalUrl,
+                url: canonicalUrl,
+                name: title,
+                description,
+                inLanguage: 'tr-TR',
+                isPartOf: { '@type': 'WebSite', name: 'Wondiyo', url: 'https://www.wondiyo.com.tr/' },
+            },
+            {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                    { '@type': 'ListItem', position: 1, name: 'Ana Sayfa', item: 'https://www.wondiyo.com.tr/' },
+                    { '@type': 'ListItem', position: 2, name: title.split('|')[0].trim(), item: canonicalUrl },
+                ],
+            },
+        ],
+    };
+    const ldTag = `  <script type="application/ld+json">\n${JSON.stringify(pageLd, null, 2)}\n  </script>\n`;
+    html = html.replace('</head>', `${ldTag}</head>`);
 
     return html;
 }
