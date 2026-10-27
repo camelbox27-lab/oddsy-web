@@ -208,9 +208,12 @@ async function main() {
     // Playwright'ın Chromium'u kurulu değilse (örn. Vercel build ortamında npx playwright
     // install hiç çalıştırılmadıysa) hemen vazgeç - browser.launch() burada takılıp
     // build'i sonsuza kadar bekletmesin.
+    // CHROMIUM_EXECUTABLE_PATH tanımlıysa (ör. tarayıcının hazır kurulu geldiği ortamlar)
+    // indirilen sürüm yerine o kullanılır.
+    const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH || undefined;
     let browser;
     try {
-        browser = await chromium.launch({ headless: true, timeout: 15000 });
+        browser = await chromium.launch({ headless: true, timeout: 15000, executablePath });
     } catch (err) {
         console.warn('[prerender-routes] Chromium başlatılamadı, prerender atlanıyor (meta etiketleri zaten doğru, sadece #root boş kalacak):', err.message);
         return;

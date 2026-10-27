@@ -1,68 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://wondiyo.com.tr/</loc>
+    <loc>https://www.wondiyo.com.tr/</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/oran-analiz</loc>
+    <loc>https://www.wondiyo.com.tr/oran-analiz</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/manuel-analiz</loc>
+    <loc>https://www.wondiyo.com.tr/manuel-analiz</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/kart-analizi</loc>
+    <loc>https://www.wondiyo.com.tr/kart-analizi</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/korner-analizi</loc>
+    <loc>https://www.wondiyo.com.tr/korner-analizi</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/yapay-zeka-analizleri</loc>
+    <loc>https://www.wondiyo.com.tr/yapay-zeka-analizleri</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/iy-ms-tahminleri</loc>
+    <loc>https://www.wondiyo.com.tr/iy-ms-tahminleri</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/ilk-yari-gol-listesi</loc>
+    <loc>https://www.wondiyo.com.tr/ilk-yari-gol-listesi</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/gunun-kuponlari</loc>
+    <loc>https://www.wondiyo.com.tr/gunun-kuponlari</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/gunun-tercihleri</loc>
+    <loc>https://www.wondiyo.com.tr/gunun-tercihleri</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/gunun-surprizleri</loc>
+    <loc>https://www.wondiyo.com.tr/gunun-surprizleri</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://wondiyo.com.tr/orani-dusen-maclar</loc>
+    <loc>https://www.wondiyo.com.tr/orani-dusen-maclar</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <!-- VIP/abonelik sayfası şu an sitede gizli; tekrar açılınca bu kayıt geri eklenecek
   <url>
-    <loc>https://wondiyo.com.tr/abonelik</loc>
+    <loc>https://www.wondiyo.com.tr/abonelik</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
