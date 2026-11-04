@@ -1,5 +1,5 @@
 import { db } from '../firebaseConfig';
-import { doc, getDoc, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, setDoc, serverTimestamp, where, writeBatch } from 'firebase/firestore';
 
 /**
  * usernames/{key} -> { uid, email, username }
@@ -31,12 +31,29 @@ export async function lookupEmailByUsername(username) {
 }
 
 // Kayıt ekranı: kullanıcı adı başkası tarafından alınmış mı?
+// usernames okunamazsa (Firestore'da yayındaki kurallar bu koleksiyonu henüz
+// tanımıyorsa "Missing or insufficient permissions" döner) eski yönteme,
+// users sorgusuna düşer. O da reddedilirse kaydı engellemez.
 export async function isUsernameTaken(username, ownUid = null) {
     const key = usernameKey(username);
     if (!key) return false;
-    const snap = await getDoc(doc(db, 'usernames', key));
-    if (!snap.exists()) return false;
-    return snap.data()?.uid !== ownUid;
+    try {
+        const snap = await getDoc(doc(db, 'usernames', key));
+        if (!snap.exists()) return false;
+        return snap.data()?.uid !== ownUid;
+    } catch (mapErr) {
+        console.error('Kullanıcı adı eşlemesi okunamadı, users sorgusuna düşülüyor:', mapErr);
+    }
+    try {
+        const trimmed = String(username).trim();
+        for (const value of new Set([trimmed, trimmed.toLowerCase()])) {
+            const snap = await getDocs(query(collection(db, 'users'), where('username', '==', value)));
+            if (snap.docs.some((d) => d.id !== ownUid)) return true;
+        }
+    } catch (legacyErr) {
+        console.error('Kullanıcı adı kontrol edilemedi, kayda izin veriliyor:', legacyErr);
+    }
+    return false;
 }
 
 // Kayıt sırasında eşlemeyi oluşturur
