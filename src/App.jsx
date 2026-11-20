@@ -683,17 +683,15 @@ html, body, #root, .app {
 .hero-btn.secondary { background: var(--gold); color: var(--on-gold); border: 2px solid rgba(255,255,255,0.5); }
 .hero-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
-/* Kullanım videosu (ana sayfa) */
-.kullanim-video { padding: 56px 20px 64px; background: var(--bg-dark); text-align: center; }
-.kullanim-video-baslik { font-size: 34px; font-weight: 900; color: var(--text-primary); margin-bottom: 10px; letter-spacing: -0.5px; }
-.kullanim-video-alt { font-size: 15px; color: var(--text-secondary); margin: 0 auto 26px; max-width: 620px; line-height: 1.5; }
-.kullanim-video-cerceve { max-width: 960px; margin: 0 auto; border-radius: 22px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-lg); background: #000; aspect-ratio: 16 / 9; }
+/* Kullanım videosu (ana sayfa hero'su içinde, öne çıkanların üstünde) */
+.kullanim-video { width: 100%; max-width: 760px; margin: 0 auto 30px; padding: 0 16px; text-shadow: none; }
+.kullanim-video-baslik { color: #fff; font-size: 15px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; text-align: left; margin-bottom: 12px; }
+.kullanim-video-cerceve { border-radius: 22px; overflow: hidden; border: 3px solid rgba(255,255,255,0.85); box-shadow: 0 18px 44px rgba(22,38,27,0.35); background: #000; aspect-ratio: 16 / 9; }
 .kullanim-video-cerceve video { width: 100%; height: 100%; display: block; object-fit: contain; }
 @media (max-width: 600px) {
-  .kullanim-video { padding: 36px 12px 44px; }
-  .kullanim-video-baslik { font-size: 24px; }
-  .kullanim-video-alt { font-size: 13px; margin-bottom: 18px; }
-  .kullanim-video-cerceve { border-radius: 14px; }
+  .kullanim-video { margin-bottom: 22px; }
+  .kullanim-video-baslik { font-size: 13px; }
+  .kullanim-video-cerceve { border-radius: 14px; border-width: 2px; }
 }
 
 /* Analysis Section */
@@ -2013,6 +2011,21 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
         <div className="home-page" style={{ position: 'relative', minHeight: '100vh' }}>
             <div className="hero-section">
                 <div className="hero-content" style={{ paddingTop: '110px', maxWidth: 1100, width: '100%' }}>
+                    {/* Kullanım videosu: hero'nun üst boşluğunda; yalnızca oynat'a basılınca yüklenir */}
+                    <div className="kullanim-video">
+                        <div className="kullanim-video-baslik">▶ Wondiyo Nasıl Kullanılır?</div>
+                        <div className="kullanim-video-cerceve">
+                            <video
+                                controls
+                                playsInline
+                                preload="none"
+                                poster="/videos/wondiyo-kullanim-kapak.jpg"
+                                onPlay={() => trackEvent('video_oynat', { video: 'kullanim' })}
+                            >
+                                <source src="/videos/wondiyo-kullanim.mp4" type="video/mp4" />
+                            </video>
+                        </div>
+                    </div>
                     <OneCikanlar />
                     <h1 className="hero-title">Wondiyo ile Akıllı Futbol Tahminleri</h1>
                     <p className="hero-subtitle">Yapay zeka oran analiz sistemiyle güçlendirilmiş, günün öne çıkan karşılaşmalarını sizin için sadeleştiren yeni nesil tahmin platformu.</p>
@@ -2047,23 +2060,6 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
                     </div>
                 </div>
             </div>
-
-            {/* Kullanım videosu: sadece oynat'a basılınca yüklenir (preload="none") */}
-            <section className="kullanim-video" aria-label="Wondiyo nasıl kullanılır">
-                <h2 className="kullanim-video-baslik">Wondiyo Nasıl Kullanılır?</h2>
-                <p className="kullanim-video-alt">2 dakikada tüm özellikler: tahmin listeleri, günün kuponları, yapay zeka, kart ve korner analizi.</p>
-                <div className="kullanim-video-cerceve">
-                    <video
-                        controls
-                        playsInline
-                        preload="none"
-                        poster="/videos/wondiyo-kullanim-kapak.jpg"
-                        onPlay={() => trackEvent('video_oynat', { video: 'kullanim' })}
-                    >
-                        <source src="/videos/wondiyo-kullanim.mp4" type="video/mp4" />
-                    </video>
-                </div>
-            </section>
 
             <div className="analysis-section" style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingBottom: '100px' }}>
                 <div style={{ textAlign: 'center' }}>
