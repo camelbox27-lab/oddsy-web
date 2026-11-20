@@ -48,6 +48,12 @@ const stil = {
     satirTakim: { flex: 1, minWidth: 0, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
     chip: { flex: '0 0 auto', minWidth: 34, textAlign: 'center', fontWeight: 800, borderRadius: 7, padding: '2px 6px', background: 'var(--bg-card)', color: 'var(--text-secondary)' },
     chipVurgu: { background: 'var(--primary-green)', color: '#fff' },
+    // Tutan örnek: satırın tamamı yeşil, beyaz yazı ve ✓ (dikkat çeksin)
+    satirTutan: { background: 'linear-gradient(110deg, var(--primary-green-light), var(--primary-green-dark))', color: '#fff', boxShadow: '0 4px 12px rgba(30,138,69,0.30)' },
+    tarihTutan: { color: '#D9EFD9' },
+    chipTutan: { background: 'rgba(255,255,255,0.2)', color: '#fff' },
+    chipTutanVurgu: { background: '#fff', color: 'var(--primary-green-dark)' },
+    tik: { flex: '0 0 auto', width: 16, height: 16, borderRadius: '50%', background: '#fff', color: 'var(--primary-green)', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' },
 };
 
 function Kart({ m, tur }) {
@@ -86,13 +92,15 @@ function Kart({ m, tur }) {
                     {ornekler.map((o, i) => {
                         const ms = skorAyikla(o.ms);
                         const tuttu = tutti(o);
+                        const msChip = tuttu ? (tur === 'alti' ? stil.chipTutanVurgu : stil.chipTutan) : {};
                         return (
-                            <div key={i} style={stil.satir}>
-                                <span style={stil.satirTarih}>{tarihKisa(o.tarih)}</span>
+                            <div key={i} style={{ ...stil.satir, ...(tuttu ? stil.satirTutan : {}) }}>
+                                {tuttu && <span style={stil.tik}>✓</span>}
+                                <span style={{ ...stil.satirTarih, ...(tuttu ? stil.tarihTutan : {}) }}>{tarihKisa(o.tarih)}</span>
                                 <span style={stil.satirTakim}>{o.ev} – {o.dep}</span>
-                                <span style={{ ...stil.chip, ...(tur === 'alti' && tuttu ? stil.chipVurgu : {}) }}>{ms ? `${ms[0]}-${ms[1]}` : '–'}</span>
+                                <span style={{ ...stil.chip, ...msChip }}>{ms ? `${ms[0]}-${ms[1]}` : '–'}</span>
                                 {tur === 'iyms' && (
-                                    <span style={{ ...stil.chip, ...(tuttu ? stil.chipVurgu : {}) }}>{o.iyms}</span>
+                                    <span style={{ ...stil.chip, ...(tuttu ? stil.chipTutanVurgu : {}) }}>{o.iyms}</span>
                                 )}
                             </div>
                         );
