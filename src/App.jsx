@@ -42,6 +42,7 @@ import Kart from './components/Kart';
 import Korner from './components/Korner';
 import ManuelAnaliz from './components/ManuelAnaliz';
 import OranAnaliz from './components/OranAnaliz';
+import OneCikanlar from './components/OneCikanlar';
 import YapayZeka from './components/YapayZeka';
 import { auth, db, functions, googleProvider, rtdb } from './firebaseConfig';
 import { identifyUser, trackEvent, trackPageView } from './analytics';
@@ -637,8 +638,8 @@ html, body, #root, .app {
 /* Wondiyo hero: marka gradienti + hafif saha cizgisi dokusu */
 .hero-section {
   position: relative;
-  height: 72vh;
-  min-height: 520px;
+  /* Icerik (gunun one cikanlari) uzarsa kesilmesin diye sabit yukseklik yerine alt sinir */
+  min-height: max(72vh, 520px);
   background:
     radial-gradient(ellipse 80% 55% at 50% 42%, rgba(200, 217, 46, 0.22) 0%, transparent 70%),
     linear-gradient(165deg, #2FA857 0%, #1E8A45 45%, #146B34 100%);
@@ -1998,7 +1999,8 @@ function HomePage({ onLoginClick, onNavigate, onShowLegal, user, userData }) {
     return (
         <div className="home-page" style={{ position: 'relative', minHeight: '100vh' }}>
             <div className="hero-section">
-                <div className="hero-content" style={{ paddingTop: '160px' }}>
+                <div className="hero-content" style={{ paddingTop: '110px', maxWidth: 1100, width: '100%' }}>
+                    <OneCikanlar />
                     <h1 className="hero-title">Wondiyo ile Akıllı Futbol Tahminleri</h1>
                     <p className="hero-subtitle">Yapay zeka oran analiz sistemiyle güçlendirilmiş, günün öne çıkan karşılaşmalarını sizin için sadeleştiren yeni nesil tahmin platformu.</p>
 <div className="hero-buttons" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
